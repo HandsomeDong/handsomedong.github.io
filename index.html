@@ -379,7 +379,7 @@
 <p><img src="https://i.loli.net/2019/04/22/5cbca873eec91.png" alt="输入相关配置"><br>然后再点击Deployment-&gt; + -&gt;Artifacy，设置好部署的url，直接填个”/“就行了，当然你也可以加点东西，比如填”/handsomedong”然后点击 OK 。</p>
 <p><img src="https://i.loli.net/2019/04/22/5cbca89037029.png" alt="添加Artifacy"></p>
 <p><img src="https://i.loli.net/2019/04/22/5cbca8abc0f47.png" alt="应用目录"><br>设置好运行调试的配置后，我们就可以在右上角看到配置名称了，同时也可以看到有个三角符号和虫子都变绿了。三角符号是运行按钮，点击后直接运行，小虫子是调试按钮，可以设置断点调试。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca9046f750.png" alt="变绿了"><br>我们先试试运行一下会怎么样吧！结果不出意料，根本没跑起来……我们在IDEA下面查看日志，可以看到报错信息 java.lang.ClassNotFoundException: org.springframework.web.context.ContextLoaderListener””，找不到这个类啊！为什么呢？因为还有一些包没有jar包含进来。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca9046f750.png" alt="变绿了"><br>我们先试试运行一下会怎么样吧！结果不出意料，根本没跑起来……我们在IDEA下面查看日志，可以看到报错信息 <em>java.lang.ClassNotFoundException: org.springframework.web.context.ContextLoaderListener</em> ，找不到这个类啊！为什么呢？因为还有一些包没有jar包含进来。</p>
 <p><img src="https://i.loli.net/2019/04/22/5cbca9202eeaa.png" alt="日志报错信息"></p>
 <hr>
 <h2 id="3-导入相关类库"><a href="#3-导入相关类库" class="headerlink" title="3.导入相关类库"></a>3.导入相关类库</h2><p>点击左上角 File-&gt;Project Structure。</p>

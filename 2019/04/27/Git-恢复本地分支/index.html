@@ -95,7 +95,7 @@
 <meta property="og:image" content="https://i.loli.net/2019/04/27/5cc34a8bcdea0.png">
 <meta property="og:image" content="https://i.loli.net/2019/04/27/5cc34a8be96b9.png">
 <meta property="og:image" content="https://i.loli.net/2019/04/27/5cc34a8beb6a2.png">
-<meta property="og:updated_time" content="2019-04-26T18:31:06.833Z">
+<meta property="og:updated_time" content="2019-04-26T18:40:48.080Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Git恢复本地分支">
 <meta name="twitter:description" content="一般来说，我们开发新功能都会在develop分支下新建一个分支，命名为 feature/新功能，测试没问题后再合并到develop推到远程分支。由于我是新手，老大通常要我先别合并，先推到远程的新分支下等他review没问题后再合并到develop。 有强迫症的我，看到本地太多分支就不舒服，推到远程分支后直接就删掉本地分支，只留master和develop两个分支，干干净净舒舒服服！！！  万万没想">
@@ -375,13 +375,14 @@
 <p>我随便写了个 “test”</p>
 <p><img src="https://i.loli.net/2019/04/27/5cc34a8b487e8.png" alt="新建文件随便写点东西"></p>
 <h2 id="3-提交代码"><a href="#3-提交代码" class="headerlink" title="3.提交代码"></a>3.提交代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;Add test.txt&quot;</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
-<p>此时可用git branch查看到有master和test两个分支</p>
+<p>可以看到现在有master和test两个分支</p>
 <p><img src="https://i.loli.net/2019/04/27/5cc34a8bb2edf.png" alt="提交代码"></p>
 <h2 id="4-切换回master分支并删除test分支"><a href="#4-切换回master分支并删除test分支" class="headerlink" title="4.切换回master分支并删除test分支"></a>4.切换回master分支并删除test分支</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git checkout master</span><br><span class="line">git branch -D test</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
+<p>可以看到现在只有master一个分支了</p>
 <p><img src="https://i.loli.net/2019/04/27/5cc34a8bcdea0.png" alt="删除分支"></p>
-<p>此时可用git branch查看到只有master一个分支了</p>
 <h2 id="5-git-log-g查看提交记录"><a href="#5-git-log-g查看提交记录" class="headerlink" title="5.git log -g查看提交记录"></a>5.git log -g查看提交记录</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git log -g</span><br></pre></td></tr></table></figure>
-<p>可以从提交记录可以看到commit、commit的id及提交者等信息。通过conmit来找到你想要恢复的代码，所以一个好的commit很重要哦。<br><img src="https://i.loli.net/2019/04/27/5cc34a8be96b9.png" alt="查看提交记录"></p>
+<p>可以从提交记录可以看到commit、commit的id及提交者等信息。通过conmit来找到你想要恢复的代码，所以一个好的commit很重要哦。</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8be96b9.png" alt="查看提交记录"></p>
 <h2 id="6-找到commit-id并恢复到新分支"><a href="#6-找到commit-id并恢复到新分支" class="headerlink" title="6.找到commit_id并恢复到新分支"></a>6.找到commit_id并恢复到新分支</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch recover d0bd911dcbe57eb4ff1c99dd03b42da34a75640a</span><br></pre></td></tr></table></figure>
 <h2 id="查看结果"><a href="#查看结果" class="headerlink" title="查看结果"></a>查看结果</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git branch</span><br><span class="line">git checkout recover</span><br><span class="line">ls</span><br><span class="line">cat test.txt</span><br></pre></td></tr></table></figure>
 <p>可以看到在recover分支和之前删除的test分支是一样的，文件一样，文件内容也一样，恢复分支成功！</p>

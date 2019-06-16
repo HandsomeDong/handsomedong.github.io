@@ -88,7 +88,7 @@
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://i.loli.net/2019/06/17/5d067ce88ae2294007.png">
 <meta property="og:image" content="https://i.loli.net/2019/06/17/5d067a6b9691d79258.png">
-<meta property="og:updated_time" content="2019-06-16T17:32:15.410Z">
+<meta property="og:updated_time" content="2019-06-16T17:36:42.373Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="观察者模式">
 <meta name="twitter:description" content="设计模式之观察者模式有时候在京东看到一些电子产品非常想买，但奈何没钱啊！只能每隔几天就上京东看看这件商品有没有降价，有几次都错过了优惠活动！这让我悔恨不已啊！！！后来才发现京东有个“关注商品”的功能，商品一旦降价就会立马给我推送信息！我居然一直没发现！其实设计模式里面也有一种模式类似于这种机制，那就是观察者模式。从此以后我再也没有错过商品的降价信息，然而……  1.定义建立一种对象与对象之间的依赖">
@@ -346,7 +346,7 @@
       
         <h2 id="设计模式之观察者模式"><a href="#设计模式之观察者模式" class="headerlink" title="设计模式之观察者模式"></a>设计模式之观察者模式</h2><p>有时候在京东看到一些电子产品非常想买，但奈何没钱啊！只能每隔几天就上京东看看这件商品有没有降价，有几次都错过了优惠活动！这让我悔恨不已啊！！！后来才发现京东有个“关注商品”的功能，商品一旦降价就会立马给我推送信息！我居然一直没发现！其实设计模式里面也有一种模式类似于这种机制，那就是观察者模式。从此以后我再也没有错过商品的降价信息，然而……</p>
 <p><img src="https://i.loli.net/2019/06/17/5d067ce88ae2294007.png" alt="穷啊"></p>
-<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>建立一种对象与对象之间的依赖关系，一个对象发生改变时将自动通知其他对象，其他对象将相应做出反应。在此，发生改变的对象称为观察目标，而被通知的对象称为观察者，一个观察目标可以对应多个观察者，而且这些观察者之间没有相互联系，可以根据需要增加和删除观察者，使得系统更易于扩展。</p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>建立一种对象与对象之间的依赖关系，一个对象发生改变时将自动通知其他对象，其他对象将相应做出反应。在此，发生改变的对象称为主题或者观察目标，而被通知的对象称为观察者，一个观察目标可以对应多个观察者，而且这些观察者之间没有相互联系，可以根据需要增加和删除观察者，使得系统更易于扩展。</p>
 <p>观察者模式包含以下角色：</p>
 <ol>
 <li>主题</li>
@@ -355,7 +355,7 @@
 <li>具体观察者</li>
 </ol>
 <h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p>以点外卖的例子来说，我们通常在饿了么、美团这些APP上点外卖，我们在APP下单后，相应餐厅的APP此时会提醒接单，与此同时配送员的手机APP会立马提醒抢单。这个时候，每个订单都是具体主题，而餐厅及配送员就是具体观察者，下面用代码来实现。</p>
-<h3 id="2-1-Observer接口"><a href="#2-1-Observer接口" class="headerlink" title="2.1 Observer接口"></a>2.1 Observer接口</h3><p>观察者都需要实现这个接口，当数据更新后，主题调用update方法，把数据传送给观察者。</p>
+<h3 id="2-1-Observer接口"><a href="#2-1-Observer接口" class="headerlink" title="2.1 Observer接口"></a>2.1 Observer接口</h3><p>观察者都需要实现这个接口，当数据更新后，主题调用update()方法，把数据传送给观察者。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Observer &#123;</span><br><span class="line">    public void update(String food, String address, String phone);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="2-2-Subject接口"><a href="#2-2-Subject接口" class="headerlink" title="2.2 Subject接口"></a>2.2 Subject接口</h3><p>主题最起码需要实现三个方法，registerObserver()方法用于观察者订阅主题，removeObserver()用于观察者取消订阅主题，notifyObserver()用于推送最新数据给观察者。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public interface Subject &#123;</span><br><span class="line">    public void registerObserver(Observer observer);</span><br><span class="line">    public void removeObserver(Observer observer);</span><br><span class="line">    public void notifyObserver();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>

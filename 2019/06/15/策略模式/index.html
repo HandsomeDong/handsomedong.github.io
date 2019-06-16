@@ -79,19 +79,20 @@
 
 
 
-<meta name="description" content="设计模式之策略模式以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！ 1.定义策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。 2.实例说明比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前">
+<meta name="description" content="设计模式之策略模式以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！  1.定义策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。 2.实例说明比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当">
 <meta property="og:type" content="article">
 <meta property="og:title" content="策略模式">
 <meta property="og:url" content="http://yoursite.com/2019/06/15/策略模式/index.html">
 <meta property="og:site_name" content="HandsomeDong">
-<meta property="og:description" content="设计模式之策略模式以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！ 1.定义策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。 2.实例说明比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前">
+<meta property="og:description" content="设计模式之策略模式以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！  1.定义策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。 2.实例说明比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://i.loli.net/2019/06/17/5d067ce888ffd96560.png">
 <meta property="og:image" content="https://i.loli.net/2019/06/16/5d0517243e28624089.png">
-<meta property="og:updated_time" content="2019-06-15T16:05:06.528Z">
+<meta property="og:updated_time" content="2019-06-16T17:36:40.638Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="策略模式">
-<meta name="twitter:description" content="设计模式之策略模式以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！ 1.定义策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。 2.实例说明比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前">
-<meta name="twitter:image" content="https://i.loli.net/2019/06/16/5d0517243e28624089.png">
+<meta name="twitter:description" content="设计模式之策略模式以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！  1.定义策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。 2.实例说明比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当">
+<meta name="twitter:image" content="https://i.loli.net/2019/06/17/5d067ce888ffd96560.png">
 
 
 
@@ -344,6 +345,7 @@
 
       
         <h1 id="设计模式之策略模式"><a href="#设计模式之策略模式" class="headerlink" title="设计模式之策略模式"></a>设计模式之策略模式</h1><p>以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！</p>
+<p><img src="https://i.loli.net/2019/06/17/5d067ce888ffd96560.png" alt="我技术好菜啊"></p>
 <h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>策略模式是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。</p>
 <h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p>比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前的一个动作、状态，我们可以把这一类随时可变的动作从角色里抽离出来并封装起来。</p>
 <h3 id="2-1-动作接口"><a href="#2-1-动作接口" class="headerlink" title="2.1 动作接口"></a>2.1 动作接口</h3><p>首先定义一个动作接口，所有的具体动作都要实现这个接口。</p>
@@ -359,6 +361,7 @@
 <p><img src="https://i.loli.net/2019/06/16/5d0517243e28624089.png" alt="测试结果"></p>
 <h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.算法可以自由切换，改策略很方便<br>2.增加一个策略，就多增加一个类实现接口就好了。</p>
 <h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>每一个策略都是一个类，复用的可能性很小、类数量增多</p>
+<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.许多相关类仅仅是行为不同。<br>2.需要使用一个算法的不同实现。<br>3.算法使用了客户不应该知道的数据。策略模式可以避免暴露复杂的、与算法相关的数据结构。</p>
 
       
     </div>
@@ -529,7 +532,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#设计模式之策略模式"><span class="nav-number">1.</span> <span class="nav-text">设计模式之策略模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-定义"><span class="nav-number">1.1.</span> <span class="nav-text">1.定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-实例说明"><span class="nav-number">1.2.</span> <span class="nav-text">2.实例说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-动作接口"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 动作接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-具体动作实现接口"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 具体动作实现接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Person抽象类"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 Person抽象类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-具体角色类继承Person类"><span class="nav-number">1.2.4.</span> <span class="nav-text">2.4 具体角色类继承Person类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-测试"><span class="nav-number">1.3.</span> <span class="nav-text">3.测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-优缺点"><span class="nav-number">1.4.</span> <span class="nav-text">4.优缺点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-优点"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-缺点"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 缺点</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#设计模式之策略模式"><span class="nav-number">1.</span> <span class="nav-text">设计模式之策略模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-定义"><span class="nav-number">1.1.</span> <span class="nav-text">1.定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-实例说明"><span class="nav-number">1.2.</span> <span class="nav-text">2.实例说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-动作接口"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 动作接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-具体动作实现接口"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 具体动作实现接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Person抽象类"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 Person抽象类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-具体角色类继承Person类"><span class="nav-number">1.2.4.</span> <span class="nav-text">2.4 具体角色类继承Person类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-测试"><span class="nav-number">1.3.</span> <span class="nav-text">3.测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-优缺点"><span class="nav-number">1.4.</span> <span class="nav-text">4.优缺点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-优点"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-缺点"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-适用场景"><span class="nav-number">1.5.</span> <span class="nav-text">5.适用场景</span></a></li></ol></li></ol></div>
             
 
           </div>

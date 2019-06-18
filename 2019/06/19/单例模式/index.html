@@ -79,17 +79,17 @@
 
 
 
-<meta name="description" content="题目描述在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。 解题思路这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。 代码实现12345678910">
+<meta name="description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法…… 1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个">
 <meta property="og:type" content="article">
-<meta property="og:title" content="二维数组的查找">
-<meta property="og:url" content="http://yoursite.com/2019/06/19/二维数组的查找/index.html">
+<meta property="og:title" content="单例模式">
+<meta property="og:url" content="http://yoursite.com/2019/06/19/单例模式/index.html">
 <meta property="og:site_name" content="HandsomeDong">
-<meta property="og:description" content="题目描述在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。 解题思路这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。 代码实现12345678910">
+<meta property="og:description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法…… 1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-06-18T18:15:48.341Z">
+<meta property="og:updated_time" content="2019-06-18T18:41:28.079Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="二维数组的查找">
-<meta name="twitter:description" content="题目描述在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。 解题思路这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。 代码实现12345678910">
+<meta name="twitter:title" content="单例模式">
+<meta name="twitter:description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法…… 1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个">
 
 
 
@@ -119,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/06/19/二维数组的查找/">
+  <link rel="canonical" href="http://yoursite.com/2019/06/19/单例模式/">
 
 
 
 
 
-  <title>二维数组的查找 | HandsomeDong</title>
+  <title>单例模式 | HandsomeDong</title>
   
 
 
@@ -252,7 +252,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/19/二维数组的查找/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/19/单例模式/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -269,7 +269,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">二维数组的查找</h1>
+          <h1 class="post-title" itemprop="name headline">单例模式</h1>
         
 
         <div class="post-meta">
@@ -281,7 +281,7 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-19T01:43:25+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-19T01:59:16+08:00">
                 2019-06-19
               </time>
             
@@ -304,19 +304,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/算法题/" itemprop="url" rel="index">
-                    <span itemprop="name">算法题</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/算法题/剑指offer算法题/" itemprop="url" rel="index">
-                    <span itemprop="name">剑指offer算法题</span>
+                  <a href="/categories/设计模式/" itemprop="url" rel="index">
+                    <span itemprop="name">设计模式</span>
                   </a>
                 </span>
 
@@ -352,9 +341,20 @@
       
 
       
-        <h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    bool Find(int target, vector&lt;vector&lt;int&gt; &gt; array) &#123;</span><br><span class="line">        int rowTotal = array.size(), columnTotal = array[0].size();</span><br><span class="line">        bool hasTarget = false;</span><br><span class="line">		</span><br><span class="line">        if ((rowTotal == 0) || (columnTotal == 0))&#123;</span><br><span class="line">            return false;  //空数组直接返回false</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for (int i = 0, j = columnTotal - 1; (i &lt;= rowTotal - 1) &amp;&amp;(j &gt;= 0);)&#123;</span><br><span class="line">            if (array[i][j] == target)&#123;</span><br><span class="line">                hasTarget = true;</span><br><span class="line">                break;</span><br><span class="line">            &#125;else if (array[i][j] &lt; target)&#123;</span><br><span class="line">                ++i;</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                --j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return hasTarget;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+        <h1 id="设计模式之单例模式"><a href="#设计模式之单例模式" class="headerlink" title="设计模式之单例模式"></a>设计模式之单例模式</h1><p>有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法……</p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个系统提供这个实例，这个类称为单例类，它提供全局访问的方法。</p>
+<p>单例模式的要点有三个：一是某个类只能有一个实例；二是它必须自行创建这个实例；三是它必须自行向整个系统提供这个实例。单例模式是一种对象创建型模式。单例模式又名单件模式或单态模式。</p>
+<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><h3 id="2-1-懒汉模式（线程不安全）"><a href="#2-1-懒汉模式（线程不安全）" class="headerlink" title="2.1 懒汉模式（线程不安全）"></a>2.1 懒汉模式（线程不安全）</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;</span><br><span class="line">    private static Singleton instance;</span><br><span class="line">    private Singleton()&#123;&#125;;</span><br><span class="line">    public static Singleton getInstance()&#123;</span><br><span class="line">        if (instance == null)&#123;</span><br><span class="line">            instance = new Singleton();</span><br><span class="line">        &#125;</span><br><span class="line">        return instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先判断有没有实例，没有的话再创建实例。这种没有考虑到线程安全，多线程的时候可能会同时构造多个对象。</p>
+<p>你可能想到了，我们在getinstance()方法前加锁同步不就得了嘛……所以就有了下面这种写法。</p>
+<h3 id="2-2-懒汉模式（线程安全）"><a href="#2-2-懒汉模式（线程安全）" class="headerlink" title="2.2 懒汉模式（线程安全）"></a>2.2 懒汉模式（线程安全）</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;</span><br><span class="line">    private static Singleton instance;</span><br><span class="line">    private Singleton()&#123;&#125;;</span><br><span class="line">    public static synchronized Singleton getInstance()&#123;</span><br><span class="line">        if (instance == null)&#123;</span><br><span class="line">            instance = new Singleton();</span><br><span class="line">        &#125;</span><br><span class="line">        return instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个时候每个线程进入到getinstance()方法之前都要等别的线程离开该方法，这得浪费多少资源啊……这种方式的效率是比较低的。</p>
+<h3 id="2-3-饿汉模式"><a href="#2-3-饿汉模式" class="headerlink" title="2.3 饿汉模式"></a>2.3 饿汉模式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;</span><br><span class="line">    private static Singleton instance = new Singleton();</span><br><span class="line">    private Singleton()&#123;&#125;</span><br><span class="line">    public static Singleton getInstance()&#123;</span><br><span class="line">        return instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种方式在类加载的时候直接完成初始化，因此类加载会有点慢，但是获取对象的速度快，而且可以避免多线程的同步问题。</p>
+<hr>
+<p>未完待续……</p>
+<hr>
+
       
     </div>
     
@@ -378,8 +378,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/16/观察者模式/" rel="next" title="观察者模式">
-                <i class="fa fa-chevron-left"></i> 观察者模式
+              <a href="/2019/06/19/二维数组的查找/" rel="next" title="二维数组的查找">
+                <i class="fa fa-chevron-left"></i> 二维数组的查找
               </a>
             
           </div>
@@ -387,10 +387,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/06/19/单例模式/" rel="prev" title="单例模式">
-                单例模式 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -524,7 +520,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#题目描述"><span class="nav-number">1.</span> <span class="nav-text">题目描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解题思路"><span class="nav-number">2.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.</span> <span class="nav-text">代码实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#设计模式之单例模式"><span class="nav-number">1.</span> <span class="nav-text">设计模式之单例模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-定义"><span class="nav-number">1.1.</span> <span class="nav-text">1.定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-实例说明"><span class="nav-number">1.2.</span> <span class="nav-text">2.实例说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-懒汉模式（线程不安全）"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 懒汉模式（线程不安全）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-懒汉模式（线程安全）"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 懒汉模式（线程安全）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-饿汉模式"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 饿汉模式</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>

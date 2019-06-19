@@ -79,17 +79,19 @@
 
 
 
-<meta name="description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法…… 1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个">
+<meta name="description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法……  1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整">
 <meta property="og:type" content="article">
 <meta property="og:title" content="单例模式">
 <meta property="og:url" content="http://yoursite.com/2019/06/19/单例模式/index.html">
 <meta property="og:site_name" content="HandsomeDong">
-<meta property="og:description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法…… 1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个">
+<meta property="og:description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法……  1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-06-19T15:54:26.629Z">
+<meta property="og:image" content="https://i.loli.net/2019/06/20/5d0a5d8b0b09894035.png">
+<meta property="og:updated_time" content="2019-06-19T16:06:53.459Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="单例模式">
-<meta name="twitter:description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法…… 1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个">
+<meta name="twitter:description" content="设计模式之单例模式有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法……  1.定义单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整">
+<meta name="twitter:image" content="https://i.loli.net/2019/06/20/5d0a5d8b0b09894035.png">
 
 
 
@@ -342,6 +344,7 @@
 
       
         <h1 id="设计模式之单例模式"><a href="#设计模式之单例模式" class="headerlink" title="设计模式之单例模式"></a>设计模式之单例模式</h1><p>有一些对象我们只需要一个，如果创建了多个实例，有可能会出现各种问题，比如线程池、注册表、缓存等等，这个时候就要用到单例模式了。一开始我以为单例模式会很容易，不就是把构造方法设为私有再提供一个静态方法去获取这个实例嘛，然而仔细了解后我才发现事情并没那么简单，它居然有好几种写法……</p>
+<p><img src="https://i.loli.net/2019/06/20/5d0a5d8b0b09894035.png" alt="事情没那么简单"></p>
 <h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>单例模式(Singleton Pattern)确保某一个类只有一个实例，而且自行实例化并向整个系统提供这个实例，这个类称为单例类，它提供全局访问的方法。</p>
 <p>单例模式的要点有三个：一是某个类只能有一个实例；二是它必须自行创建这个实例；三是它必须自行向整个系统提供这个实例。单例模式是一种对象创建型模式。单例模式又名单件模式或单态模式。</p>
 <h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><h3 id="2-1-饿汉模式"><a href="#2-1-饿汉模式" class="headerlink" title="2.1 饿汉模式"></a>2.1 饿汉模式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class Singleton &#123;</span><br><span class="line">    private static Singleton instance = new Singleton();</span><br><span class="line">    private Singleton()&#123;&#125;</span><br><span class="line">    public static Singleton getInstance()&#123;</span><br><span class="line">        return instance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>

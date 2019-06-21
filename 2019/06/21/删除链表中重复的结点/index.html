@@ -79,17 +79,19 @@
 
 
 
-<meta name="description" content="题目描述输入一个链表，按链表值从尾到头的顺序返回一个ArrayList。 C++123456789/***  struct ListNode &amp;#123;*        int val;*        struct ListNode *next;*        ListNode(int x) :*              val(x), next(NULL) &amp;#123;*">
+<meta name="description" content="题目描述在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&amp;gt;2-&amp;gt;3-&amp;gt;3-&amp;gt;4-&amp;gt;4-&amp;gt;5 处理后为 1-&amp;gt;2-&amp;gt;5 解题思路这道题做了比较久……感觉有一点点难写。 主要看下面这幅图理解  先建一个头结点，返回的时候返回这个头结点。再建两个临时结点p、q，p用来作存储结点，q用来跳过重复">
 <meta property="og:type" content="article">
-<meta property="og:title" content="从尾到头打印链表">
-<meta property="og:url" content="http://yoursite.com/2019/06/20/从尾到头打印链表/index.html">
+<meta property="og:title" content="删除链表中重复的结点">
+<meta property="og:url" content="http://yoursite.com/2019/06/21/删除链表中重复的结点/index.html">
 <meta property="og:site_name" content="HandsomeDong">
-<meta property="og:description" content="题目描述输入一个链表，按链表值从尾到头的顺序返回一个ArrayList。 C++123456789/***  struct ListNode &amp;#123;*        int val;*        struct ListNode *next;*        ListNode(int x) :*              val(x), next(NULL) &amp;#123;*">
+<meta property="og:description" content="题目描述在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&amp;gt;2-&amp;gt;3-&amp;gt;3-&amp;gt;4-&amp;gt;4-&amp;gt;5 处理后为 1-&amp;gt;2-&amp;gt;5 解题思路这道题做了比较久……感觉有一点点难写。 主要看下面这幅图理解  先建一个头结点，返回的时候返回这个头结点。再建两个临时结点p、q，p用来作存储结点，q用来跳过重复">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-06-20T07:05:13.252Z">
+<meta property="og:image" content="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png">
+<meta property="og:updated_time" content="2019-06-21T13:38:57.805Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="从尾到头打印链表">
-<meta name="twitter:description" content="题目描述输入一个链表，按链表值从尾到头的顺序返回一个ArrayList。 C++123456789/***  struct ListNode &amp;#123;*        int val;*        struct ListNode *next;*        ListNode(int x) :*              val(x), next(NULL) &amp;#123;*">
+<meta name="twitter:title" content="删除链表中重复的结点">
+<meta name="twitter:description" content="题目描述在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&amp;gt;2-&amp;gt;3-&amp;gt;3-&amp;gt;4-&amp;gt;4-&amp;gt;5 处理后为 1-&amp;gt;2-&amp;gt;5 解题思路这道题做了比较久……感觉有一点点难写。 主要看下面这幅图理解  先建一个头结点，返回的时候返回这个头结点。再建两个临时结点p、q，p用来作存储结点，q用来跳过重复">
+<meta name="twitter:image" content="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png">
 
 
 
@@ -119,13 +121,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/06/20/从尾到头打印链表/">
+  <link rel="canonical" href="http://yoursite.com/2019/06/21/删除链表中重复的结点/">
 
 
 
 
 
-  <title>从尾到头打印链表 | HandsomeDong</title>
+  <title>删除链表中重复的结点 | HandsomeDong</title>
   
 
 
@@ -252,7 +254,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/20/从尾到头打印链表/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/21/删除链表中重复的结点/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -269,7 +271,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">从尾到头打印链表</h1>
+          <h1 class="post-title" itemprop="name headline">删除链表中重复的结点</h1>
         
 
         <div class="post-meta">
@@ -281,8 +283,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-20T14:21:25+08:00">
-                2019-06-20
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-21T21:26:51+08:00">
+                2019-06-21
               </time>
             
 
@@ -352,12 +354,13 @@
       
 
       
-        <h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>输入一个链表，按链表值从尾到头的顺序返回一个ArrayList。</p>
-<h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">*  struct ListNode &#123;</span><br><span class="line">*        int val;</span><br><span class="line">*        struct ListNode *next;</span><br><span class="line">*        ListNode(int x) :</span><br><span class="line">*              val(x), next(NULL) &#123;</span><br><span class="line">*        &#125;</span><br><span class="line">*  &#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">*    public class ListNode &#123;</span><br><span class="line">*        int val;</span><br><span class="line">*        ListNode next = null;</span><br><span class="line">*</span><br><span class="line">*        ListNode(int val) &#123;</span><br><span class="line">*            this.val = val;</span><br><span class="line">*        &#125;</span><br><span class="line">*    &#125;</span><br><span class="line">*</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>新建一个栈，利用栈的先进后出的特性，从头到尾遍历链表依次放到栈里，最后再从栈中一个个弹出来。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C-1"><a href="#C-1" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    vector&lt;int&gt; printListFromTailToHead(ListNode* head) &#123;</span><br><span class="line">        vector&lt;int&gt; value;</span><br><span class="line">        stack&lt;int&gt; stk;</span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        while (p != NULL) &#123;</span><br><span class="line">            stk.push(p-&gt;val);</span><br><span class="line">            p = p-&gt;next;</span><br><span class="line">        &#125;</span><br><span class="line">        while (!stk.empty()) &#123;</span><br><span class="line">            value.push_back(stk.top());</span><br><span class="line">            stk.pop();</span><br><span class="line">        &#125;</span><br><span class="line">        return value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="Java-1"><a href="#Java-1" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public ArrayList&lt;Integer&gt; printListFromTailToHead(ListNode listNode) &#123;</span><br><span class="line">        Stack&lt;Integer&gt; stk = new Stack&lt;Integer&gt;();</span><br><span class="line">        ArrayList&lt;Integer&gt; tmp = new ArrayList();</span><br><span class="line">        while (listNode != null) &#123;</span><br><span class="line">            stk.push(listNode.val);</span><br><span class="line">            listNode = listNode.next;</span><br><span class="line">        &#125;</span><br><span class="line">        while (!stk.empty())&#123;</span><br><span class="line">            tmp.add(stk.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        return tmp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        <h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5 处理后为 1-&gt;2-&gt;5</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这道题做了比较久……感觉有一点点难写。</p>
+<p>主要看下面这幅图理解</p>
+<p><img src="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png" alt="思路图"></p>
+<p>先建一个头结点，返回的时候返回这个头结点。<br>再建两个临时结点p、q，p用来作存储结点，q用来跳过重复结点。如图中第二个q的位置，先判断p的下一个结点位置是否与q一样，不一样的话先把q的下一个结点位置存到p的下一个结点，这样就先跳过了前面的重复结点。如果p的下一个结点是一样的，那就是图中第二个p的位置那里，这个时候证明了当前的q结点是不重复的，此时p直接存储q结点。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">struct ListNode &#123;</span><br><span class="line">    int val;</span><br><span class="line">    struct ListNode *next;</span><br><span class="line">    ListNode(int x) :</span><br><span class="line">        val(x), next(NULL) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    ListNode* deleteDuplication(ListNode* pHead)</span><br><span class="line">    &#123;</span><br><span class="line">        if (pHead == NULL || pHead-&gt;next == NULL) &#123;</span><br><span class="line">            return pHead;</span><br><span class="line">        &#125;</span><br><span class="line">        int first = -1;</span><br><span class="line">        if (pHead-&gt;val == first) &#123;</span><br><span class="line">            first = -2;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        ListNode *head = new ListNode(first);</span><br><span class="line">        head-&gt;next = pHead;</span><br><span class="line">        </span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        ListNode *q = head-&gt;next;</span><br><span class="line">        </span><br><span class="line">        while (q != NULL) &#123;</span><br><span class="line">            while ((q-&gt;next != NULL) &amp;&amp; (q-&gt;val == q-&gt;next-&gt;val)) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (p-&gt;next != q) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">                p-&gt;next = q;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                p = q;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return head-&gt;next;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -382,8 +385,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/19/替换空格/" rel="next" title="替换空格">
-                <i class="fa fa-chevron-left"></i> 替换空格
+              <a href="/2019/06/20/跳台阶/" rel="next" title="跳台阶">
+                <i class="fa fa-chevron-left"></i> 跳台阶
               </a>
             
           </div>
@@ -391,10 +394,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/06/20/跳台阶/" rel="prev" title="跳台阶">
-                跳台阶 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -528,7 +527,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#题目描述"><span class="nav-number">1.</span> <span class="nav-text">题目描述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#C"><span class="nav-number">1.1.</span> <span class="nav-text">C++</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java"><span class="nav-number">1.2.</span> <span class="nav-text">Java</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解题思路"><span class="nav-number">2.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.</span> <span class="nav-text">代码实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#C-1"><span class="nav-number">3.1.</span> <span class="nav-text">C++</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java-1"><span class="nav-number">3.2.</span> <span class="nav-text">Java</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#题目描述"><span class="nav-number">1.</span> <span class="nav-text">题目描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解题思路"><span class="nav-number">2.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.</span> <span class="nav-text">代码实现</span></a></li></ol></div>
             
 
           </div>

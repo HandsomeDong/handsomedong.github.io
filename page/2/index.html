@@ -249,6 +249,185 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/27/Git-恢复本地分支/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="HandsomeDong">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HandsomeDong">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/04/27/Git-恢复本地分支/" itemprop="url">Git恢复本地分支</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-27T00:52:45+08:00">
+                2019-04-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Git/" itemprop="url" rel="index">
+                    <span itemprop="name">Git</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Git/工作中的Git/" itemprop="url" rel="index">
+                    <span itemprop="name">工作中的Git</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>一般来说，我们开发新功能都会在develop分支下新建一个分支，命名为 <strong>feature/新功能</strong>，测试没问题后再合并到develop推到远程分支。由于我是新手，老大通常要我先别合并，先推到远程的新分支下等他review没问题后再合并到develop。</p>
+<p>有强迫症的我，看到本地太多分支就不舒服，推到远程分支后直接就删掉本地分支，只留master和develop两个分支，干干净净舒舒服服！！！</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34c7e105f4.png" alt="帅字贯穿了我的一生"></p>
+<p>万万没想到没想到老大也喜欢干干净净舒舒服服，但他不仅喜欢本地干干净净，也喜欢远程分支干干净净……然后今天早上问我这个功能的代码推到哪个分支了，我看了半天好像也找不到，老大说可能是他误删了……我……</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34c7e15923.png" alt="枯了"></p>
+<p>原谅我是个菜鸡，Git可以恢复本地分支我都唔鸡，老大提醒我后我赶紧看了一下如何恢复本地分支，没想到如此简单！我只知道怎么在现有分支回滚代码，万万没想到连分支都能恢复！</p>
+<p><img src="https://i.loli.net/2019/04/28/5cc59b0db9ebe.png" alt="流下了没技术的泪水"></p>
+<p><strong>仅需两步即可找回丢失分支！</strong><br>1.git log -g 找到删除分支前的commit_id<br>2.git branch recover commit_id  把代码恢复到新分支recover下</p>
+<h1 id="下面来演示全过程"><a href="#下面来演示全过程" class="headerlink" title="下面来演示全过程"></a>下面来演示全过程</h1><h2 id="1-新建并切换到新分支test"><a href="#1-新建并切换到新分支test" class="headerlink" title="1.新建并切换到新分支test"></a>1.新建并切换到新分支test</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ls</span><br><span class="line">git checkout -b test</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8b4584c.png" alt="新建并切换到新分支test"></p>
+<h2 id="2-新建文件随便写点东西"><a href="#2-新建文件随便写点东西" class="headerlink" title="2.新建文件随便写点东西"></a>2.新建文件随便写点东西</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim test.txt</span><br></pre></td></tr></table></figure>
+<p>我随便写了个 “test”</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8b487e8.png" alt="新建文件随便写点东西"></p>
+<h2 id="3-提交代码"><a href="#3-提交代码" class="headerlink" title="3.提交代码"></a>3.提交代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;Add test.txt&quot;</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
+<p>可以看到现在有master和test两个分支</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8bb2edf.png" alt="提交代码"></p>
+<h2 id="4-切换回master分支并删除test分支"><a href="#4-切换回master分支并删除test分支" class="headerlink" title="4.切换回master分支并删除test分支"></a>4.切换回master分支并删除test分支</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git checkout master</span><br><span class="line">git branch -D test</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
+<p>可以看到现在只有master一个分支了</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8bcdea0.png" alt="删除分支"></p>
+<h2 id="5-git-log-g查看提交记录"><a href="#5-git-log-g查看提交记录" class="headerlink" title="5.git log -g查看提交记录"></a>5.git log -g查看提交记录</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git log -g</span><br></pre></td></tr></table></figure>
+<p>可以从提交记录可以看到commit、commit的id及提交者等信息。通过conmit来找到你想要恢复的代码，所以一个好的commit很重要哦。</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8be96b9.png" alt="查看提交记录"></p>
+<h2 id="6-找到commit-id并恢复到新分支"><a href="#6-找到commit-id并恢复到新分支" class="headerlink" title="6.找到commit_id并恢复到新分支"></a>6.找到commit_id并恢复到新分支</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch recover d0bd911dcbe57eb4ff1c99dd03b42da34a75640a</span><br></pre></td></tr></table></figure>
+<h2 id="查看结果"><a href="#查看结果" class="headerlink" title="查看结果"></a>查看结果</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git branch</span><br><span class="line">git checkout recover</span><br><span class="line">ls</span><br><span class="line">cat test.txt</span><br></pre></td></tr></table></figure>
+<p>可以看到在recover分支和之前删除的test分支是一样的，文件一样，文件内容也一样，恢复分支成功！</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8beb6a2.png" alt="查看结果"></p>
+<p>所以一定要好好commit啊，不然不管是回滚代码还是恢复分支，光是找节点就能让你找半天！</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/20/Spring-框架学习第一步-最简单的MVC/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -502,7 +681,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

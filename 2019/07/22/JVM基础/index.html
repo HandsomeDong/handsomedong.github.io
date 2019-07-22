@@ -99,7 +99,7 @@
 <meta property="og:image" content="https://pic.yupoo.com/crowhawk/6b90388c/6c281cf0.png">
 <meta property="og:image" content="https://pic.yupoo.com/crowhawk/9a6b1249/b1800d45.png">
 <meta property="og:image" content="https://pic.yupoo.com/crowhawk/fffcf9a2/f60599b2.png">
-<meta property="og:updated_time" content="2019-07-22T14:52:13.666Z">
+<meta property="og:updated_time" content="2019-07-22T14:54:26.493Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JVM基础">
 <meta name="twitter:description" content="JVM基础知识 最近看《深入理解Java虚拟机》学习到了一些JVM基础知识，主要了解了JVM运行时数据区域、GC以及类加载机制，现在来总结一下。  1 JVM的跨平台性Java Virtual Machine简称JVM。各个操作系统之间存在着硬件、指令集的差异，而Java虚拟机的出现则屏蔽了这种差异性，我们只需在其中一个平台编写符合Java规范的代码，编译成为字节码，就可以通过不同平台版本的JVM">
@@ -400,7 +400,69 @@
 </ul>
 <hr>
 <p>总的来说，这七种垃圾收集器的对比如下表。</p>
-<p>收集器 | 串行、并行or并发 | 算法 | 目标 | 适用场景<br>Serial | 串行 | 复制 | 响应速度优先 | 单CPU环境下的Client模式<br>Serial Old | 串行 | 标记-整理 | 响应速度优先 | 单CPU环境下的Client模式、CMS的后备预案<br>ParNew | 并行 | 复制 | 响应速度优先 | 多CPU环境时在Server模式下与CMS配合<br>Parallel Scavenge | 并行 | 复制 | 吞吐量优先 | 在后台运算而不需要太多交互的任务<br>Parallel Old | 并行 | 标记-整理 | 吞吐量优先 | 在后台运算而不需要太多交互的任务<br>CMS | 并发 | 复制 | 标记-清除 | 响应速度优先 | 集中在互联网站或B/S系统服务端上的Java应用<br>G1 | 并发 | 标记-整理+复制 | 响应速度优先 | 面向服务端应用，将来替换CMS</p>
+<table>
+<thead>
+<tr>
+<th>收集器</th>
+<th>串行、并行or并发</th>
+<th>算法</th>
+<th>目标</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Serial</td>
+<td>串行</td>
+<td>复制</td>
+<td>响应速度优先</td>
+<td>单CPU环境下的Client模式</td>
+</tr>
+<tr>
+<td>Serial Old</td>
+<td>串行</td>
+<td>标记-整理</td>
+<td>响应速度优先</td>
+<td>单CPU环境下的Client模式、CMS的后备预案</td>
+</tr>
+<tr>
+<td>ParNew</td>
+<td>并行</td>
+<td>复制</td>
+<td>响应速度优先</td>
+<td>多CPU环境时在Server模式下与CMS配合</td>
+</tr>
+<tr>
+<td>Parallel Scavenge</td>
+<td>并行</td>
+<td>复制</td>
+<td>吞吐量优先</td>
+<td>在后台运算而不需要太多交互的任务</td>
+</tr>
+<tr>
+<td>Parallel Old</td>
+<td>并行</td>
+<td>标记-整理</td>
+<td>吞吐量优先</td>
+<td>在后台运算而不需要太多交互的任务</td>
+</tr>
+<tr>
+<td>CMS</td>
+<td>并发</td>
+<td>复制</td>
+<td>标记-清除</td>
+<td>响应速度优先</td>
+<td>集中在互联网站或B/S系统服务端上的Java应用</td>
+</tr>
+<tr>
+<td>G1</td>
+<td>并发</td>
+<td>标记-整理+复制</td>
+<td>响应速度优先</td>
+<td>面向服务端应用，将来替换CMS</td>
+</tr>
+</tbody>
+</table>
 
       
     </div>

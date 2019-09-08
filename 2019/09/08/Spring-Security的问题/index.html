@@ -81,14 +81,14 @@
 
 <meta name="description" content="最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：1&amp;lt;input t">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spring Security的问题">
+<meta property="og:title" content="Spring Security CSRF防御">
 <meta property="og:url" content="http://yoursite.com/2019/09/08/Spring-Security的问题/index.html">
 <meta property="og:site_name" content="HandsomeDong">
 <meta property="og:description" content="最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：1&amp;lt;input t">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-09-08T14:39:56.365Z">
+<meta property="og:updated_time" content="2019-09-08T14:40:38.240Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spring Security的问题">
+<meta name="twitter:title" content="Spring Security CSRF防御">
 <meta name="twitter:description" content="最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：1&amp;lt;input t">
 
 
@@ -125,7 +125,7 @@
 
 
 
-  <title>Spring Security的问题 | HandsomeDong</title>
+  <title>Spring Security CSRF防御 | HandsomeDong</title>
   
 
 
@@ -269,7 +269,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Spring Security的问题</h1>
+          <h1 class="post-title" itemprop="name headline">Spring Security CSRF防御</h1>
         
 
         <div class="post-meta">

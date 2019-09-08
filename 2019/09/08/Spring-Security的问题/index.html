@@ -79,17 +79,17 @@
 
 
 
-<meta name="description" content="题目描述在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。 解题思路这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。 代码实现12345678910">
+<meta name="description" content="最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：1&amp;lt;input t">
 <meta property="og:type" content="article">
-<meta property="og:title" content="二维数组的查找">
-<meta property="og:url" content="http://yoursite.com/2019/06/19/二维数组的查找/index.html">
+<meta property="og:title" content="Spring Security的问题">
+<meta property="og:url" content="http://yoursite.com/2019/09/08/Spring-Security的问题/index.html">
 <meta property="og:site_name" content="HandsomeDong">
-<meta property="og:description" content="题目描述在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。 解题思路这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。 代码实现12345678910">
+<meta property="og:description" content="最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：1&amp;lt;input t">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-06-18T18:15:48.341Z">
+<meta property="og:updated_time" content="2019-09-08T14:33:13.602Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="二维数组的查找">
-<meta name="twitter:description" content="题目描述在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。 解题思路这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。 代码实现12345678910">
+<meta name="twitter:title" content="Spring Security的问题">
+<meta name="twitter:description" content="最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：1&amp;lt;input t">
 
 
 
@@ -119,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/06/19/二维数组的查找/">
+  <link rel="canonical" href="http://yoursite.com/2019/09/08/Spring-Security的问题/">
 
 
 
 
 
-  <title>二维数组的查找 | HandsomeDong</title>
+  <title>Spring Security的问题 | HandsomeDong</title>
   
 
 
@@ -252,7 +252,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/19/二维数组的查找/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/08/Spring-Security的问题/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -269,7 +269,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">二维数组的查找</h1>
+          <h1 class="post-title" itemprop="name headline">Spring Security的问题</h1>
         
 
         <div class="post-meta">
@@ -281,8 +281,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-19T01:43:25+08:00">
-                2019-06-19
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-08T22:02:57+08:00">
+                2019-09-08
               </time>
             
 
@@ -304,19 +304,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/算法题/" itemprop="url" rel="index">
-                    <span itemprop="name">算法题</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/算法题/剑指offer算法题/" itemprop="url" rel="index">
-                    <span itemprop="name">剑指offer算法题</span>
+                  <a href="/categories/工作中遇到的问题/" itemprop="url" rel="index">
+                    <span itemprop="name">-工作中遇到的问题</span>
                   </a>
                 </span>
 
@@ -352,9 +341,16 @@
       
 
       
-        <h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    bool Find(int target, vector&lt;vector&lt;int&gt; &gt; array) &#123;</span><br><span class="line">        int rowTotal = array.size(), columnTotal = array[0].size();</span><br><span class="line">        bool hasTarget = false;</span><br><span class="line">		</span><br><span class="line">        if ((rowTotal == 0) || (columnTotal == 0))&#123;</span><br><span class="line">            return false;  //空数组直接返回false</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for (int i = 0, j = columnTotal - 1; (i &lt;= rowTotal - 1) &amp;&amp;(j &gt;= 0);)&#123;</span><br><span class="line">            if (array[i][j] == target)&#123;</span><br><span class="line">                hasTarget = true;</span><br><span class="line">                break;</span><br><span class="line">            &#125;else if (array[i][j] &lt; target)&#123;</span><br><span class="line">                ++i;</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                --j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return hasTarget;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+        <p>最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;input type=&quot;hidden&quot; name=&quot;$&#123;_csrf.parameterName&#125;&quot; value=&quot;$&#123;_csrf.token&#125;&quot;/&gt;</span><br></pre></td></tr></table></figure></p>
+<p>详情可以在官方文档中看到，<a href="https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html" target="_blank" rel="noopener">https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html</a></p>
+<h3 id="什么是CSRF攻击"><a href="#什么是CSRF攻击" class="headerlink" title="什么是CSRF攻击"></a>什么是CSRF攻击</h3><p>看了一下官方文档才了解到这CSRF到底是什么，就像文档所说的，假如银行网站向用户提供转账功能，转账请求的代码是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">POST /transfer HTTP/1.1</span><br><span class="line">Host: bank.example.com</span><br><span class="line">Cookie: JSESSIONID=randomid; Domain=bank.example.com; Secure; HttpOnly</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line"></span><br><span class="line">amount=100.00&amp;routingNumber=1234&amp;account=9876</span><br></pre></td></tr></table></figure>
+<p>但是假如你登录到了银行网站，然后在还没注销的情况下又访问了一个恶意网站，这时你看到恶意网站上有个【领取奖品】按钮，你美滋滋地点击了这个按钮，却不知道这个按钮会提交这样的表单信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;form action=&quot;https://bank.example.com/transfer&quot; method=&quot;post&quot;&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;amount&quot;</span><br><span class="line">      value=&quot;100.00&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;routingNumber&quot;</span><br><span class="line">      value=&quot;evilsRoutingNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;account&quot;</span><br><span class="line">      value=&quot;evilsAccountNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;submit&quot;</span><br><span class="line">      value=&quot;Win Money!&quot;/&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
+<p>最后你会收到一条信息，您向银行卡号XXX转账100元……这是为什么呢？？？<br>因为恶意网站虽然没办法获取你的cookie信息，但是它向银行后端请求的时候，浏览器还是会将cookie信息一起发送的，银行当然不知道这个请求是恶意网站向它发送的，它只知道cookie是你的！</p>
+<p><strong>像这种伪装成当前已登录认证用户去请求正在访问的网站后端的攻击方式，就被称为CSRF。</strong></p>
+<p>所以解决办法就是增加一些表单信息，而这些信息是恶意网站所无法获取的！例如图片验证码什么的。但是除了登录注册的时候使用验证码外，其它时候都使用验证码，用户岂不是会觉得很烦，所以Spring Sercurity通过在WEB应用中增加前端过滤器，验证请求是否包含CSRF的token信息，不包含的自然就是非法请求咯，因为攻击网站是无法获取到token信息的，只要是跨域提交的信息，都是无法通过这个过滤器的校验的。</p>
+
       
     </div>
     
@@ -378,8 +374,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/06/16/观察者模式/" rel="next" title="观察者模式">
-                <i class="fa fa-chevron-left"></i> 观察者模式
+              <a href="/2019/07/22/JVM基础/" rel="next" title="JVM基础">
+                <i class="fa fa-chevron-left"></i> JVM基础
               </a>
             
           </div>
@@ -387,10 +383,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/06/19/单例模式/" rel="prev" title="单例模式">
-                单例模式 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -524,7 +516,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#题目描述"><span class="nav-number">1.</span> <span class="nav-text">题目描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解题思路"><span class="nav-number">2.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.</span> <span class="nav-text">代码实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是CSRF攻击"><span class="nav-number">1.</span> <span class="nav-text">什么是CSRF攻击</span></a></li></ol></div>
             
 
           </div>

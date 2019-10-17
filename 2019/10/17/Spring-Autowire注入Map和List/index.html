@@ -79,21 +79,21 @@
 
 
 
-<meta name="description" content="今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service去调用接口的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或L">
+<meta name="description" content="今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或">
 <meta name="keywords" content="Java,框架,Spring">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring @Autowire注入Map和List">
 <meta property="og:url" content="http://yoursite.com/2019/10/17/Spring-Autowire注入Map和List/index.html">
 <meta property="og:site_name" content="HandsomeDong">
-<meta property="og:description" content="今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service去调用接口的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或L">
+<meta property="og:description" content="今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g81mdil3xcj2069069q2s.jpg">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g81m8btsk0j20ez0anq3n.jpg">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g81mbys0fyj20d2070wek.jpg">
-<meta property="og:updated_time" content="2019-10-17T15:35:20.762Z">
+<meta property="og:updated_time" content="2019-10-17T15:38:11.361Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring @Autowire注入Map和List">
-<meta name="twitter:description" content="今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service去调用接口的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或L">
+<meta name="twitter:description" content="今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或">
 <meta name="twitter:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g81mdil3xcj2069069q2s.jpg">
 
 
@@ -324,7 +324,7 @@
       
 
       
-        <p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service去调用接口的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！<br><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g81mdil3xcj2069069q2s.jpg" alt="太棒了"></p>
+        <p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！<br><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g81mdil3xcj2069069q2s.jpg" alt="太棒了"></p>
 <p>那么就不多BB了，直接上代码。</p>
 <h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>

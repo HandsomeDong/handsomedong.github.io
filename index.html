@@ -291,6 +291,28 @@
           </span>
 
           
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/树莓派/" itemprop="url" rel="index">
+                    <span itemprop="name">树莓派</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -324,29 +346,29 @@
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qtgput9wj20u01o0110.jpg" alt="1T希捷移动硬盘"></p>
 <p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qtkzel48j206o06owfb.jpg" alt="不可描述"></p>
-<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 fdisk -l 看看是哪个硬盘。</p>
+<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qucylcwmj20ro02vjrd.jpg" alt="fdisk -l"></p>
 <p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
-<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 ==fdisk /dev/sdb1== 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
+<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9queq7mytj20uw0vlmzi.jpg" alt="操作提示"></p>
-<p>可以看到 n 是添加新分区，那就输入 ==n== 吧。</p>
+<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9quf72w3ij20ky03pmx6.jpg" alt="添加新分区"></p>
 <p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qug2i511j20xb09ht9b.jpg" alt="创建主分区"></p>
-<p>创建好后可以输入 ==p== 来查看逻辑分区。</p>
+<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9quha6joxj20td07z0ta.jpg" alt="查看逻辑分区"></p>
-<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 ==w== 保存。</p>
-<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>创建好分区后，还要对硬盘进行加密格式化，输入 ==cryptsetup luksFormat /dev/sdb1== ，然后输入YES确认（主要要大写），再输入你要给硬盘设置的密码。</p>
+<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
+<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>创建好分区后，还要对硬盘进行加密格式化，输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（主要要大写），再输入你要给硬盘设置的密码。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvj4q2zij20se072glu.jpg" alt="加密格式化"></p>
-<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 ==cryptsetup luksOpen /dev/sdb1 test== ，这个输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
+<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，这个输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvohnn4aj20tc055t96.jpg" alt="打开硬盘"></p>
-<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 ==mkfs.ext4 /dev/mapper/test==，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
+<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvtcmfjtj20vy0a3wfa.jpg" alt="格式化映射设备"></p>
-<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， ==mount /dev/mapper/test /home/HandsomeDong== 。</p>
+<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvu21jg8j20uk020weg.jpg" alt="挂载硬盘"></p>
-<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 ==umount /home/HandsomeDong/==<br>关闭映射设备 ==cryptsetup luksClose test==</p>
+<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong></p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvwzjm6yj20t202nq2y.jpg" alt="卸载硬盘"></p>
-<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br>==fsck /dev/mapper/HandsomeDong==</p>
+<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qwazkbctj20mj0b6juf.jpg" alt="修复分区"></p>
 
           
@@ -1980,7 +2002,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -1991,7 +2013,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

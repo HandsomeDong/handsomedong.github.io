@@ -358,9 +358,9 @@
 <p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9quha6joxj20td07z0ta.jpg" alt="查看逻辑分区"></p>
 <p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
-<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>创建好分区后，还要对硬盘进行加密格式化，输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（主要要大写），再输入你要给硬盘设置的密码。</p>
+<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>创建好分区后，还要对硬盘进行加密格式化，输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvj4q2zij20se072glu.jpg" alt="加密格式化"></p>
-<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，这个输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
+<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvohnn4aj20tc055t96.jpg" alt="打开硬盘"></p>
 <h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9qvtcmfjtj20vy0a3wfa.jpg" alt="格式化映射设备"></p>

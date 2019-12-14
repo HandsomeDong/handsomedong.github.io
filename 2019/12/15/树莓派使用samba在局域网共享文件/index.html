@@ -92,7 +92,7 @@
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wr93j9xpj215j0u6q4k.jpg">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wra4h165j20m60hc74p.jpg">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wruwh09pj214g0u6q7a.jpg">
-<meta property="og:updated_time" content="2019-12-14T17:37:53.768Z">
+<meta property="og:updated_time" content="2019-12-14T17:39:58.300Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="树莓派使用samba在局域网共享文件">
 <meta name="twitter:description" content="新买的树莓派4终于到了！！！我的树莓派3B+光荣退休！到手第一步当然是用树莓派通过SMB共享我硬盘里的文件啦，随传随看。  安装sambasamba是一个能让Linux系统应用Microsoft网络通讯协议的软件，而SMB是Server Message Block的缩写，即为服务器消息块 ，SMB主要是作为Microsoft的网络通讯协议，后来samba将SMB通信协议应用到了Linux系统上，就">
@@ -360,7 +360,7 @@
 <h3 id="设置共享密码以及重启"><a href="#设置共享密码以及重启" class="headerlink" title="设置共享密码以及重启"></a>设置共享密码以及重启</h3><p>访问共享文件时，用的是samba设置的共享密码，而不是linux用户密码，现在要设置的就是共享密码，设置好后直接重启samba服务。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">smbpasswd -a share</span><br><span class="line">service smbd restart</span><br></pre></td></tr></table></figure>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wr50l2mfj20iy04o74g.jpg" alt="设置密码、重启samba服务"></p>
-<h3 id="访问共享文件夹"><a href="#访问共享文件夹" class="headerlink" title="访问共享文件夹"></a>访问共享文件夹</h3><h4 id="电脑访问"><a href="#电脑访问" class="headerlink" title="电脑访问"></a>电脑访问</h4><p>用windows系统访问共享文件夹，只需在资源管理器输入 \\IP 就可以直接看到共享文件夹了，输入用户名和共享密码就可以访问了，这时就可以肆意地往里面存片子了！！！</p>
+<h3 id="访问共享文件夹"><a href="#访问共享文件夹" class="headerlink" title="访问共享文件夹"></a>访问共享文件夹</h3><h4 id="电脑访问"><a href="#电脑访问" class="headerlink" title="电脑访问"></a>电脑访问</h4><p>用windows系统访问共享文件夹，只需在资源管理器输入 \\IP 就可以直接看到共享文件夹了，输入用户名和共享密码就可以访问了。现在把我前几天买的1T硬盘挂载到这个文件夹下，我就可以肆意地往里面存片子了！！！</p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wr93j9xpj215j0u6q4k.jpg" alt="文件夹"></p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wra4h165j20m60hc74p.jpg" alt="输入用户名、密码"></p>
 <p><img src="http://ww1.sinaimg.cn/large/edf1c68fgy1g9wruwh09pj214g0u6q7a.jpg" alt="片子"></p>

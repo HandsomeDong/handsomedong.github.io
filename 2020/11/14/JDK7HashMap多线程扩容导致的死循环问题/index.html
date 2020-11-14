@@ -91,7 +91,7 @@
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20201114211819832.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20201114212639171.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20201114214042697.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center">
-<meta property="og:updated_time" content="2020-11-14T13:47:06.792Z">
+<meta property="og:updated_time" content="2020-11-14T13:51:54.194Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JDK7HashMap多线程扩容导致的死循环问题">
 <meta name="twitter:description" content="前言JDK8以前的HashMap，多线程扩容的时候可能会出现死循环，这个问题在JDK8得到了修复。本翔看了大半天JDK7HashMap扩容源码找这个问题，所以写篇博客记录记录。 源码先来看看JDK7的HashMap扩容相关源码。1234567891011121314151617181920212223242526272829303132333435//扩容void resize(int newCa">
@@ -366,7 +366,7 @@
 </blockquote>
 <h1 id="多线程扩容"><a href="#多线程扩容" class="headerlink" title="多线程扩容"></a>多线程扩容</h1><p>单线程的情况下扩容，是没什么问题的，我们直接来一步步分析多线程扩容的时候会出现什么问题。</p>
 <blockquote>
-<p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5，请记住它们的顺序是3-7-5。</p>
+<p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5。</p>
 </blockquote>
 <p><img src="https://img-blog.csdnimg.cn/20201114210933754.png#pic_center" alt="扩容前"></p>
 <blockquote>

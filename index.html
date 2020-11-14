@@ -249,6 +249,182 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/14/JDK7HashMap多线程扩容导致的死循环问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="HandsomeDong">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HandsomeDong">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/11/14/JDK7HashMap多线程扩容导致的死循环问题/" itemprop="url">JDK7HashMap多线程扩容导致的死循环问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-11-14T21:46:19+08:00">
+                2020-11-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/基础/" itemprop="url" rel="index">
+                    <span itemprop="name">基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><font color="#999AAA">JDK8以前的HashMap，多线程扩容的时候可能会出现死循环，这个问题在JDK8得到了修复。本翔看了大半天JDK7HashMap扩容源码找这个问题，所以写篇博客记录记录。</font></p>
+<h1 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h1><p>先来看看JDK7的HashMap扩容相关源码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">//扩容</span><br><span class="line">void resize(int newCapacity) &#123;</span><br><span class="line">       Entry[] oldTable = table;</span><br><span class="line">       int oldCapacity = oldTable.length;</span><br><span class="line">       if (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">           threshold = Integer.MAX_VALUE;</span><br><span class="line">           return;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       Entry[] newTable = new Entry[newCapacity];</span><br><span class="line">       transfer(newTable, initHashSeedAsNeeded(newCapacity));</span><br><span class="line">       table = newTable;</span><br><span class="line">       threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   void transfer(Entry[] newTable, boolean rehash) &#123;</span><br><span class="line">       int newCapacity = newTable.length;</span><br><span class="line">       //遍历旧桶数组</span><br><span class="line">       for (Entry&lt;K,V&gt; e : table) &#123;</span><br><span class="line">           while(null != e) &#123;</span><br><span class="line">           	//先记录下一次循环要插入的节点</span><br><span class="line">               Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">               if (rehash) &#123;</span><br><span class="line">                   e.hash = null == e.key ? 0 : hash(e.key);</span><br><span class="line">               &#125;</span><br><span class="line">               //计算新下标</span><br><span class="line">               int i = indexFor(e.hash, newCapacity);</span><br><span class="line">               //下面这两步很明显了，头插法。即先拿到桶原本指向的节点，把要插入的节点的next指向它，然后再把桶指向这个要插入的节点</span><br><span class="line">               e.next = newTable[i];</span><br><span class="line">               newTable[i] = e;</span><br><span class="line">               //next记录了旧数组旧链表里的下一个节点，现在把e指向它，准备下次循环把它插到新桶</span><br><span class="line">               e = next;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到 transfer 方法用的是头插法，我们重点注意以下几个步骤：</p>
+<blockquote>
+<p>1.Entry&lt;K,V&gt; next = e.next;     next指向旧链表中的下一个节点<br>2.e.next = newTable[i];      把新链表的头结点摘下来放到将要插入的节点的尾部<br>3.newTable[i] = e;        插入节点，即把桶指向e<br>4.e = next;        把e指向next，准备继续插入下一个节点</p>
+</blockquote>
+<h1 id="多线程扩容"><a href="#多线程扩容" class="headerlink" title="多线程扩容"></a>多线程扩容</h1><p>单线程的情况下扩容，是没什么问题的，我们直接来一步步分析多线程扩容的时候会出现什么问题。</p>
+<blockquote>
+<p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5，请记住它们的顺序是3-7-5。</p>
+</blockquote>
+<p><img src="https://img-blog.csdnimg.cn/20201114210933754.png#pic_center" alt="扩容前"></p>
+<blockquote>
+<p>1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 <strong>Entry&lt;K,V&gt; next = e.next;</strong> 这一步后，e指向3，next指向7。<br>这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。<br>这个时候旧数组、链表和两个线程的状态是这样的。<br><img src="https://img-blog.csdnimg.cn/20201114211611593.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="线程二扩容完成"></p>
+</blockquote>
+<blockquote>
+<p>2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：<br><img src="https://img-blog.csdnimg.cn/20201114211819832.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="第一次循环结束"></p>
+</blockquote>
+<blockquote>
+<p>3 下次循环一开始，<strong>Entry&lt;K,V&gt; next = e.next</strong> 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？<br><img src="https://img-blog.csdnimg.cn/20201114212639171.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="第二次循环结束"></p>
+</blockquote>
+<blockquote>
+<p>4 这次循环执行情况是这样的<br>Entry&lt;K,V&gt; next = e.next;    现在e是3，而3的next是null，所以next指向了null<br>e.next = newTable[i];        这一步把3的next指向了7，因为桶现在是指向7的<br>newTable[i] = e;            把桶指向3<br>e = next;        由于next是null了，所以e指向了null，跳出了while进行后面的for循环<br>现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：<br><img src="https://img-blog.csdnimg.cn/20201114214042697.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="第三次循环结束出大问题"></p>
+</blockquote>
+<p>显而易见，环形链表出现，这个时候如果我们再去做一些查询，查到这个桶3上面来的话，遍历的时候就出现了死循环，直接出不去了，出大问题……<br>还好JDK8修复了这个死循环问题。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/14/JDK8-HashMap源码理解/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1812,162 +1988,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/20/跳台阶/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="HandsomeDong">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HandsomeDong">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/20/跳台阶/" itemprop="url">跳台阶</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-20T15:33:47+08:00">
-                2019-06-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/算法题/" itemprop="url" rel="index">
-                    <span itemprop="name">算法题</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/算法题/剑指offer算法题/" itemprop="url" rel="index">
-                    <span itemprop="name">剑指offer算法题</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>一只青蛙一次可以跳上1级台阶，也可以跳上2级。求该青蛙跳上一个n级的台阶总共有多少种跳法（先后次序不同算不同的结果）。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>f(n) = f(n-1) + f(n-2)</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="递归"><a href="#递归" class="headerlink" title="递归"></a>递归</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int jumpFloor(int number) &#123;</span><br><span class="line">        if (number &lt; 1)&#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125; else if (number == 1) &#123;</span><br><span class="line">            return 1;</span><br><span class="line">        &#125; else if (number ==2) &#123;</span><br><span class="line">            return 2;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return jumpFloor(number - 1) + jumpFloor(number - 2);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="非递归"><a href="#非递归" class="headerlink" title="非递归"></a>非递归</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int jumpFloor(int number) &#123;</span><br><span class="line">        if (number &lt; 1)&#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        if ((number == 1) || (number == 2))&#123;</span><br><span class="line">            return number;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        int first = 2, second = 1, sum = 0;</span><br><span class="line">        </span><br><span class="line">        for (int i = 3; i &lt;= number; i++) &#123;</span><br><span class="line">            sum = first + second;</span><br><span class="line">            second = first;</span><br><span class="line">            first = sum;</span><br><span class="line">        &#125;</span><br><span class="line">        return sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2020,7 +2040,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -1,7 +1,9 @@
 ---
 title: Spring @Autowire注入Map和List
 date: 2019-10-17 22:55:23
-tags:
+tags: 
+    - Spring
+categories:
     - Java
     - 框架
     - Spring

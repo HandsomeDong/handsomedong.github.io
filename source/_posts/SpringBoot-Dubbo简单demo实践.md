@@ -3,6 +3,10 @@ title: SpringBoot+Dubbo简单demo实践
 date: 2021-07-02 13:56:41
 tags:
     - Dubbo
+categories: 
+    - Java
+    - 框架
+    - Dubbo
 ---
 # SpringBoot + Dubbo 简单 demo 实践
 休息了一个月终于又要上班了，下家公司的项目用的是Dubbo+Zookeeper，由于之前只用过Spring Cloud，所以提前了解一下Dubbo的使用，搭了个简单的 demo 感受 Dubbo 和 Spring Cloud 的区别。

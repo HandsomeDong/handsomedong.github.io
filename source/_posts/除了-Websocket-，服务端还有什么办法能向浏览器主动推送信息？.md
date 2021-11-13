@@ -2,7 +2,10 @@
 layout: w
 title: 除了 Websocket ，服务端还有什么办法能向浏览器主动推送信息？
 date: 2021-11-13 13:43:47
-tags:
+tags: 
+    - websocket
+    - Server-Sent Events
+categories:
     - 前端
 ---
 # 前言

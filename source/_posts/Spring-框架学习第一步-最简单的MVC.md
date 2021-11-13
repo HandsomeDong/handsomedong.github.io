@@ -2,7 +2,8 @@
 title: 'Spring 学习—第一个MVC：Hello World'
 date: 2019-04-20 04:14:29
 tags: 
-categories: 
+    - Spring
+categories:
     - Java
     - 框架
     - Spring

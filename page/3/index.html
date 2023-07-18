@@ -397,14 +397,17 @@
       
         
           
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>国庆前这段时间一直都在搞分库分表相关的东西，中间遇到了比较多的问题，不过最后还是都艰难地解决掉了。这段时间感觉挺累但又挺有意思的，需要思考的点很多，所以决定写篇博客<del>水</del>总结一下。毕竟因为最近在刷算法题，没更新过什么博客了，趁国庆时间比较多，赶紧卷一卷。<br><img src="https://img-blog.csdnimg.cn/c2225430e10b4562bc25d966864039e9.jpg#pic_center" alt="水一篇博客"></p>
-<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>先说一下背景吧。我们项目之前是完全没做分库分表的，现在有几张核心的表，数据量已经非常大了，数据量最大的一张表已经有接近250亿的数据了……我刚开始看到这张表的数据量是比较惊讶的，而且还跟DBA大佬了解了一下，现在线上这张表的操作耗时非常短，暂时没有性能问题。一般来说，千万级的数据量应该已经比较影响性能了，现在这个表已经差不多250亿数据了，还不出问题？<br><img src="https://img-blog.csdnimg.cn/a4a50e6a14d64d889e6f9c42327635e3.png#pic_center" alt="？"></p>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>国庆前这段时间一直都在搞分库分表相关的东西，中间遇到了比较多的问题，不过最后还是都艰难地解决掉了。这段时间感觉挺累但又挺有意思的，需要思考的点很多，所以决定写篇博客<del>水</del>总结一下。毕竟因为最近在刷算法题，没更新过什么博客了，趁国庆时间比较多，赶紧卷一卷。</p>
+<p><img src="https://s2.loli.net/2023/07/19/RgNIw7APqQo8EW9.jpg" alt="水一篇博客"></p>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>先说一下背景吧。我们项目之前是完全没做分库分表的，现在有几张核心的表，数据量已经非常大了，数据量最大的一张表已经有接近250亿的数据了……我刚开始看到这张表的数据量是比较惊讶的，而且还跟DBA大佬了解了一下，现在线上这张表的操作耗时非常短，暂时没有性能问题。一般来说，千万级的数据量应该已经比较影响性能了，现在这个表已经差不多250亿数据了，还不出问题？</p>
+<p><img src="https://s2.loli.net/2023/07/19/t6oZcgp9RPMLrIA.png" alt="？"></p>
 <p>我分析了一下这张表的结构，然后看了一下相关的SQL，我认为这张表暂时还没有性能问题有以下两点：</p>
 <ol>
 <li>数据结构简单。这是一张文件表，里面的字段不多，只有主键id、文件名、key、hash、url、大小等字段，占用的空间也不大</li>
 <li>SQL不复杂。我分析了一下与这张表有关系的所有SQL，发现这张表几乎没有update操作（有是有，但是只有一个SQL，而且那个方法还被废弃了，我们现在的业务基本上不会对这张表的数据进行修改），只有insert和select操作，而且select操作大部分都是通过主键id作为条件查询，少量是通过hash字段来进行查询，所以需要维护的索引也不多，只有主键索引和这个hash字段的普通索引。所以这张表的相关SQL是比较简单的。</li>
 </ol>
-<p>虽然现在没有性能问题，但是嘛……现在这张表每个月的增长速度是亿级别的，再不做分库分表，迟早要出问题。所以我决定先对它出手了！另外几张表的数据量也很大，但是与之相关的操作太复杂了，所以我觉得我得先找个简单的表实践实践，积累一点经验后再对其它几张表下手。<br><img src="https://img-blog.csdnimg.cn/60b58989885642a2a029268729dfce20.gif#pic_center" alt="在这里插入图片描述"></p>
+<p>虽然现在没有性能问题，但是嘛……现在这张表每个月的增长速度是亿级别的，再不做分库分表，迟早要出问题。所以我决定先对它出手了！另外几张表的数据量也很大，但是与之相关的操作太复杂了，所以我觉得我得先找个简单的表实践实践，积累一点经验后再对其它几张表下手。</p>
+<p><img src="https://s2.loli.net/2023/07/19/I7mojJDOzVd9wnp.gif" alt="在这里插入图片描述"></p>
 <h1 id="分库分表方案"><a href="#分库分表方案" class="headerlink" title="分库分表方案"></a>分库分表方案</h1><p>分库分表主要有垂直切分和水平水平，这次针对的问题是单表容量达到瓶颈的问题，因此采用<strong>水平切分</strong>。</p>
 <p><strong>以下把这张表叫做 t_file 表吧。</strong></p>
 <h2 id="切分策略"><a href="#切分策略" class="headerlink" title="切分策略"></a>切分策略</h2><p>水平切分策略主要有hash切分和范围切分，优缺点如下表。</p>
@@ -446,8 +449,10 @@
 <li>mycat是proxy层解决方案，需要部署、维护，并且本身是单点的，高可用性差，如果想要集群还需要再引入别的中间件</li>
 <li>tidb资源利用率低、维护成本也很高</li>
 </ol>
-<p><strong>综合业务及中间件优缺点考虑，sharding-jdbc较为合适。</strong><br><img src="https://img-blog.csdnimg.cn/2ccda90f6bbb4040845c37649d4e1bf4.jpg#pic_center" alt="就用sharding-jdbc"></p>
-<h1 id="问题及解决方案"><a href="#问题及解决方案" class="headerlink" title="问题及解决方案"></a>问题及解决方案</h1><p>写的过程碰到了几个问题，搞了点骚操作。<br><img src="https://img-blog.csdnimg.cn/c8f044b7d9664254b89d6f775cac2b1c.gif#pic_center" alt="满脑子骚操作"></p>
+<p><strong>综合业务及中间件优缺点考虑，sharding-jdbc较为合适。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/UzLi1dTkKS3lN6c.jpg" alt="就用sharding-jdbc"></p>
+<h1 id="问题及解决方案"><a href="#问题及解决方案" class="headerlink" title="问题及解决方案"></a>问题及解决方案</h1><p>写的过程碰到了几个问题，搞了点骚操作。</p>
+<p><img src="https://s2.loli.net/2023/07/19/SnwkPHu3e4LJr2D.gif" alt="满脑子骚操作"></p>
 <h2 id="分布式ID实现"><a href="#分布式ID实现" class="headerlink" title="分布式ID实现"></a>分布式ID实现</h2><h3 id="不重复的ID该怎么实现？"><a href="#不重复的ID该怎么实现？" class="headerlink" title="不重复的ID该怎么实现？"></a>不重复的ID该怎么实现？</h3><p><strong>分库分表后，需要保证数据插入后ID的唯一性</strong>，实现不重复的ID一般有以下几种方案：</p>
 <ol>
 <li>使用雪花算法生成ID。雪花算法会生成64 bit的ID，转成字符串后长度是19位（有个表需要存储文件表数据ID），长度比较长。如果我们使用了雪花算法，那另一个表每一行的数据都会膨胀很多，这就不是很划算了……</li>
@@ -463,25 +468,31 @@
 <li>使用自己的策略就意味着不能使用sharding-jdbc的ID生成策略了</li>
 </ol>
 <p>第一个问题只需运维或者后端开发建表前注意一下即可，而第二个问题则需要在代码中解决，而第三个问题，只需要我们把表下标传进mapper，交给mybatis帮我们拼装到SQL里面即可。</p>
-<p><strong>所以现在主要是要解决第二个问题。</strong><br><img src="https://img-blog.csdnimg.cn/6b855c47ef304083ac7fc508239f8912.png#pic_center" alt="愁"></p>
+<p><strong>所以现在主要是要解决第二个问题。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/y9kUqCGojaFpX8g.png" alt="愁"></p>
 <h2 id="表下标维护"><a href="#表下标维护" class="headerlink" title="表下标维护"></a>表下标维护</h2><p>那么要怎么维护这个表下标呢？我当时是思考了一个下午，一步步优化，得到一个自认为不错的方案（太佩服我自己了吧），而且实现也不复杂。<strong>这个方案就是每个表预留一部分ID，然后每个实例各自维护一个表下标，不存储在redis中。</strong></p>
-<p>下面来看看整个优化的过程。<br><img src="https://img-blog.csdnimg.cn/518f43b1fd8f4cc485b3112588ca4d20.png#pic_center" alt="我真是个天才"></p>
-<h3 id="插入前查询maxId"><a href="#插入前查询maxId" class="headerlink" title="插入前查询maxId"></a>插入前查询maxId</h3><p>最直接的写法就是每次批量插入数据前，先查询表的最大ID，再加上当前的数据量，预测插入数据后的ID是否还在范围内，若超过了该范围，就把下标+1，更新到redis中，然后把数据插入到下一个表中。<br><img src="https://img-blog.csdnimg.cn/c780dae7556c4e0bb8396bef588323d3.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="插入前查询maxId"></p>
+<p>下面来看看整个优化的过程。</p>
+<p><img src="https://s2.loli.net/2023/07/19/k8YusoF1cWpKtnj.png" alt="我真是个天才"></p>
+<h3 id="插入前查询maxId"><a href="#插入前查询maxId" class="headerlink" title="插入前查询maxId"></a>插入前查询maxId</h3><p>最直接的写法就是每次批量插入数据前，先查询表的最大ID，再加上当前的数据量，预测插入数据后的ID是否还在范围内，若超过了该范围，就把下标+1，更新到redis中，然后把数据插入到下一个表中。</p>
+<p><img src="https://s2.loli.net/2023/07/19/KEiyTZamtGH3SNQ.jpg" alt="插入前查询maxId"></p>
 <p>单线程下这种做法当然没有问题，但是多线程问题就大了，何况这个业务并发量还那么高。</p>
 <p>假设 t_file_0 的ID范围是0 ~ 9999，现在该表最大的ID是9995，此时2个线程同时插入数据，这2个线程都插入4行数据……2个线程获取到的tableIndex都是0，并且查了一下maxId加上自己的数据量，最后得到9999，在范围内，然后同时插入数据……那么 t_file_0 这个表就会出现ID超过了9999的情况，而 t_file_1 的ID范围是 10000~19999，ID重复了！</p>
 <p>所以很明显，<strong>这个方案不靠谱。</strong></p>
-<h3 id="插入后查询maxId"><a href="#插入后查询maxId" class="headerlink" title="插入后查询maxId"></a>插入后查询maxId</h3><p>既然插入后的ID可能会超出范围，那我们能不能在插入后再检查一下maxId呢？如果maxId超出范围，就回滚事务，再更新tableIndex，把数据插入到下一张表中。<br><img src="https://img-blog.csdnimg.cn/aab14646598542eeaad907c1e0439300.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="插入后查询maxId"><br>这种做法比较靠谱，插入后再检查ID，再决定是否提交事务，就不会出现最大ID超过该表范围这种情况了。<strong>但是却要手动控制事务。</strong></p>
+<h3 id="插入后查询maxId"><a href="#插入后查询maxId" class="headerlink" title="插入后查询maxId"></a>插入后查询maxId</h3><p>既然插入后的ID可能会超出范围，那我们能不能在插入后再检查一下maxId呢？如果maxId超出范围，就回滚事务，再更新tableIndex，把数据插入到下一张表中。</p>
+<p><img src="https://s2.loli.net/2023/07/19/O8TGmfaQsKAMIBl.jpg" alt="插入后查询maxId"></p>
+<p>这种做法比较靠谱，插入后再检查ID，再决定是否提交事务，就不会出现最大ID超过该表范围这种情况了。<strong>但是却要手动控制事务。</strong></p>
 <h3 id="预留ID"><a href="#预留ID" class="headerlink" title="预留ID"></a>预留ID</h3><p>那能不能再优化一下呢？我不想控制事务回滚然后再提交一次……</p>
 <p>所以我想到了预留最后一部分ID的做法，<strong>我可以让每张表都预留一部分ID，这部分ID可以插入一部分数据，但是插入之后，以后的数据就插入到下一张表。只要我们预留的ID范围足够大，那在高并发场景下就不会出现ID超范围的情况。</strong></p>
 <p>比如 t_file_0 的预留ID范围是 9000~9999，当插入一批数据后得到的最大ID是9100，达到了预留ID范围，那就更新表下标，以后的数据插入到 t_file_1 中。即使多个线程同时插入一大批数据，只要我们预留的范围足够大，就不会出现最大ID超过这张表范围的情况。这样就不用手动控制事务了。<br>而我们需要查询的时候，ID为 0 ~ 9999（包括预留的那部分ID，9000 ~ 9999） 还是路由到 t_file_0 进行查询，所以插入和查询都是不会有问题的。</p>
-<p><img src="https://img-blog.csdnimg.cn/21801bc2d7434ba58a98d81d9d9cc30f.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="预留ID"><br>但是这样又依赖与中间件了，这样的话，redis一出问题，那可能就会影响到当前业务的新增操作了。</p>
+<p><img src="https://s2.loli.net/2023/07/19/LtxuMKQ6envg1b3.jpg" alt="预留ID"></p>
+<p>但是这样又依赖与中间件了，这样的话，redis一出问题，那可能就会影响到当前业务的新增操作了。</p>
 <h3 id="预留ID-不依赖redis"><a href="#预留ID-不依赖redis" class="headerlink" title="预留ID + 不依赖redis"></a>预留ID + 不依赖redis</h3><p>上面的方案，都是在redis维护了一个表下标。这样的话，redis一出问题，那可能就会影响到当前业务的新增操作了，但是<strong>实际上表下标是不需要在redis中再维护一份的，我只需要在每个实例中维护自己的一个下标就行了！</strong></p>
 <p>这样的话，会有这个问题：当其中一个实例插入数据后，发现自己的下标要+1了，其它的实例无法感知到。</p>
 <p><strong>但是这个问题并不会使ID重复，因为只要我预留的ID足够大，保证其它实例再插入数据的时候，不会超过当前表的最大ID，就不会出现问题！并且我们插入数据是分批插入的，每批最多100个数据</strong>。比如要插入1000个数据，我会分成10批数据，每批数据插入完成后都会检查一下maxId并更新表。所以理论上，只要满足这个条件，就绝对不会有重复ID的问题发生（<strong>当然我是测过的，你完全可以相信七里翔</strong>）： </p>
 <blockquote>
 <p><strong>预留ID数 &gt; 实例数 <em> 每个实例的最大线程数 </em> 100</strong></p>
 </blockquote>
-<p><img src="https://img-blog.csdnimg.cn/ce063a80027f49f7abd70ba5fb6592b7.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="预留ID + 不依赖redis"></p>
+<p><img src="https://s2.loli.net/2023/07/19/dNnMAb2REB36CkQ.jpg" alt="预留ID + 不依赖redis"></p>
 <h2 id="多数据源、sharding-jdbc、主从怎么结合到一块？"><a href="#多数据源、sharding-jdbc、主从怎么结合到一块？" class="headerlink" title="多数据源、sharding-jdbc、主从怎么结合到一块？"></a>多数据源、sharding-jdbc、主从怎么结合到一块？</h2><p>使用sharding-jdbc的shardingsphere，我又遇到了以下两个问题：</p>
 <ol>
 <li>在项目中使用了我们自己写的一个多数据源的组件，与shardingsphere数据源冲突</li>
@@ -495,9 +506,10 @@
 <li>使用Hint分片策略，强制切换数据源。这种办法不靠谱，每次使用前都需要路由到指定的具体库和表，将产生大量重复的业务代码</li>
 <li>配置shardingsphere的读写分离。这种方法也不靠谱，我们不一定所有的读都走从库，再加上我们有个别sql查询是不走shardingsphere的，这意味着这部分查询语句没法使用shardingsphere的读写分离。</li>
 </ol>
-<p>这两种方法都没法满足我们的业务需求，最终我决定再优化多数据源组件，使用多数据源管理多个shardingsphere DataSource。<br>通过配置多个shardingsphere数据源，把主数据库和从数据库配置到不同的shardingsphere数据源中，再注入到多数据源组件中，通过注解切换到不同的shardingsphere数据源，即可实现主从库数据源的切换，同时还能使用shardingsphere的功能，主从数据源共用同一套表路由算法，并且方便以后其它表使用shardingsphere来进行表路由。<br><img src="https://img-blog.csdnimg.cn/b8ee278f0d934eca934132b32bb878be.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="dynamic-datasource和shardingsphere结合"></p>
+<p>这两种方法都没法满足我们的业务需求，最终我决定再优化多数据源组件，使用多数据源管理多个shardingsphere DataSource。<br>通过配置多个shardingsphere数据源，把主数据库和从数据库配置到不同的shardingsphere数据源中，再注入到多数据源组件中，通过注解切换到不同的shardingsphere数据源，即可实现主从库数据源的切换，同时还能使用shardingsphere的功能，主从数据源共用同一套表路由算法，并且方便以后其它表使用shardingsphere来进行表路由。</p>
+<p><img src="https://s2.loli.net/2023/07/19/aXKSOBAFrs9uPCG.jpg" alt="dynamic-datasource和shardingsphere结合"></p>
 <h1 id="影响"><a href="#影响" class="headerlink" title="影响"></a>影响</h1><h2 id="部分SQL性能问题"><a href="#部分SQL性能问题" class="headerlink" title="部分SQL性能问题"></a>部分SQL性能问题</h2><p>虽然这个表涉及的SQL不多，并且不复杂，但是还是有个别SQL可能会出现问题。<br>比如刚才说到的，通过hash查询某一行数据。有2个SQL，分别是这样：需要通过hash匹配查询第一行数据；需要通过hash匹配查询最后一行数据。<br>这2个SQL肯定不能走shardingsphere来查询的了，因为我的分片键只有id，这种查询条件不是分片键的SQL，会在所有的表中执行一次，最后在汇合处理，这样的效率肯定是非常低的。<br>还好这2个SQL也不复杂，我最后自己优化了一下。不通过shardingsphere去做路由，而是我自己传入表下标。比如需要通过hash匹配查询第一行数据，我传下标0进去执行SQL，数据为空，下标+1再查下一个表。直到查询到一行数据或者下标超出了当前插入数据的表下标（tableIndex）为止。</p>
-<h1 id="上线前准备"><a href="#上线前准备" class="headerlink" title="上线前准备"></a>上线前准备</h1><h2 id="数据迁移"><a href="#数据迁移" class="headerlink" title="数据迁移"></a>数据迁移</h2><p>上线前需要运维协助建表并迁移数据，分表后每张表数据量为20亿，预留10万个ID。<br><img src="https://img-blog.csdnimg.cn/b59c7d9f72bf4cf0ad705e1899dee678.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="数据迁移"></p>
+<h1 id="上线前准备"><a href="#上线前准备" class="headerlink" title="上线前准备"></a>上线前准备</h1><h2 id="数据迁移"><a href="#数据迁移" class="headerlink" title="数据迁移"></a>数据迁移</h2><p>上线前需要运维协助建表并迁移数据，分表后每张表数据量为20亿，预留10万个ID。<br><img src="https://s2.loli.net/2023/07/19/haI9D1xXf7gBZoV.jpg" alt="数据迁移"></p>
 <h2 id="服务切换"><a href="#服务切换" class="headerlink" title="服务切换"></a>服务切换</h2><p>服务更新与服务回滚是比较重要的环节，这个得要提前规划好。考虑好怎么样才能将服务切换时的影响降到最低。我刚开始的方案是，预留一部分主键ID，具体方案如下。</p>
 <h3 id="预留一部分主键ID"><a href="#预留一部分主键ID" class="headerlink" title="预留一部分主键ID"></a>预留一部分主键ID</h3><p>采取预留一部分主键ID的方案让新旧服务能同时运行而不会产生主键冲突。</p>
 <p>假如现在线上有250亿数据，按照每张表20亿数据分表，则可以分为13张表，下标为 0 ~ 12 ，t_file_12 的主键范围是 240亿~260亿-1，全量同步后开启增量同步，把后续新增的数据也同步过去。</p>
@@ -512,9 +524,17 @@
 <li>上线新服务</li>
 <li>新服务无异常，关掉旧服务和双向同步</li>
 </ol>
-<p><img src="https://img-blog.csdnimg.cn/b668d4869b894181b2215c4c9fc14842.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="预留一部分主键ID"><br>当我说完这个方案后，我自信满满，此时我的表情是这样的👇。<br><img src="https://img-blog.csdnimg.cn/5eacb660f08944a9a652f7b82bda826a.gif#pic_center" alt="自信满满"><br>但是，DBA大佬的表情先是这样的👇。<br><img src="https://img-blog.csdnimg.cn/696b08f5796f485e8e79a6927c252216.png#pic_center" alt="?"><br>然后，变成了这样👇。<br><img src="https://img-blog.csdnimg.cn/6617a978bef2436e9c37020d4ce3f9f0.png#pic_center" alt="!"><br>我内心慌了起来。</p>
+<p><img src="https://s2.loli.net/2023/07/19/GeDQaymw51AxrWv.png" alt="预留一部分主键ID"></p>
+<p>当我说完这个方案后，我自信满满，此时我的表情是这样的👇。</p>
+<p><img src="https://s2.loli.net/2023/07/19/7YipyCTMcRxJFws.gif" alt="自信满满"></p>
+<p>但是，DBA大佬的表情先是这样的👇。</p>
+<p><img src="https://s2.loli.net/2023/07/19/IJqaGMfPzjwN1TQ.png" alt="?"></p>
+<p>然后，变成了这样👇。</p>
+<p><img src="https://s2.loli.net/2023/07/19/bQRGLrxayWH5lVm.png" alt="!"></p>
+<p>我内心慌了起来。</p>
 <p>DBA大佬说：小伙子，这个上线方案不行。假如一个表原本的当前的自增序列号是10，而你插入了一行数据，这行数据里面包含了ID（即不是使用自增ID）的话，是会更新自增序列号的，比如你插入了一个ID为15的数据，那这个时候表的自增序列号就会变成16，而不是原来的10了。</p>
-<p>我……<br><img src="https://img-blog.csdnimg.cn/1abd5ed41885470cba4a540d08e59405.jpg#pic_center" alt="是我太菜"></p>
+<p>我……</p>
+<p><img src="https://s2.loli.net/2023/07/19/1lcmD8Arwxaf94t.jpg" alt="是我太菜"></p>
 <h3 id="最后的方案"><a href="#最后的方案" class="headerlink" title="最后的方案"></a>最后的方案</h3><p>还是DBA大佬经验丰富，和他讨论过后，我豁然开朗。最终的上线步骤是这样的。</p>
 <ol>
 <li>运维开启全量同步，把旧库数据同步到新库中</li>

@@ -390,7 +390,7 @@
 <p>最近看《深入理解Java虚拟机》学习到了一些JVM基础知识，主要了解了JVM运行时数据区域、GC以及类加载机制，现在来总结一下。</p>
 </blockquote>
 <h2 id="JVM的跨平台性"><a href="#JVM的跨平台性" class="headerlink" title="JVM的跨平台性"></a>JVM的跨平台性</h2><p>Java Virtual Machine简称JVM。各个操作系统之间存在着硬件、指令集的差异，而Java虚拟机的出现则屏蔽了这种差异性，我们只需在其中一个平台编写符合Java规范的代码，编译成为字节码，就可以通过不同平台版本的JVM运行这段字节码，实现“一处编译，处处运行”。</p>
-<h2 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h2><p>JVM在执行Java程序的过程中，会把它所管理的内存划分为若干个不同的数据区域，这些区域都有各自的用途以及创建和销毁的时间。如下图所示。<br><img src="https://img-blog.csdnimg.cn/20201114183116339.png" alt="运行时数据区域"></p>
+<h2 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h2><p>JVM在执行Java程序的过程中，会把它所管理的内存划分为若干个不同的数据区域，这些区域都有各自的用途以及创建和销毁的时间。如下图所示。<br><img src="https://s2.loli.net/2023/07/19/xtwkZ395WSn41om.png" alt="运行时数据区域"></p>
 <h3 id="方法区（Method-Area）"><a href="#方法区（Method-Area）" class="headerlink" title="方法区（Method Area）"></a>方法区（Method Area）</h3><p>方法区用于存储被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据，它是各个线程共享的内存区域。</p>
 <h3 id="程序计数器（Program-Counter-Register）"><a href="#程序计数器（Program-Counter-Register）" class="headerlink" title="程序计数器（Program Counter Register）"></a>程序计数器（Program Counter Register）</h3><p>这是一块比较小的内存空间，用来存储当前线程所执行的字节码的行号，因此是线程私有的。字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器来完成。</p>
 <h3 id="Java虚拟机栈（Java-Virtual-Machine-Stacks）"><a href="#Java虚拟机栈（Java-Virtual-Machine-Stacks）" class="headerlink" title="Java虚拟机栈（Java Virtual Machine Stacks）"></a>Java虚拟机栈（Java Virtual Machine Stacks）</h3><p>该区域也是线程私有，生命周期也与线程相同。它描述了Java方法执行的内存模型：每个方法被执行时都会同时创建一个栈帧，栈帧存储局部变量表、操作栈、动态链接、方法出口等信息，线程私有。<br>在JVM规范中，对这个区域规定了两种异常状况：如果线程请求的栈深度大于虚拟机允许的深度，则抛出StackOverflowError异常；如果虚拟机栈可以动态扩展，但扩展到无法再申请足够的内存时会抛出OutOfMemoryError异常。</p>
@@ -400,38 +400,35 @@
 <h3 id="判断对象是否存活"><a href="#判断对象是否存活" class="headerlink" title="判断对象是否存活"></a>判断对象是否存活</h3><p>垃圾收集器在对堆进行回收前，当然得要先确定哪些对象是否还存活，哪些要go die。</p>
 <h4 id="引用计数算法"><a href="#引用计数算法" class="headerlink" title="引用计数算法"></a>引用计数算法</h4><p>给对象添加一个引用计数器，每当有一个地方引用它时，计数器加一；引用失效时，计数器减一。当计数器为0的时候就是不能再被使用的，这个对象就是要go die了。<br>这个方法实现比较简单，判定效率也比较高，但是有一个问题，它很难解决对象之间相互引用的问题。因此Java语言中没有选用这一方法来管理内存。</p>
 <h4 id="根搜索算法"><a href="#根搜索算法" class="headerlink" title="根搜索算法"></a>根搜索算法</h4><p>Java和C#都是使用这一方法来判定对象是否存活的。它的基本思路是通过一系列名为“GC Roots”的对象作为起始点，从这些节点开始向下搜索，搜索所走过的路径成为引用链，当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的，此时这个对象就是可回收的。<br>如下图，object5、object6、object7虽然是有关联的，但是它们到GC Roots是不可达的，所以它们被判定为是可回收的。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114183443761.jpg" alt="GC Roots"></p>
+<p><img src="https://s2.loli.net/2023/07/19/83vrZykwUfn6EIY.jpg" alt="GC Roots"></p>
 <h3 id="垃圾收集算法"><a href="#垃圾收集算法" class="headerlink" title="垃圾收集算法"></a>垃圾收集算法</h3><h4 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h4><p>将内存按容量划分为大小相等的两块，每次只使用其中一块。当这块内存用完了，就将还存活的对象复制到另一块，然后把这一块全部清理掉。</p>
-<p><img src="https://img-blog.csdnimg.cn/2020111418370090.png" alt="复制算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/QAXBEHLoWDl1bFI.webp" alt="复制算法"></p>
 <blockquote>
 <p>优点：<br>内存分配时不用考虑内存碎片等复杂情况，只需要移动堆顶指针即可<br>缺点：<br>内存缩小为原来的一半</p>
 </blockquote>
 <h4 id="标记-清除算法（Mark-Sweep）"><a href="#标记-清除算法（Mark-Sweep）" class="headerlink" title="标记-清除算法（Mark-Sweep）"></a>标记-清除算法（Mark-Sweep）</h4><p>分为“标记”和“清除”两个阶段。在标记阶段，通过根搜索，标记所有从根节点开始的可达对象；然后在清楚阶段，清楚所有未被标记的对象。</p>
-<p><img src="https://img-blog.csdnimg.cn/2020111418380812.png" alt="标记-清除算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/Ie6KCdnfT5lqcAg.webp" alt="标记-清除算法"></p>
 <blockquote>
 <p>缺点：<br>1.效率问题，无论是标记还是清除过程，效率都不高；<br>2.空间问题，从上图就可以看出，标记清除后产生了大量不连续的内存碎片，当程序在运行过程中需要分配较大对象时无法找到足够的连续内存而不得不提前触发另一次垃圾收集动作。</p>
 </blockquote>
 <h4 id="标记-整理算法（Mark-Compact）"><a href="#标记-整理算法（Mark-Compact）" class="headerlink" title="标记-整理算法（Mark-Compact）"></a>标记-整理算法（Mark-Compact）</h4><p>分为“标记”和“整理”两个阶段。标记阶段仍和“标记-清除”算法一样，但是后续步骤直接清理可回收对象，而是让所有存活对象都向一端移动，然后直接清理掉端边界以外的内存。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114183925804.png" alt="标记-整理算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/AfUeJGiQbmVZuTs.webp" alt="标记-整理算法"></p>
 <blockquote>
 <p>优点：<br>1.解决了内存碎片问题；<br>2.没有内存碎片，对象创建时内存分配也更快了。<br>缺点：<br>还是有一定的效率问题，标记和整理两个过程效率都不高。</p>
 </blockquote>
 <h4 id="分代收集算法（Generational-Collection）"><a href="#分代收集算法（Generational-Collection）" class="headerlink" title="分代收集算法（Generational Collection）"></a>分代收集算法（Generational Collection）</h4><p>根据对象存活周期的不同将内存分为几块，像Java堆就是分为新生代和老年代，然后根据各个年代的特点采用适当的收集算法。新生代采用复制算法，老年代采用“标记-清除”或“标记-整理”算法。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114184017593.png" alt="分代收集算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/6MDYeUNOuIHolhZ.webp" alt="分代收集算法"></p>
 <h3 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h3><p>收集算法是内存回收的方法论，而垃圾收集器是内存回收的具体实现。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114184247458.jpg" alt="垃圾收集器"></p>
-<h4 id="Serial（串行）收集器"><a href="#Serial（串行）收集器" class="headerlink" title="Serial（串行）收集器"></a>Serial（串行）收集器</h4><p>这种收集器是最基本、历史最悠久的收集器，它是一个单线程的收集器，使用复制算法，简单高效，Serial收集器由于没有线程交互的开销，专心做垃圾收集可以获得很高的单线程收集效率。它在进行垃圾收集时，必须暂停其它所有的工作线程，直到收集结束（“Stop The World”）。这就有点难受……想象一下你玩手机的时候隔一段时间就卡一卡，还卡很久……<br><img src="https://img-blog.csdnimg.cn/img_convert/afd01489ff7c43f20911847f7ee5ed53.png" alt="Serial收集器"></p>
+<p><img src="https://s2.loli.net/2023/07/19/Mm5K8VuB4S1jRpW.jpg" alt="垃圾收集器"></p>
+<h4 id="Serial（串行）收集器"><a href="#Serial（串行）收集器" class="headerlink" title="Serial（串行）收集器"></a>Serial（串行）收集器</h4><p>这种收集器是最基本、历史最悠久的收集器，它是一个单线程的收集器，使用复制算法，简单高效，Serial收集器由于没有线程交互的开销，专心做垃圾收集可以获得很高的单线程收集效率。它在进行垃圾收集时，必须暂停其它所有的工作线程，直到收集结束（“Stop The World”）。这就有点难受……想象一下你玩手机的时候隔一段时间就卡一卡，还卡很久……</p>
 <h4 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h4><p>实际上这个收集器就是Serial收集器的多线程版本，它除了多线程收集之外，其它与Serial没多大区别。这是第一款真正意义的并发收集器，它实现了让垃圾收集线程与用户线程同时工作。<br>ParNew收集器在单CPU的环境中不会比Serial收集器有更好的效果，而且由于存在线程交互的开销，该收集器可能回避Serial收集器表现更差。但是，随着可以使用的CPU数量的增加，它的表现它对于GC时系统资源的利用还是很有好处的。它默认开启的收集线程数与CPU的数量相同，在CPU非常多的情况下可使用-XX:ParallerGCThreads参数设置。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/44b019d07e684205a84d8896216ed4c1.png" alt="ParNew收集器"></p>
 <h4 id="Parallel（并行）-Scavenge-收集器"><a href="#Parallel（并行）-Scavenge-收集器" class="headerlink" title="Parallel（并行） Scavenge 收集器"></a>Parallel（并行） Scavenge 收集器</h4><p>这个收集器是一个并行的多线程新生代收集器，也是使用复制算法。它的关注点与其它收集器不同，其它收集器的关注点是尽可能缩短垃圾收集时用户线程的停顿时间，而它的目标是达到一个可控制的吞吐量（吞吐量就是CPU用于运行用户代码的时间与CPU总消耗时间的比值，即吞吐量 = 运行用户代码时间 /（运行用户代码时间 + 垃圾收集时间））。<br>Parallel Scavenge收集器提供了两个参数用于精确控制吞吐量，分别是控制最大垃圾收集停顿时间的 -XX:MaxGCPauseMillis以及直接设置吞吐量大小的 -XX:GCTTimeRatio参数。</p>
 <h4 id="Serial-Old收集器"><a href="#Serial-Old收集器" class="headerlink" title="Serial Old收集器"></a>Serial Old收集器</h4><p>Serial Old是Serial收集器的老年代版本，同样是一个单线程收集器，使用“标记-整理”算法。此收集器的主要意义也是在于给Client模式下的虚拟机使用。如果在Server模式下，它还有两大用途：</p>
 <ul>
 <li>此收集器的主要意义也是在于给Client模式下的虚拟机使用。如果在Server模式下，它还有两大用途：</li>
 <li>作为CMS收集器的后备预案，在并发收集发生Concurrent Mode Failure时使用。</li>
 </ul>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/afd01489ff7c43f20911847f7ee5ed53.png" alt="Serial Old收集器"></p>
 <h4 id="Parallel-Old收集器"><a href="#Parallel-Old收集器" class="headerlink" title="Parallel Old收集器"></a>Parallel Old收集器</h4><p>Parallel Old是Parallel Scavenge收集器的老年代版本，使用多线程和“标记-整理”算法。在注重吞吐量以及CPU资源敏感的场合，都可以优先考虑Parallel Scavenge与Parallel Old组合。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/704ccbaa6bf0a2010625164999ed999d.png" alt="Parallel Old收集器"></p>
 <h4 id="CMS收集器"><a href="#CMS收集器" class="headerlink" title="CMS收集器"></a>CMS收集器</h4><p>CMS（Concurrent Mark Sweep）收集器是一种以获取最短回收停顿时间为目标的收集器，它非常符合那些集中在互联网站或者B/S系统的服务端上的Java应用，这些应用都非常重视服务的响应速度。<br>从名字上（“Mark Sweep”）就可以看出它是基于“标记-清除”算法实现的，它的运作过程分为四个步骤：</p>
 <ol>
 <li>初始标记（CMS initial mark）：仅仅只是标记一下GC Roots能直接关联到的对象，速度很快，需要“Stop The World”。</li>
@@ -440,7 +437,7 @@
 <li>并发清除（CMS concurrent sweep）</li>
 </ol>
 <p>由于整个过程中耗时最长的并发标记和并发清除过程收集器线程都可以与用户线程一起工作，所以，从总体上来说，CMS收集器的内存回收过程是与用户线程一起并发执行的。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/32e2b43663e2d0a4548446032f15491d.png" alt="CMS收集器"></p>
+<p><img src="https://s2.loli.net/2023/07/19/HhEvo1V3N6qOYjT.jpg" alt="CMS收集器"></p>
 <blockquote>
 <p>优点：<br>并发收集、低停顿<br>缺点<br>1.对CPU资源非常敏感<br>2.无法处理浮动垃圾<br>3.标记清楚算法导致产生较多空间碎片</p>
 </blockquote>
@@ -516,7 +513,7 @@
 </tbody>
 </table>
 <h2 id="类加载机制"><a href="#类加载机制" class="headerlink" title="类加载机制"></a>类加载机制</h2><h3 id="类加载的过程"><a href="#类加载的过程" class="headerlink" title="类加载的过程"></a>类加载的过程</h3><p>类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载、验证、准备、解析、初始化、使用和卸载七个结点。其中验证、准备和解析三个部分统称为连接。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/612e4e344a18a9be5fbe8fde9e2ee05c.png" alt="类加载过程"></p>
+<p><img src="https://s2.loli.net/2023/07/19/ALrz9SgRtDF5NEh.jpg" alt="类加载过程"></p>
 <h4 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h4><p>在加载阶段，虚拟机需要完成三件事情：</p>
 <ol>
 <li>通过一个类的全限定名来获取定义此类的二进制字节流；</li>
@@ -538,7 +535,7 @@
 <li><strong>扩展类加载器（Extension ClassLoader）</strong> 这个加载器由sun.misc.Launcher$ExtClassLoader实现，它负责加载&lt;JAVA_HOME&gt;\lib\ext目录中的，或者被java.ext.dirs系统变量所指定的路径中的所有类库，开发者可以直接使用扩展类加载器</li>
 <li><strong>应用程序类加载器（Application ClassLoader）</strong> 这个类加载器由sun.misc.Launcher@AppClassLoader来实现。由于这个类加载器是ClassLoader中的getSystemClassLoader()方法的返回值，所以一般也称它为系统类加载器。它负责加载用户类路径上所指定的类库，开发者可以直接使用这个类加载器，如果应用程序中没有自定义自己的类加载器，一般情况下这个就是程序中默认的类加载器</li>
 </ul>
-<p><img src="https://img-blog.csdnimg.cn/20201114184531212.png" alt="双亲委派模型"></p>
+<p><img src="https://s2.loli.net/2023/07/19/xfpEW9gmt2eSNMb.png" alt="双亲委派模型"></p>
 <p>上图所展示的类加载器之间的层次关系就称为双亲委派模型。它要求除了顶层的启动类加载器外，其余的类加载器都应有自己的父类加载器。使用组合（Composition）关系来复用父加载器。</p>
 <p>双亲委派模型的工作过程是：如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把这个请求委托给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都会传送到顶层的启动类加载器中，只有当父类加载器反馈自己无法完成这个加载请求（它的搜索范围中没有找到所需的类）时，子加载器才会尝试自己去加载。</p>
 <p>使用双亲委派模型的好处在于Java类随着它的类加载器一起具备了一种带有优先级的层次关系。例如类java.lang.Object，它存在在rt.jar中，无论哪一个类加载器要加载这个类，最终都是委派给处于模型最顶端的Bootstrap ClassLoader进行加载，因此Object类在程序的各种类加载器环境中都是同一个类。相反，如果没有双亲委派模型而是由各个类加载器自行加载的话，如果用户编写了一个java.lang.Object的同名类并放在ClassPath中，那系统中将会出现多个不同的Object类，程序将混乱。因此，如果开发者尝试编写一个与rt.jar类库中重名的Java类，可以正常编译，但是永远无法被加载运行。</p>

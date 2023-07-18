@@ -79,18 +79,18 @@
 <blockquote>
 <p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5。</p>
 </blockquote>
-<p><img src="https://img-blog.csdnimg.cn/20201114210933754.png#pic_center" alt="扩容前"></p>
+<p><img src="https://s2.loli.net/2023/07/19/blEqv2TKHC8zY7P.png#pic_center" alt="扩容前"></p>
 <blockquote>
-<p>1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 <strong>Entry&lt;K,V&gt; next = e.next;</strong> 这一步后，e指向3，next指向7。<br>这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。<br>这个时候旧数组、链表和两个线程的状态是这样的。<br><img src="https://img-blog.csdnimg.cn/20201114211611593.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="线程二扩容完成"></p>
+<p>1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 <strong>Entry&lt;K,V&gt; next = e.next;</strong> 这一步后，e指向3，next指向7。<br>这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。<br>这个时候旧数组、链表和两个线程的状态是这样的。<br><img src="https://s2.loli.net/2023/07/19/o47McDelJqGOxyA.png#pic_center" alt="线程二扩容完成"></p>
 </blockquote>
 <blockquote>
-<p>2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：<br><img src="https://img-blog.csdnimg.cn/20201114211819832.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="第一次循环结束"></p>
+<p>2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：<br><img src="https://s2.loli.net/2023/07/19/5yFvHUxTd697JDj.png#pic_center" alt="第一次循环结束"></p>
 </blockquote>
 <blockquote>
-<p>3 下次循环一开始，<strong>Entry&lt;K,V&gt; next = e.next</strong> 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？<br><img src="https://img-blog.csdnimg.cn/20201114212639171.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="第二次循环结束"></p>
+<p>3 下次循环一开始，<strong>Entry&lt;K,V&gt; next = e.next</strong> 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？<br><img src="https://s2.loli.net/2023/07/19/efA5nEC3gvOi4jr.png#pic_center" alt="第二次循环结束"></p>
 </blockquote>
 <blockquote>
-<p>4 这次循环执行情况是这样的<br>Entry&lt;K,V&gt; next = e.next;    现在e是3，而3的next是null，所以next指向了null<br>e.next = newTable[i];        这一步把3的next指向了7，因为桶现在是指向7的<br>newTable[i] = e;            把桶指向3<br>e = next;        由于next是null了，所以e指向了null，跳出了while进行后面的for循环<br>现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：<br><img src="https://img-blog.csdnimg.cn/20201114214042697.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="第三次循环结束出大问题"></p>
+<p>4 这次循环执行情况是这样的<br>Entry&lt;K,V&gt; next = e.next;    现在e是3，而3的next是null，所以next指向了null<br>e.next = newTable[i];        这一步把3的next指向了7，因为桶现在是指向7的<br>newTable[i] = e;            把桶指向3<br>e = next;        由于next是null了，所以e指向了null，跳出了while进行后面的for循环<br>现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：<br><img src="https://s2.loli.net/2023/07/19/hHXCscelu493RST.png#pic_center" alt="第三次循环结束出大问题"></p>
 </blockquote>
 <p>显而易见，环形链表出现，这个时候如果我们再去做一些查询，查到这个桶3上面来的话，遍历的时候就出现了死循环，直接出不去了，出大问题……<br>还好JDK8修复了这个死循环问题。</p>
 ]]></content>
@@ -106,7 +106,7 @@
     <title>JDK8 HashMap源码理解</title>
     <url>/2020/11/14/JDK8-HashMap%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><font color="#999AAA">最近本翔再次认真阅读了HashMap的源码，总结一下自己的一些理解，希望对大家能有点帮助。</font></p>
-<h1 id="一、数据结构"><a href="#一、数据结构" class="headerlink" title="一、数据结构"></a>一、数据结构</h1><p>HashMap的数据结构是数组+链表，数组里面是一个个Node，在JDK8中加入了红黑树。HashMap根据存入的对象的hash跟数组长度取模得出下标，如果发生了哈希冲突，则新插入的键值对会放到上一个节点的后面，形成链表。当链表长度超过8且数组长度也不小于64时会转为红黑树，同理，链表长度小于6时会再次变回链表。数组里的每个存储空间，我们称为桶(bucket)。<br><img src="https://img-blog.csdnimg.cn/20201114005720673.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="HashMap内部"></p>
+<h1 id="一、数据结构"><a href="#一、数据结构" class="headerlink" title="一、数据结构"></a>一、数据结构</h1><p>HashMap的数据结构是数组+链表，数组里面是一个个Node，在JDK8中加入了红黑树。HashMap根据存入的对象的hash跟数组长度取模得出下标，如果发生了哈希冲突，则新插入的键值对会放到上一个节点的后面，形成链表。当链表长度超过8且数组长度也不小于64时会转为红黑树，同理，链表长度小于6时会再次变回链表。数组里的每个存储空间，我们称为桶(bucket)。<br><img src="https://s2.loli.net/2023/07/19/FLEQBtTJXvwnz1l.png#pic_center" alt="HashMap内部"></p>
 <h2 id="1-1-Node"><a href="#1-1-Node" class="headerlink" title="1.1 Node"></a>1.1 Node</h2><p>Node封装了key和value，我们使用put方法塞进去key和value其实都存到了Node里面，看看Node里面的成员变量有哪些。<br><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Node</span>&lt;K,V&gt; <span class="title">implements</span> <span class="title">Map</span>.<span class="title">Entry</span>&lt;K,V&gt; &#123;</span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> hash;</span><br><span class="line">    <span class="keyword">final</span> K key;</span><br><span class="line">    V value;</span><br><span class="line">    Node&lt;K,V&gt; next;</span><br><span class="line">    <span class="comment">// ………………略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>可以看到里面有四个成员</p>
 <blockquote>
@@ -155,13 +155,37 @@
       </tags>
   </entry>
   <entry>
+    <title>Spring @Autowire注入Map和List</title>
+    <url>/2019/10/17/Spring-Autowire%E6%B3%A8%E5%85%A5Map%E5%92%8CList/</url>
+    <content><![CDATA[<p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
+<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
+<p>那么就不多BB了，直接上代码。</p>
+<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
+<p>下面是运行结果。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>框架</category>
+        <category>Spring</category>
+      </categories>
+      <tags>
+        <tag>Spring</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>JVM基础</title>
     <url>/2019/07/22/JVM%E5%9F%BA%E7%A1%80/</url>
     <content><![CDATA[<h1 id="JVM基础知识"><a href="#JVM基础知识" class="headerlink" title="JVM基础知识"></a>JVM基础知识</h1><blockquote>
 <p>最近看《深入理解Java虚拟机》学习到了一些JVM基础知识，主要了解了JVM运行时数据区域、GC以及类加载机制，现在来总结一下。</p>
 </blockquote>
 <h2 id="JVM的跨平台性"><a href="#JVM的跨平台性" class="headerlink" title="JVM的跨平台性"></a>JVM的跨平台性</h2><p>Java Virtual Machine简称JVM。各个操作系统之间存在着硬件、指令集的差异，而Java虚拟机的出现则屏蔽了这种差异性，我们只需在其中一个平台编写符合Java规范的代码，编译成为字节码，就可以通过不同平台版本的JVM运行这段字节码，实现“一处编译，处处运行”。</p>
-<h2 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h2><p>JVM在执行Java程序的过程中，会把它所管理的内存划分为若干个不同的数据区域，这些区域都有各自的用途以及创建和销毁的时间。如下图所示。<br><img src="https://img-blog.csdnimg.cn/20201114183116339.png" alt="运行时数据区域"></p>
+<h2 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h2><p>JVM在执行Java程序的过程中，会把它所管理的内存划分为若干个不同的数据区域，这些区域都有各自的用途以及创建和销毁的时间。如下图所示。<br><img src="https://s2.loli.net/2023/07/19/xtwkZ395WSn41om.png" alt="运行时数据区域"></p>
 <h3 id="方法区（Method-Area）"><a href="#方法区（Method-Area）" class="headerlink" title="方法区（Method Area）"></a>方法区（Method Area）</h3><p>方法区用于存储被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据，它是各个线程共享的内存区域。</p>
 <h3 id="程序计数器（Program-Counter-Register）"><a href="#程序计数器（Program-Counter-Register）" class="headerlink" title="程序计数器（Program Counter Register）"></a>程序计数器（Program Counter Register）</h3><p>这是一块比较小的内存空间，用来存储当前线程所执行的字节码的行号，因此是线程私有的。字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器来完成。</p>
 <h3 id="Java虚拟机栈（Java-Virtual-Machine-Stacks）"><a href="#Java虚拟机栈（Java-Virtual-Machine-Stacks）" class="headerlink" title="Java虚拟机栈（Java Virtual Machine Stacks）"></a>Java虚拟机栈（Java Virtual Machine Stacks）</h3><p>该区域也是线程私有，生命周期也与线程相同。它描述了Java方法执行的内存模型：每个方法被执行时都会同时创建一个栈帧，栈帧存储局部变量表、操作栈、动态链接、方法出口等信息，线程私有。<br>在JVM规范中，对这个区域规定了两种异常状况：如果线程请求的栈深度大于虚拟机允许的深度，则抛出StackOverflowError异常；如果虚拟机栈可以动态扩展，但扩展到无法再申请足够的内存时会抛出OutOfMemoryError异常。</p>
@@ -171,38 +195,35 @@
 <h3 id="判断对象是否存活"><a href="#判断对象是否存活" class="headerlink" title="判断对象是否存活"></a>判断对象是否存活</h3><p>垃圾收集器在对堆进行回收前，当然得要先确定哪些对象是否还存活，哪些要go die。</p>
 <h4 id="引用计数算法"><a href="#引用计数算法" class="headerlink" title="引用计数算法"></a>引用计数算法</h4><p>给对象添加一个引用计数器，每当有一个地方引用它时，计数器加一；引用失效时，计数器减一。当计数器为0的时候就是不能再被使用的，这个对象就是要go die了。<br>这个方法实现比较简单，判定效率也比较高，但是有一个问题，它很难解决对象之间相互引用的问题。因此Java语言中没有选用这一方法来管理内存。</p>
 <h4 id="根搜索算法"><a href="#根搜索算法" class="headerlink" title="根搜索算法"></a>根搜索算法</h4><p>Java和C#都是使用这一方法来判定对象是否存活的。它的基本思路是通过一系列名为“GC Roots”的对象作为起始点，从这些节点开始向下搜索，搜索所走过的路径成为引用链，当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的，此时这个对象就是可回收的。<br>如下图，object5、object6、object7虽然是有关联的，但是它们到GC Roots是不可达的，所以它们被判定为是可回收的。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114183443761.jpg" alt="GC Roots"></p>
+<p><img src="https://s2.loli.net/2023/07/19/83vrZykwUfn6EIY.jpg" alt="GC Roots"></p>
 <h3 id="垃圾收集算法"><a href="#垃圾收集算法" class="headerlink" title="垃圾收集算法"></a>垃圾收集算法</h3><h4 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h4><p>将内存按容量划分为大小相等的两块，每次只使用其中一块。当这块内存用完了，就将还存活的对象复制到另一块，然后把这一块全部清理掉。</p>
-<p><img src="https://img-blog.csdnimg.cn/2020111418370090.png" alt="复制算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/QAXBEHLoWDl1bFI.webp" alt="复制算法"></p>
 <blockquote>
 <p>优点：<br>内存分配时不用考虑内存碎片等复杂情况，只需要移动堆顶指针即可<br>缺点：<br>内存缩小为原来的一半</p>
 </blockquote>
 <h4 id="标记-清除算法（Mark-Sweep）"><a href="#标记-清除算法（Mark-Sweep）" class="headerlink" title="标记-清除算法（Mark-Sweep）"></a>标记-清除算法（Mark-Sweep）</h4><p>分为“标记”和“清除”两个阶段。在标记阶段，通过根搜索，标记所有从根节点开始的可达对象；然后在清楚阶段，清楚所有未被标记的对象。</p>
-<p><img src="https://img-blog.csdnimg.cn/2020111418380812.png" alt="标记-清除算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/Ie6KCdnfT5lqcAg.webp" alt="标记-清除算法"></p>
 <blockquote>
 <p>缺点：<br>1.效率问题，无论是标记还是清除过程，效率都不高；<br>2.空间问题，从上图就可以看出，标记清除后产生了大量不连续的内存碎片，当程序在运行过程中需要分配较大对象时无法找到足够的连续内存而不得不提前触发另一次垃圾收集动作。</p>
 </blockquote>
 <h4 id="标记-整理算法（Mark-Compact）"><a href="#标记-整理算法（Mark-Compact）" class="headerlink" title="标记-整理算法（Mark-Compact）"></a>标记-整理算法（Mark-Compact）</h4><p>分为“标记”和“整理”两个阶段。标记阶段仍和“标记-清除”算法一样，但是后续步骤直接清理可回收对象，而是让所有存活对象都向一端移动，然后直接清理掉端边界以外的内存。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114183925804.png" alt="标记-整理算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/AfUeJGiQbmVZuTs.webp" alt="标记-整理算法"></p>
 <blockquote>
 <p>优点：<br>1.解决了内存碎片问题；<br>2.没有内存碎片，对象创建时内存分配也更快了。<br>缺点：<br>还是有一定的效率问题，标记和整理两个过程效率都不高。</p>
 </blockquote>
 <h4 id="分代收集算法（Generational-Collection）"><a href="#分代收集算法（Generational-Collection）" class="headerlink" title="分代收集算法（Generational Collection）"></a>分代收集算法（Generational Collection）</h4><p>根据对象存活周期的不同将内存分为几块，像Java堆就是分为新生代和老年代，然后根据各个年代的特点采用适当的收集算法。新生代采用复制算法，老年代采用“标记-清除”或“标记-整理”算法。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114184017593.png" alt="分代收集算法"></p>
+<p><img src="https://s2.loli.net/2023/07/19/6MDYeUNOuIHolhZ.webp" alt="分代收集算法"></p>
 <h3 id="垃圾收集器"><a href="#垃圾收集器" class="headerlink" title="垃圾收集器"></a>垃圾收集器</h3><p>收集算法是内存回收的方法论，而垃圾收集器是内存回收的具体实现。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114184247458.jpg" alt="垃圾收集器"></p>
-<h4 id="Serial（串行）收集器"><a href="#Serial（串行）收集器" class="headerlink" title="Serial（串行）收集器"></a>Serial（串行）收集器</h4><p>这种收集器是最基本、历史最悠久的收集器，它是一个单线程的收集器，使用复制算法，简单高效，Serial收集器由于没有线程交互的开销，专心做垃圾收集可以获得很高的单线程收集效率。它在进行垃圾收集时，必须暂停其它所有的工作线程，直到收集结束（“Stop The World”）。这就有点难受……想象一下你玩手机的时候隔一段时间就卡一卡，还卡很久……<br><img src="https://img-blog.csdnimg.cn/img_convert/afd01489ff7c43f20911847f7ee5ed53.png" alt="Serial收集器"></p>
+<p><img src="https://s2.loli.net/2023/07/19/Mm5K8VuB4S1jRpW.jpg" alt="垃圾收集器"></p>
+<h4 id="Serial（串行）收集器"><a href="#Serial（串行）收集器" class="headerlink" title="Serial（串行）收集器"></a>Serial（串行）收集器</h4><p>这种收集器是最基本、历史最悠久的收集器，它是一个单线程的收集器，使用复制算法，简单高效，Serial收集器由于没有线程交互的开销，专心做垃圾收集可以获得很高的单线程收集效率。它在进行垃圾收集时，必须暂停其它所有的工作线程，直到收集结束（“Stop The World”）。这就有点难受……想象一下你玩手机的时候隔一段时间就卡一卡，还卡很久……</p>
 <h4 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h4><p>实际上这个收集器就是Serial收集器的多线程版本，它除了多线程收集之外，其它与Serial没多大区别。这是第一款真正意义的并发收集器，它实现了让垃圾收集线程与用户线程同时工作。<br>ParNew收集器在单CPU的环境中不会比Serial收集器有更好的效果，而且由于存在线程交互的开销，该收集器可能回避Serial收集器表现更差。但是，随着可以使用的CPU数量的增加，它的表现它对于GC时系统资源的利用还是很有好处的。它默认开启的收集线程数与CPU的数量相同，在CPU非常多的情况下可使用-XX:ParallerGCThreads参数设置。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/44b019d07e684205a84d8896216ed4c1.png" alt="ParNew收集器"></p>
 <h4 id="Parallel（并行）-Scavenge-收集器"><a href="#Parallel（并行）-Scavenge-收集器" class="headerlink" title="Parallel（并行） Scavenge 收集器"></a>Parallel（并行） Scavenge 收集器</h4><p>这个收集器是一个并行的多线程新生代收集器，也是使用复制算法。它的关注点与其它收集器不同，其它收集器的关注点是尽可能缩短垃圾收集时用户线程的停顿时间，而它的目标是达到一个可控制的吞吐量（吞吐量就是CPU用于运行用户代码的时间与CPU总消耗时间的比值，即吞吐量 = 运行用户代码时间 /（运行用户代码时间 + 垃圾收集时间））。<br>Parallel Scavenge收集器提供了两个参数用于精确控制吞吐量，分别是控制最大垃圾收集停顿时间的 -XX:MaxGCPauseMillis以及直接设置吞吐量大小的 -XX:GCTTimeRatio参数。</p>
 <h4 id="Serial-Old收集器"><a href="#Serial-Old收集器" class="headerlink" title="Serial Old收集器"></a>Serial Old收集器</h4><p>Serial Old是Serial收集器的老年代版本，同样是一个单线程收集器，使用“标记-整理”算法。此收集器的主要意义也是在于给Client模式下的虚拟机使用。如果在Server模式下，它还有两大用途：</p>
 <ul>
 <li>此收集器的主要意义也是在于给Client模式下的虚拟机使用。如果在Server模式下，它还有两大用途：</li>
 <li>作为CMS收集器的后备预案，在并发收集发生Concurrent Mode Failure时使用。</li>
 </ul>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/afd01489ff7c43f20911847f7ee5ed53.png" alt="Serial Old收集器"></p>
 <h4 id="Parallel-Old收集器"><a href="#Parallel-Old收集器" class="headerlink" title="Parallel Old收集器"></a>Parallel Old收集器</h4><p>Parallel Old是Parallel Scavenge收集器的老年代版本，使用多线程和“标记-整理”算法。在注重吞吐量以及CPU资源敏感的场合，都可以优先考虑Parallel Scavenge与Parallel Old组合。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/704ccbaa6bf0a2010625164999ed999d.png" alt="Parallel Old收集器"></p>
 <h4 id="CMS收集器"><a href="#CMS收集器" class="headerlink" title="CMS收集器"></a>CMS收集器</h4><p>CMS（Concurrent Mark Sweep）收集器是一种以获取最短回收停顿时间为目标的收集器，它非常符合那些集中在互联网站或者B/S系统的服务端上的Java应用，这些应用都非常重视服务的响应速度。<br>从名字上（“Mark Sweep”）就可以看出它是基于“标记-清除”算法实现的，它的运作过程分为四个步骤：</p>
 <ol>
 <li>初始标记（CMS initial mark）：仅仅只是标记一下GC Roots能直接关联到的对象，速度很快，需要“Stop The World”。</li>
@@ -211,7 +232,7 @@
 <li>并发清除（CMS concurrent sweep）</li>
 </ol>
 <p>由于整个过程中耗时最长的并发标记和并发清除过程收集器线程都可以与用户线程一起工作，所以，从总体上来说，CMS收集器的内存回收过程是与用户线程一起并发执行的。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/32e2b43663e2d0a4548446032f15491d.png" alt="CMS收集器"></p>
+<p><img src="https://s2.loli.net/2023/07/19/HhEvo1V3N6qOYjT.jpg" alt="CMS收集器"></p>
 <blockquote>
 <p>优点：<br>并发收集、低停顿<br>缺点<br>1.对CPU资源非常敏感<br>2.无法处理浮动垃圾<br>3.标记清楚算法导致产生较多空间碎片</p>
 </blockquote>
@@ -287,7 +308,7 @@
 </tbody>
 </table>
 <h2 id="类加载机制"><a href="#类加载机制" class="headerlink" title="类加载机制"></a>类加载机制</h2><h3 id="类加载的过程"><a href="#类加载的过程" class="headerlink" title="类加载的过程"></a>类加载的过程</h3><p>类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载、验证、准备、解析、初始化、使用和卸载七个结点。其中验证、准备和解析三个部分统称为连接。</p>
-<p><img src="https://img-blog.csdnimg.cn/img_convert/612e4e344a18a9be5fbe8fde9e2ee05c.png" alt="类加载过程"></p>
+<p><img src="https://s2.loli.net/2023/07/19/ALrz9SgRtDF5NEh.jpg" alt="类加载过程"></p>
 <h4 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h4><p>在加载阶段，虚拟机需要完成三件事情：</p>
 <ol>
 <li>通过一个类的全限定名来获取定义此类的二进制字节流；</li>
@@ -309,7 +330,7 @@
 <li><strong>扩展类加载器（Extension ClassLoader）</strong> 这个加载器由sun.misc.Launcher$ExtClassLoader实现，它负责加载&lt;JAVA_HOME&gt;\lib\ext目录中的，或者被java.ext.dirs系统变量所指定的路径中的所有类库，开发者可以直接使用扩展类加载器</li>
 <li><strong>应用程序类加载器（Application ClassLoader）</strong> 这个类加载器由sun.misc.Launcher@AppClassLoader来实现。由于这个类加载器是ClassLoader中的getSystemClassLoader()方法的返回值，所以一般也称它为系统类加载器。它负责加载用户类路径上所指定的类库，开发者可以直接使用这个类加载器，如果应用程序中没有自定义自己的类加载器，一般情况下这个就是程序中默认的类加载器</li>
 </ul>
-<p><img src="https://img-blog.csdnimg.cn/20201114184531212.png" alt="双亲委派模型"></p>
+<p><img src="https://s2.loli.net/2023/07/19/xfpEW9gmt2eSNMb.png" alt="双亲委派模型"></p>
 <p>上图所展示的类加载器之间的层次关系就称为双亲委派模型。它要求除了顶层的启动类加载器外，其余的类加载器都应有自己的父类加载器。使用组合（Composition）关系来复用父加载器。</p>
 <p>双亲委派模型的工作过程是：如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把这个请求委托给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都会传送到顶层的启动类加载器中，只有当父类加载器反馈自己无法完成这个加载请求（它的搜索范围中没有找到所需的类）时，子加载器才会尝试自己去加载。</p>
 <p>使用双亲委派模型的好处在于Java类随着它的类加载器一起具备了一种带有优先级的层次关系。例如类java.lang.Object，它存在在rt.jar中，无论哪一个类加载器要加载这个类，最终都是委派给处于模型最顶端的Bootstrap ClassLoader进行加载，因此Object类在程序的各种类加载器环境中都是同一个类。相反，如果没有双亲委派模型而是由各个类加载器自行加载的话，如果用户编写了一个java.lang.Object的同名类并放在ClassPath中，那系统中将会出现多个不同的Object类，程序将混乱。因此，如果开发者尝试编写一个与rt.jar类库中重名的Java类，可以正常编译，但是永远无法被加载运行。</p>
@@ -318,28 +339,6 @@
         <category>Java</category>
         <category>JVM</category>
       </categories>
-  </entry>
-  <entry>
-    <title>Spring @Autowire注入Map和List</title>
-    <url>/2019/10/17/Spring-Autowire%E6%B3%A8%E5%85%A5Map%E5%92%8CList/</url>
-    <content><![CDATA[<p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！<br><img src="https://img-blog.csdnimg.cn/20201114184730276.jpg" alt="太棒了"></p>
-<p>那么就不多BB了，直接上代码。</p>
-<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://img-blog.csdnimg.cn/2020111418481998.jpg" alt="测试断点"></p>
-<p>下面是运行结果。<br><img src="https://img-blog.csdnimg.cn/2020111418481978.jpg" alt="运行结果"></p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>框架</category>
-        <category>Spring</category>
-      </categories>
-      <tags>
-        <tag>Spring</tag>
-      </tags>
   </entry>
   <entry>
     <title>Spring Security CSRF防御</title>
@@ -425,21 +424,6 @@
       </tags>
   </entry>
   <entry>
-    <title>从尾到头打印链表</title>
-    <url>/2019/06/20/%E4%BB%8E%E5%B0%BE%E5%88%B0%E5%A4%B4%E6%89%93%E5%8D%B0%E9%93%BE%E8%A1%A8/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>输入一个链表，按链表值从尾到头的顺序返回一个ArrayList。</p>
-<h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">*  struct ListNode &#123;</span><br><span class="line">*        int val;</span><br><span class="line">*        struct ListNode *next;</span><br><span class="line">*        ListNode(int x) :</span><br><span class="line">*              val(x), next(NULL) &#123;</span><br><span class="line">*        &#125;</span><br><span class="line">*  &#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">*    public class ListNode &#123;</span><br><span class="line">*        int val;</span><br><span class="line">*        ListNode next = null;</span><br><span class="line">*</span><br><span class="line">*        ListNode(int val) &#123;</span><br><span class="line">*            this.val = val;</span><br><span class="line">*        &#125;</span><br><span class="line">*    &#125;</span><br><span class="line">*</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>新建一个栈，利用栈的先进后出的特性，从头到尾遍历链表依次放到栈里，最后再从栈中一个个弹出来。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C-1"><a href="#C-1" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    vector&lt;int&gt; printListFromTailToHead(ListNode* head) &#123;</span><br><span class="line">        vector&lt;int&gt; value;</span><br><span class="line">        stack&lt;int&gt; stk;</span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        while (p != NULL) &#123;</span><br><span class="line">            stk.push(p-&gt;val);</span><br><span class="line">            p = p-&gt;next;</span><br><span class="line">        &#125;</span><br><span class="line">        while (!stk.empty()) &#123;</span><br><span class="line">            value.push_back(stk.top());</span><br><span class="line">            stk.pop();</span><br><span class="line">        &#125;</span><br><span class="line">        return value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="Java-1"><a href="#Java-1" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public ArrayList&lt;Integer&gt; printListFromTailToHead(ListNode listNode) &#123;</span><br><span class="line">        Stack&lt;Integer&gt; stk = new Stack&lt;Integer&gt;();</span><br><span class="line">        ArrayList&lt;Integer&gt; tmp = new ArrayList();</span><br><span class="line">        while (listNode != null) &#123;</span><br><span class="line">            stk.push(listNode.val);</span><br><span class="line">            listNode = listNode.next;</span><br><span class="line">        &#125;</span><br><span class="line">        while (!stk.empty())&#123;</span><br><span class="line">            tmp.add(stk.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        return tmp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
-  </entry>
-  <entry>
     <title>SpringBoot+Dubbo简单demo实践</title>
     <url>/2021/07/02/SpringBoot-Dubbo%E7%AE%80%E5%8D%95demo%E5%AE%9E%E8%B7%B5/</url>
     <content><![CDATA[<h1 id="SpringBoot-Dubbo-简单-demo-实践"><a href="#SpringBoot-Dubbo-简单-demo-实践" class="headerlink" title="SpringBoot + Dubbo 简单 demo 实践"></a>SpringBoot + Dubbo 简单 demo 实践</h1><p>休息了一个月终于又要上班了，下家公司的项目用的是Dubbo+Zookeeper，由于之前只用过Spring Cloud，所以提前了解一下Dubbo的使用，搭了个简单的 demo 感受 Dubbo 和 Spring Cloud 的区别。<br>大概流程如下：</p>
@@ -451,25 +435,26 @@
 <li>消费层调用</li>
 </ol>
 <h2 id="Dubbo基本工作原理"><a href="#Dubbo基本工作原理" class="headerlink" title="Dubbo基本工作原理"></a>Dubbo基本工作原理</h2><p>Dubbo 是一款 RPC 服务框架，它最大的优势在于提供了面向接口代理的服务编程模型，对开发者屏蔽了底层的远程通信细节。同时 Dubbo 也是一款服务治理框架，它为分布式部署的微服务提供了服务发现、流量调度等服务治理解决方案。</p>
-<p>下图是 Dubbo 的基本工作原理图(在官网找的)，服务提供者与服务消费者之间通过注册中心协调地址，通过约定的协议实现数据交换。<br><img src="https://img-blog.csdnimg.cn/20210702113353557.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="Dubbo 基本工作原理图"><br>接下来就搭建一个 demo ，感受一下 Dubbo 的使用和 Spring Cloud 有什么区别。</p>
+<p>下图是 Dubbo 的基本工作原理图(在官网找的)，服务提供者与服务消费者之间通过注册中心协调地址，通过约定的协议实现数据交换。<br><img src="https://s2.loli.net/2023/07/19/RmB1wsW5jqTYAZv.png#pic_center" alt="Dubbo 基本工作原理图"><br>接下来就搭建一个 demo ，感受一下 Dubbo 的使用和 Spring Cloud 有什么区别。</p>
 <h2 id="Zookeeper搭建"><a href="#Zookeeper搭建" class="headerlink" title="Zookeeper搭建"></a>Zookeeper搭建</h2><h3 id="Zookeeper下载"><a href="#Zookeeper下载" class="headerlink" title="Zookeeper下载"></a>Zookeeper下载</h3><p>Dubbo 使用 Zookeeper 作为注册中心，提供服务注册和发现，跟Spring Cloud的 eureka 或 nacos 类似。</p>
 <p>所以第一步当然是去<a href="https://zookeeper.apache.org/" target="_blank" rel="noopener">官网</a>下载 Zookeeper 啦，我下载的版本是3.6.3。</p>
 <h3 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h3><p>下载解压后，进入 conf 文件夹可以看到有个 zoo_sample.cfg 文件，这个是配置文件示例，现在复制并更名为 zoo.cfg ，根据自己的需要对配置进行更改，我改了一下数据路径。<br>Zookeeper 的端口号默认是2181，可以根据自己的需要对 clientPort 的值进行更改。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dataDir=E:/zookeeper/data</span><br><span class="line">clientPort=2181</span><br></pre></td></tr></table></figure>
 <h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>进入bin文件夹可以看到里面有很多脚本，zkServer.cmd 和 zkServer.sh 就是启动脚本，我的电脑系统是 windows ，所以直接双击 zkServer.cmd 即可启动。</p>
-<p><img src="https://img-blog.csdnimg.cn/20210702113029700.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="启动Zookeeper"></p>
+<p><img src="https://s2.loli.net/2023/07/19/SnKa5EN2pIZO9RL.png#pic_center" alt="启动Zookeeper"></p>
 <h2 id="Dubbo-可视化管理界面搭建"><a href="#Dubbo-可视化管理界面搭建" class="headerlink" title="Dubbo 可视化管理界面搭建"></a>Dubbo 可视化管理界面搭建</h2><p>Zookeeper 启动完成之后，我们需要一个可视化界面方便对服务进行观察和管理。</p>
 <h3 id="下载项目"><a href="#下载项目" class="headerlink" title="下载项目"></a>下载项目</h3><p>Dubbo-admin的Github地址是 <a href="https://github.com/apache/dubbo-admin" target="_blank" rel="noopener">https://github.com/apache/dubbo-admin</a> ，直接 git clone 下来。项目里有 readme.md 介绍启动流程，参考 readme.md 启动项目。</p>
 <h3 id="修改配置-1"><a href="#修改配置-1" class="headerlink" title="修改配置"></a>修改配置</h3><p>打开 dubbo-admin\dubbo-admin-server\src\main\resources\application.properties 可以修改配置，指定 Zookeeper 地址，我的 Zookeeper 是默认配置，所以不用修改。</p>
 <h3 id="编译、打包项目"><a href="#编译、打包项目" class="headerlink" title="编译、打包项目"></a>编译、打包项目</h3><p>进入到项目里编译并打包项目。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mvn clean package -Dmaven.test.skip=true</span><br></pre></td></tr></table></figure>
 <h3 id="启动项目"><a href="#启动项目" class="headerlink" title="启动项目"></a>启动项目</h3><p>可以直接在项目根目录运行 mvn –projects dubbo-admin-server spring-boot:run 启动项目，也可以进入 dubbo-admin-distribution\target 运行里面的jar包。</p>
-<p><img src="https://img-blog.csdnimg.cn/20210702120409974.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="启动 dubbo-admin"></p>
+<p><img src="https://s2.loli.net/2023/07/19/SVJFBcPLXlzGxmb.png#pic_center" alt="启动 dubbo-admin"></p>
 <p><strong> 启动失败 </strong><br>我刚开始启动失败了，这个 dubbo-admin 的启动端口是 8080，但是我发现 8080 端口已经被占用了，最后发现是 Zookeeper 占用的，原来是 Zookeeper 内嵌了一个管理控制台，通过 jetty 启动，这个 jetty 的端口就是 8080，于是我去改了以下 Zookeeper 的 zoo.cfg ，新增了一行配置把 Zookeeper 的管理控制台端口改为 8081。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">admin.serverPort=8081</span><br></pre></td></tr></table></figure>
-<h3 id="进入管理界面"><a href="#进入管理界面" class="headerlink" title="进入管理界面"></a>进入管理界面</h3><p>启动成功后就可以访问 <a href="http://127.0.0.1:8080" target="_blank" rel="noopener">http://127.0.0.1:8080</a> 了，默认的账号密码都是root。<br><img src="https://img-blog.csdnimg.cn/20210702120820273.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="登录"><br><img src="https://img-blog.csdnimg.cn/20210702120905244.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="Dubbo Admin"></p>
+<h3 id="进入管理界面"><a href="#进入管理界面" class="headerlink" title="进入管理界面"></a>进入管理界面</h3><p>启动成功后就可以访问 <a href="http://127.0.0.1:8080" target="_blank" rel="noopener">http://127.0.0.1:8080</a> 了，默认的账号密码都是root。<br><img src="https://s2.loli.net/2023/07/19/fv5lIzuOY4d6RWZ.png#pic_center" alt="登录"></p>
+<p><img src="https://s2.loli.net/2023/07/19/kWJmSxy5gLArGPE.png#pic_center" alt="Dubbo Admin"></p>
 <h2 id="工程创建"><a href="#工程创建" class="headerlink" title="工程创建"></a>工程创建</h2><p>接下来就要创建工程了，先创建个 maven 多模块工程，里面需要包含三个模块，一个是 api 模块，一个是服务提供者模块，一个是服务消费者模块。</p>
-<h3 id="api模块"><a href="#api模块" class="headerlink" title="api模块"></a>api模块</h3><p>假设我这个服务是一个用户查询的服务，那我就需要先创建一个 dto 和一个接口。<br><img src="https://img-blog.csdnimg.cn/20210702122334353.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="api 模块"></p>
+<h3 id="api模块"><a href="#api模块" class="headerlink" title="api模块"></a>api模块</h3><p>假设我这个服务是一个用户查询的服务，那我就需要先创建一个 dto 和一个接口。<br><img src="https://s2.loli.net/2023/07/19/N2jn3OCBtpPaT4r.png" alt="api 模块"></p>
 <h4 id="创建-UserInfo-类"><a href="#创建-UserInfo-类" class="headerlink" title="创建 UserInfo 类"></a>创建 UserInfo 类</h4><p>创建一个用户信息类，需要注意的是，dto 要实现 Serializable 接口进行序列化。当然，也可以使用其它的序列化方式，hessian2、json等。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class UserInfo implements Serializable &#123;</span><br><span class="line">    private static final long serialVersionUID = 2908612893636115165L;</span><br><span class="line"></span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    private Long userId;</span><br><span class="line"></span><br><span class="line">    public static long getSerialVersionUID() &#123;</span><br><span class="line">        return serialVersionUID;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getUserName() &#123;</span><br><span class="line">        return userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserName(String userName) &#123;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Long getUserId() &#123;</span><br><span class="line">        return userId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserId(Long userId) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="定义用户服务接口"><a href="#定义用户服务接口" class="headerlink" title="定义用户服务接口"></a>定义用户服务接口</h4><p>简单定义一个接口。</p>
@@ -477,13 +462,14 @@
 <h3 id="服务提供者模块"><a href="#服务提供者模块" class="headerlink" title="服务提供者模块"></a>服务提供者模块</h3><p>现在创建一个服务提供者模块。</p>
 <h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><p>这个模块需要 Dubbo 和 Zookeeper 相关依赖，再加上这个模块是要实现 UserService 接口，所以也需要刚才创建的 api 模块依赖。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>配置文件主要需要以下配置：<br><img src="https://img-blog.csdnimg.cn/20210702124035217.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="配置文件"></p>
+<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>配置文件主要需要以下配置：<br><img src="https://s2.loli.net/2023/07/19/d3WH21YxENk7fZ6.png" alt="配置文件"></p>
 <p>根据上图的配置，修改 application.yml，我的配置如下：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 9000</span><br><span class="line"></span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-provider</span><br><span class="line">  registry:</span><br><span class="line">    address: 127.0.0.1:2181</span><br><span class="line">    protocol: zookeeper</span><br><span class="line">  protocol:</span><br><span class="line">    name: dubbo</span><br><span class="line">    port: 19000</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registry</span><br></pre></td></tr></table></figure></p>
 <h4 id="用户服务类具体实现"><a href="#用户服务类具体实现" class="headerlink" title="用户服务类具体实现"></a>用户服务类具体实现</h4><p>实现用户服务接口，注意这里的 @Service 注解，不是 Spring 的注解，而是 Dubbo 的注解！包的全路径是 org.apache.dubbo.config.annotation.Service。<br>并且需要注意的是，它必须要实现 UserService 接口。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Service</span><br><span class="line">@Component</span><br><span class="line">public class UserServiceImpl implements UserService &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = new ArrayList&lt;&gt;();</span><br><span class="line">        for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">            UserInfo userInfo = new UserInfo();</span><br><span class="line">            userInfo.setUserId(Integer.valueOf(i).longValue());</span><br><span class="line">            userInfo.setUserName(&quot;七里翔&quot; + i);</span><br><span class="line">            userInfoList.add(userInfo);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="SpringBoot-启动类"><a href="#SpringBoot-启动类" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>最后在启动类要加上 @EnableDubbo 注解。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserProviderApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserProviderApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="查看-Dubbo-Admin"><a href="#查看-Dubbo-Admin" class="headerlink" title="查看 Dubbo Admin"></a>查看 Dubbo Admin</h4><p>现在再去 Dubbo Admin 上面就可以看到这个服务注册成功了！点击详情也可以看到服务的具体信息。<br><img src="https://img-blog.csdnimg.cn/20210702124820859.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="Dubbo Admin"><br><img src="https://img-blog.csdnimg.cn/20210702124935459.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="服务详情"></p>
+<h4 id="查看-Dubbo-Admin"><a href="#查看-Dubbo-Admin" class="headerlink" title="查看 Dubbo Admin"></a>查看 Dubbo Admin</h4><p>现在再去 Dubbo Admin 上面就可以看到这个服务注册成功了！点击详情也可以看到服务的具体信息。<br><img src="https://s2.loli.net/2023/07/19/aF1lCeZkbI8HYtA.png" alt="Dubbo Admin"></p>
+<p><img src="https://s2.loli.net/2023/07/19/x9IWKMvbJnLVBl4.png" alt="服务详情"></p>
 <h3 id="服务消费者模块"><a href="#服务消费者模块" class="headerlink" title="服务消费者模块"></a>服务消费者模块</h3><p>最后就是创建服务消费者模块了，在该模块下进行服务调用。</p>
 <h4 id="依赖-1"><a href="#依赖-1" class="headerlink" title="依赖"></a>依赖</h4><p>依赖基本和服务提供者相同，这个就不多BB了。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
@@ -493,15 +479,17 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RestController</span><br><span class="line">@RequestMapping(&quot;test&quot;)</span><br><span class="line">public class TestController &#123;</span><br><span class="line">    @Reference	//dubbo</span><br><span class="line">    UserService userService;</span><br><span class="line"></span><br><span class="line">    @GetMapping(&quot;test&quot;)</span><br><span class="line">    public List&lt;UserInfo&gt; test() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = userService.getUserInfoList();</span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="SpringBoot-启动类-1"><a href="#SpringBoot-启动类-1" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>这个启动类同样要加上 @EnableDubbo 注解。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserConsumerApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserConsumerApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>启动服务消费者后，断点调试、用 postman 测试一下。<br><img src="https://img-blog.csdnimg.cn/2021070213174837.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="断点调试"></p>
-<p><img src="https://img-blog.csdnimg.cn/20210702131812576.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="postman"><br>可以看到已经大功告成了！！！</p>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>启动服务消费者后，断点调试、用 postman 测试一下。</p>
+<p><img src="https://s2.loli.net/2023/07/19/UGLvxHwCRNcMsqI.png" alt="断点调试"></p>
+<p><img src="https://s2.loli.net/2023/07/19/rXKsIJBAYU1Hlpk.png" alt="postman"></p>
+<p>可以看到已经大功告成了！！！</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="Dubbo-和-Spring-Cloud-区别"><a href="#Dubbo-和-Spring-Cloud-区别" class="headerlink" title="Dubbo 和 Spring Cloud 区别"></a>Dubbo 和 Spring Cloud 区别</h3><ol>
 <li>Dubbo 耦合较高，有一定约束。这是我使用中感受到的最大的区别，Dubbo 需要我们定义个抽象接口，然后提供方实现这个接口，消费方再通过这个接口进行调用。提供方和消费方都依赖于这个接口的模块，所以整个项目是有一定的耦合的。而Spring Cloud 我们使用 Feign 就比较自由，比较轻量化，通过 REST 调用，更灵活。这不能单纯地说是优点或者是缺点吧，毕竟接口定义过轻也很容易多版本的情况下导致接口文档与实际所展现功能不一致导致服务集成时的问题，或许对版本控制比较严格有时候反而会更加稳定。</li>
 <li>Dubbo底层是使用Netty这样的NIO框架，是基于TCP协议传输的；而 Spring Cloud 是基于 Http 协议+ REST 接口调用远程过程的通信。在传输协议和序列化方式上，Dubbo 的性能要比 Spring Cloud 更高。因为 Dubbo 是长连接并且用二进制传输，占用带宽更少。而 Spring Cloud 使用的是短连接并且使用 JSON 序列化，消耗更大。</li>
 <li>Dubbo 只是一个 RPC 框架，而 Spring Cloud 是一整套微服务的解决方案，因此它们的领域是不一样的。</li>
 <li>社区方面，Spring Cloud 要比 Dubbo 活跃很多很多很多很多……Dubbo 好久没更新了，而 Spring Cloud 目前还一直在更新，很活跃！</li>
 </ol>
-<p><img src="https://img-blog.csdnimg.cn/20210702134836992.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="Dubbo 流泪"></p>
+<p><img src="https://s2.loli.net/2023/07/19/Qt4rfk8dsqL1Ugb.png" alt="Dubbo 流泪"></p>
 ]]></content>
       <categories>
         <category>Java</category>
@@ -524,31 +512,18 @@
       </categories>
   </entry>
   <entry>
-    <title>使用cryptsetup加密硬盘</title>
-    <url>/2019/12/09/%E4%BD%BF%E7%94%A8cryptsetup%E5%8A%A0%E5%AF%86%E7%A1%AC%E7%9B%98/</url>
-    <content><![CDATA[<p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114185225708.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="1T希捷移动硬盘"></p>
-<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114185314876.jpg#pic_center" alt="不可描述"></p>
-<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
-<p><img src="https://img-blog.csdnimg.cn/2020111418540061.jpg#pic_center" alt="fdisk -l"></p>
-<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
-<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114185454794.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="操作提示"></p>
-<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。<br><img src="https://img-blog.csdnimg.cn/20201114185659938.jpg#pic_center" alt="添加新分区"></p>
-<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。<br><img src="https://img-blog.csdnimg.cn/20201114185740894.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="创建主分区"></p>
-<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。<br><img src="https://img-blog.csdnimg.cn/20201114185821330.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="查看逻辑分区"></p>
-<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
-<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://img-blog.csdnimg.cn/20201114185918841.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="加密格式化"></p>
-<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。<br><img src="https://img-blog.csdnimg.cn/20201114185954951.jpg#pic_center" alt="打开硬盘"></p>
-<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114190037490.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="格式化映射设备"></p>
-<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。<br><img src="https://img-blog.csdnimg.cn/20201114190121843.jpg#pic_center" alt="挂载硬盘"></p>
-<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://img-blog.csdnimg.cn/20201114190154672.jpg#pic_center" alt="卸载硬盘"></p>
-<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong><br><img src="https://img-blog.csdnimg.cn/20201114190246843.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center" alt="修复分区"></p>
+    <title>从尾到头打印链表</title>
+    <url>/2019/06/20/%E4%BB%8E%E5%B0%BE%E5%88%B0%E5%A4%B4%E6%89%93%E5%8D%B0%E9%93%BE%E8%A1%A8/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>输入一个链表，按链表值从尾到头的顺序返回一个ArrayList。</p>
+<h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">*  struct ListNode &#123;</span><br><span class="line">*        int val;</span><br><span class="line">*        struct ListNode *next;</span><br><span class="line">*        ListNode(int x) :</span><br><span class="line">*              val(x), next(NULL) &#123;</span><br><span class="line">*        &#125;</span><br><span class="line">*  &#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">*    public class ListNode &#123;</span><br><span class="line">*        int val;</span><br><span class="line">*        ListNode next = null;</span><br><span class="line">*</span><br><span class="line">*        ListNode(int val) &#123;</span><br><span class="line">*            this.val = val;</span><br><span class="line">*        &#125;</span><br><span class="line">*    &#125;</span><br><span class="line">*</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>新建一个栈，利用栈的先进后出的特性，从头到尾遍历链表依次放到栈里，最后再从栈中一个个弹出来。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C-1"><a href="#C-1" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    vector&lt;int&gt; printListFromTailToHead(ListNode* head) &#123;</span><br><span class="line">        vector&lt;int&gt; value;</span><br><span class="line">        stack&lt;int&gt; stk;</span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        while (p != NULL) &#123;</span><br><span class="line">            stk.push(p-&gt;val);</span><br><span class="line">            p = p-&gt;next;</span><br><span class="line">        &#125;</span><br><span class="line">        while (!stk.empty()) &#123;</span><br><span class="line">            value.push_back(stk.top());</span><br><span class="line">            stk.pop();</span><br><span class="line">        &#125;</span><br><span class="line">        return value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="Java-1"><a href="#Java-1" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public ArrayList&lt;Integer&gt; printListFromTailToHead(ListNode listNode) &#123;</span><br><span class="line">        Stack&lt;Integer&gt; stk = new Stack&lt;Integer&gt;();</span><br><span class="line">        ArrayList&lt;Integer&gt; tmp = new ArrayList();</span><br><span class="line">        while (listNode != null) &#123;</span><br><span class="line">            stk.push(listNode.val);</span><br><span class="line">            listNode = listNode.next;</span><br><span class="line">        &#125;</span><br><span class="line">        while (!stk.empty())&#123;</span><br><span class="line">            tmp.add(stk.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        return tmp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
-        <category>树莓派</category>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
       </categories>
   </entry>
   <entry>
@@ -561,6 +536,53 @@
 <p>先建一个头结点，返回的时候返回这个头结点。<br>再建两个临时结点p、q，p用来作存储结点，q用来跳过重复结点。如图中第二个q的位置，先判断p的下一个结点位置是否与q一样，不一样的话先把q的下一个结点位置存到p的下一个结点，这样就先跳过了前面的重复结点。如果p的下一个结点是一样的，那就是图中第二个p的位置那里，这个时候证明了当前的q结点是不重复的，此时p直接存储q结点。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/*</span><br><span class="line">struct ListNode &#123;</span><br><span class="line">    int val;</span><br><span class="line">    struct ListNode *next;</span><br><span class="line">    ListNode(int x) :</span><br><span class="line">        val(x), next(NULL) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
 <h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    ListNode* deleteDuplication(ListNode* pHead)</span><br><span class="line">    &#123;</span><br><span class="line">        if (pHead == NULL || pHead-&gt;next == NULL) &#123;</span><br><span class="line">            return pHead;</span><br><span class="line">        &#125;</span><br><span class="line">        int first = -1;</span><br><span class="line">        if (pHead-&gt;val == first) &#123;</span><br><span class="line">            first = -2;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        ListNode *head = new ListNode(first);</span><br><span class="line">        head-&gt;next = pHead;</span><br><span class="line">        </span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        ListNode *q = head-&gt;next;</span><br><span class="line">        </span><br><span class="line">        while (q != NULL) &#123;</span><br><span class="line">            while ((q-&gt;next != NULL) &amp;&amp; (q-&gt;val == q-&gt;next-&gt;val)) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (p-&gt;next != q) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">                p-&gt;next = q;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                p = q;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return head-&gt;next;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>使用cryptsetup加密硬盘</title>
+    <url>/2019/12/09/%E4%BD%BF%E7%94%A8cryptsetup%E5%8A%A0%E5%AF%86%E7%A1%AC%E7%9B%98/</url>
+    <content><![CDATA[<p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
+<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
+<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
+<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
+<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
+<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
+<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
+<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
+<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
+<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
+<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
+<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
+<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
+<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
+<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
+<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
+<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
+<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
+<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
+<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
+<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
+]]></content>
+      <categories>
+        <category>树莓派</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>替换空格</title>
+    <url>/2019/06/19/%E6%9B%BF%E6%8D%A2%E7%A9%BA%E6%A0%BC/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>先从前到后遍历一次，计算有多少个空格，然后再从后到前逐个替换。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void replaceSpace(char *str,int length) &#123;</span><br><span class="line">        int count=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(*(str+i)==&apos; &apos;)</span><br><span class="line">                count++;</span><br><span class="line">			cout &lt;&lt; *(str+i);</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">        for (int i = length - 1; i &gt;= 0; i--)&#123;</span><br><span class="line">            if (*(str+i) != &apos; &apos;)&#123;</span><br><span class="line">                *(str+i+count*2) = *(str+i);</span><br><span class="line">            &#125;else&#123;</span><br><span class="line">                count--;</span><br><span class="line">                *(str+i+(count)*2) = &apos;%&apos;;</span><br><span class="line">                *(str+i+(count)*2+1) = &apos;2&apos;;</span><br><span class="line">                *(str+i+(count)*2+2) = &apos;0&apos;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public String replaceSpace(StringBuffer str) &#123;</span><br><span class="line">        char ch[] = str.toString().toCharArray();</span><br><span class="line">        int count = 0;</span><br><span class="line">        for (int i = 0; i &lt; ch.length; i++) &#123;</span><br><span class="line">            if (ch[i] == &apos; &apos;) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        char tmp[] = new char[ch.length + 2 * count];</span><br><span class="line"></span><br><span class="line">        for (int i = ch.length-1; i &gt;= 0; i--) &#123;</span><br><span class="line">            if (ch[i] != &apos; &apos;) &#123;</span><br><span class="line">                tmp[i + 2 * count] = ch[i];</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                tmp[i + 2 * count] = &apos;0&apos;;</span><br><span class="line">                tmp[i + 2 * count - 1] = &apos;2&apos;;</span><br><span class="line">                tmp[i + 2 * count - 2] = &apos;%&apos;;</span><br><span class="line">                count--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return String.valueOf(tmp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>算法题</category>
@@ -592,37 +614,24 @@
       </categories>
   </entry>
   <entry>
-    <title>替换空格</title>
-    <url>/2019/06/19/%E6%9B%BF%E6%8D%A2%E7%A9%BA%E6%A0%BC/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>先从前到后遍历一次，计算有多少个空格，然后再从后到前逐个替换。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void replaceSpace(char *str,int length) &#123;</span><br><span class="line">        int count=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(*(str+i)==&apos; &apos;)</span><br><span class="line">                count++;</span><br><span class="line">			cout &lt;&lt; *(str+i);</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">        for (int i = length - 1; i &gt;= 0; i--)&#123;</span><br><span class="line">            if (*(str+i) != &apos; &apos;)&#123;</span><br><span class="line">                *(str+i+count*2) = *(str+i);</span><br><span class="line">            &#125;else&#123;</span><br><span class="line">                count--;</span><br><span class="line">                *(str+i+(count)*2) = &apos;%&apos;;</span><br><span class="line">                *(str+i+(count)*2+1) = &apos;2&apos;;</span><br><span class="line">                *(str+i+(count)*2+2) = &apos;0&apos;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public String replaceSpace(StringBuffer str) &#123;</span><br><span class="line">        char ch[] = str.toString().toCharArray();</span><br><span class="line">        int count = 0;</span><br><span class="line">        for (int i = 0; i &lt; ch.length; i++) &#123;</span><br><span class="line">            if (ch[i] == &apos; &apos;) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        char tmp[] = new char[ch.length + 2 * count];</span><br><span class="line"></span><br><span class="line">        for (int i = ch.length-1; i &gt;= 0; i--) &#123;</span><br><span class="line">            if (ch[i] != &apos; &apos;) &#123;</span><br><span class="line">                tmp[i + 2 * count] = ch[i];</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                tmp[i + 2 * count] = &apos;0&apos;;</span><br><span class="line">                tmp[i + 2 * count - 1] = &apos;2&apos;;</span><br><span class="line">                tmp[i + 2 * count - 2] = &apos;%&apos;;</span><br><span class="line">                count--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return String.valueOf(tmp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
-  </entry>
-  <entry>
     <title>树莓派使用samba在局域网共享文件</title>
     <url>/2019/12/15/%E6%A0%91%E8%8E%93%E6%B4%BE%E4%BD%BF%E7%94%A8samba%E5%9C%A8%E5%B1%80%E5%9F%9F%E7%BD%91%E5%85%B1%E4%BA%AB%E6%96%87%E4%BB%B6/</url>
     <content><![CDATA[<p>新买的树莓派4终于到了！！！我的树莓派3B+光荣退休！到手第一步当然是用树莓派通过SMB共享我硬盘里的文件啦，随传随看。</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114191323554.jpg" alt="你懂的"></p>
+<p><img src="https://s2.loli.net/2023/07/19/l72kpZNU8OXwPWy.jpg" alt="你懂的"></p>
 <h3 id="安装samba"><a href="#安装samba" class="headerlink" title="安装samba"></a>安装samba</h3><p>samba是一个能让Linux系统应用Microsoft网络通讯协议的软件，而SMB是Server Message Block的缩写，即为服务器消息块 ，SMB主要是作为Microsoft的网络通讯协议，后来samba将SMB通信协议应用到了Linux系统上，就形成了现在的samba软件。后来微软又把 SMB 改名为 CIFS（Common Internet File System），即公共 Internet 文件系统，并且加入了许多新的功能，这样一来，使得samba具有了更强大的功能。</p>
 <p>所以首先得安装samba。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">apt-get install samba samba-common-bin</span><br></pre></td></tr></table></figure></p>
 <h3 id="新建用户并与要共享的文件夹绑定"><a href="#新建用户并与要共享的文件夹绑定" class="headerlink" title="新建用户并与要共享的文件夹绑定"></a>新建用户并与要共享的文件夹绑定</h3><p>接下来先新建一个用户用于其它设备通过samba访问共享文件夹时登录访问。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">useradd share	//新建用户</span><br><span class="line">passwd share    //设置用户密码</span><br><span class="line">mkdir /home/share    //新建一个文件夹</span><br><span class="line">chown -R share /home/share    //绑定</span><br></pre></td></tr></table></figure>
-<p><img src="https://img-blog.csdnimg.cn/20201114191429468.jpg" alt="新建用户"></p>
+<p><img src="https://s2.loli.net/2023/07/19/NtuRO2EzSZHdYyU.jpg" alt="新建用户"></p>
 <h3 id="配置samba"><a href="#配置samba" class="headerlink" title="配置samba"></a>配置samba</h3><p>用户和文件夹都建好了，现在就要根据情况修改配置了。配置文件路径是 /etc/samba/smb.conf ，打开这个文件，在文件最后添加共享账户和共享文件夹的一些信息。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[HandsomeDong]	#网络中显示的文件名称</span><br><span class="line">    path = /home/share	#文件路径</span><br><span class="line">    valid users = share	#允许浏览的用户</span><br><span class="line">    browseable = yes	#允许浏览</span><br><span class="line">    public = yes		#允许共享访问</span><br><span class="line">    writable = yes		#允许写入</span><br></pre></td></tr></table></figure>
 <h3 id="设置共享密码以及重启"><a href="#设置共享密码以及重启" class="headerlink" title="设置共享密码以及重启"></a>设置共享密码以及重启</h3><p>访问共享文件时，用的是samba设置的共享密码，而不是linux用户密码，现在要设置的就是共享密码，设置好后直接重启samba服务。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">smbpasswd -a share</span><br><span class="line">service smbd restart</span><br></pre></td></tr></table></figure>
-<p><img src="https://img-blog.csdnimg.cn/20201114191520419.jpg" alt="设置密码、重启samba服务"></p>
+<p><img src="https://s2.loli.net/2023/07/19/ukJ68IjhBtnbegr.jpg" alt="设置密码、重启samba服务"></p>
 <h3 id="访问共享文件夹"><a href="#访问共享文件夹" class="headerlink" title="访问共享文件夹"></a>访问共享文件夹</h3><h4 id="电脑访问"><a href="#电脑访问" class="headerlink" title="电脑访问"></a>电脑访问</h4><p>用windows系统访问共享文件夹，只需在资源管理器输入 \\IP 就可以直接看到共享文件夹了，输入用户名和共享密码就可以访问了。现在把我前几天买的1T硬盘挂载到这个文件夹下，我就可以肆意地往里面存片子了！！！</p>
-<p><img src="https://img-blog.csdnimg.cn/20201114191605648.jpg" alt="文件夹"></p>
-<p><img src="https://img-blog.csdnimg.cn/20201114191655170.jpg" alt="输入用户名、密码"></p>
-<p><img src="https://img-blog.csdnimg.cn/20201114191717536.jpg" alt="片子"></p>
+<p><img src="https://s2.loli.net/2023/07/19/YdNgS6hDXkcOGp3.jpg" alt="文件夹"></p>
+<p><img src="https://s2.loli.net/2023/07/19/I2ERBc931Ylautb.jpg" alt="输入用户名、密码"></p>
+<p><img src="https://s2.loli.net/2023/07/19/UNiGLEF184wXqJW.jpg" alt="片子"></p>
 <h4 id="安卓手机访问"><a href="#安卓手机访问" class="headerlink" title="安卓手机访问"></a>安卓手机访问</h4><p>安卓手机有不少APP都能使用SMB协议，我用的比较多的是 Solid Explorer 和 Kodi。Solid Explorer用来管理文件，视频、文本、音频、图片什么的浏览、管理起来都比较方便，Kodi浏览视频和图片非常好，非常强大！</p>
 <h3 id="ipad、iphone访问"><a href="#ipad、iphone访问" class="headerlink" title="ipad、iphone访问"></a>ipad、iphone访问</h3><p>App Store上有很多软件都可以，收费的体验更好！</p>
 ]]></content>
@@ -668,16 +677,49 @@
       </categories>
   </entry>
   <entry>
+    <title>装饰者模式</title>
+    <url>/2019/06/21/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
+    <content><![CDATA[<h2 id="设计模式之装饰者模式"><a href="#设计模式之装饰者模式" class="headerlink" title="设计模式之装饰者模式"></a>设计模式之装饰者模式</h2><p>最近在买奶茶的时候突发奇想，假如我要设计一个奶茶订单系统，这个奶茶价格计算要怎样设计才算方便呢？毕竟奶茶种类那么多，而且能加的配料也很多，并且奶茶店可能随时还会增加奶茶的种类及可选的配料，想要满足这些经常改变或增加的需求，怎么设计代码才是易维护、易扩展的呢？在了解了装饰者模式之后，我终于知道该怎么做了！</p>
+<p><img src="https://i.loli.net/2019/06/21/5d0cf8c3a00af59704.png" alt="奶茶奶茶奶茶"></p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>装饰者模式(Decorator Pattern)动态地将责任附加在对象上。若要扩展功能，装饰者提供了比继承更有弹性的替代方案。</p>
+<p>装饰者模式包含以下角色：</p>
+<ol>
+<li>抽象构件</li>
+<li>具体构件</li>
+<li>抽象装饰类</li>
+<li>具体装饰类</li>
+</ol>
+<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p> 按照大白话来讲，抽象构件就是奶茶，具体构件是珍珠奶茶、波霸奶茶、红豆奶茶这些具体的奶茶。而抽象装饰类和具体装饰类是装饰者模式的设计核心了，利用它们我们可以动态地给奶茶加上配料。</p>
+<h3 id="2-1-抽象奶茶类"><a href="#2-1-抽象奶茶类" class="headerlink" title="2.1 抽象奶茶类"></a>2.1 抽象奶茶类</h3> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class MilkTea &#123;</span><br><span class="line">    public abstract String getDescription();</span><br><span class="line">    public abstract int cost();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-具体奶茶类"><a href="#2-2-具体奶茶类" class="headerlink" title="2.2 具体奶茶类"></a>2.2 具体奶茶类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 波霸奶茶，一杯15块钱</span><br><span class="line">public class BoBaMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;波霸奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 15;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 红豆奶茶，一杯12块钱</span><br><span class="line">public class HongDouMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;红豆奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 12;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-抽象配料类"><a href="#2-3-抽象配料类" class="headerlink" title="2.3 抽象配料类"></a>2.3 抽象配料类</h3><p>由于我们是让配料来扩展奶茶，因此需要继承抽象奶茶类并且实现里面的抽象方法。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Decorator extends MilkTea&#123;</span><br><span class="line">    private MilkTea milkTea;</span><br><span class="line"></span><br><span class="line">    public Decorator(MilkTea milkTea)&#123;</span><br><span class="line">        this.milkTea = milkTea;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return milkTea.getDescription();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return milkTea.cost();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-具体配料类"><a href="#2-4-具体配料类" class="headerlink" title="2.4 具体配料类"></a>2.4 具体配料类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 加奇异果要3块钱！</span><br><span class="line">public class QiYiGuoDecorator extends Decorator &#123;</span><br><span class="line">    public QiYiGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加奇异果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 加椰果才要2块钱！</span><br><span class="line">public class YeGuoDecorator extends Decorator &#123;</span><br><span class="line">    public YeGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加椰果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String args[])&#123;</span><br><span class="line">        //先来一杯红豆奶茶，加椰果，加奇异果！</span><br><span class="line">        MilkTea hongDouMilkTea = new HongDouMilkTea();</span><br><span class="line">        hongDouMilkTea = new YeGuoDecorator(hongDouMilkTea);</span><br><span class="line">        hongDouMilkTea = new QiYiGuoDecorator(hongDouMilkTea);</span><br><span class="line">        System.out.println(hongDouMilkTea.getDescription() + &quot;，价格：&quot; + hongDouMilkTea.cost() + &quot;元&quot;);</span><br><span class="line"></span><br><span class="line">        //再来一杯波霸奶茶，再加双倍椰果，别问我为什么！我爱椰果！</span><br><span class="line">        MilkTea boBaMilkTea = new BoBaMilkTea();</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        System.out.println(boBaMilkTea.getDescription() + &quot;，价格：&quot; + boBaMilkTea.cost() + &quot;元&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/06/22/5d0d03ced660424319.png" alt="测试结果"></p>
+<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.装饰模式与继承关系的目的都是要扩展对象的功能，但是装饰模式可以提供比继承更多的灵活性。<br>2.通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合。可以使用多个具体装饰类来装饰同一对象，得到功能更为强大的对象。<br>3.具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，在使用时再对其进行组合，原有代码无须改变，符合“开闭原则”</p>
+<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>1.使用装饰模式进行系统设计时将产生很多小对象，这些对象的区别在于它们之间相互连接的方式有所不同，而不是它们的类或者属性值有所不同，同时还将产生很多具体装饰类。这些装饰类和小对象的产生将增加系统的复杂度。<br>2.这种比继承更加灵活机动的特性，也同时意味着装饰模式比继承更加易于出错，排错也很困难，对于多次装饰的对象，调试时寻找错误可能需要逐级排查，较为烦琐。</p>
+<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.当不能采用继承的方式对系统进行扩充或者采用继承不利于系统扩展和维护时。不能采用继承的情况主要有两类：第一类是系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类数目呈爆炸性增长；第二类是因为类定义不能继承（如final类）.<br>2.在不影响其他对象的情况下，以动态、透明的方式给单个对象添加职责。</p>
+]]></content>
+      <categories>
+        <category>设计模式</category>
+      </categories>
+  </entry>
+  <entry>
     <title>聊聊我最近的分库分表骚操作</title>
     <url>/2021/10/03/%E8%81%8A%E8%81%8A%E6%88%91%E6%9C%80%E8%BF%91%E7%9A%84%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E9%AA%9A%E6%93%8D%E4%BD%9C/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>国庆前这段时间一直都在搞分库分表相关的东西，中间遇到了比较多的问题，不过最后还是都艰难地解决掉了。这段时间感觉挺累但又挺有意思的，需要思考的点很多，所以决定写篇博客<del>水</del>总结一下。毕竟因为最近在刷算法题，没更新过什么博客了，趁国庆时间比较多，赶紧卷一卷。<br><img src="https://img-blog.csdnimg.cn/c2225430e10b4562bc25d966864039e9.jpg#pic_center" alt="水一篇博客"></p>
-<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>先说一下背景吧。我们项目之前是完全没做分库分表的，现在有几张核心的表，数据量已经非常大了，数据量最大的一张表已经有接近250亿的数据了……我刚开始看到这张表的数据量是比较惊讶的，而且还跟DBA大佬了解了一下，现在线上这张表的操作耗时非常短，暂时没有性能问题。一般来说，千万级的数据量应该已经比较影响性能了，现在这个表已经差不多250亿数据了，还不出问题？<br><img src="https://img-blog.csdnimg.cn/a4a50e6a14d64d889e6f9c42327635e3.png#pic_center" alt="？"></p>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>国庆前这段时间一直都在搞分库分表相关的东西，中间遇到了比较多的问题，不过最后还是都艰难地解决掉了。这段时间感觉挺累但又挺有意思的，需要思考的点很多，所以决定写篇博客<del>水</del>总结一下。毕竟因为最近在刷算法题，没更新过什么博客了，趁国庆时间比较多，赶紧卷一卷。</p>
+<p><img src="https://s2.loli.net/2023/07/19/RgNIw7APqQo8EW9.jpg" alt="水一篇博客"></p>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>先说一下背景吧。我们项目之前是完全没做分库分表的，现在有几张核心的表，数据量已经非常大了，数据量最大的一张表已经有接近250亿的数据了……我刚开始看到这张表的数据量是比较惊讶的，而且还跟DBA大佬了解了一下，现在线上这张表的操作耗时非常短，暂时没有性能问题。一般来说，千万级的数据量应该已经比较影响性能了，现在这个表已经差不多250亿数据了，还不出问题？</p>
+<p><img src="https://s2.loli.net/2023/07/19/t6oZcgp9RPMLrIA.png" alt="？"></p>
 <p>我分析了一下这张表的结构，然后看了一下相关的SQL，我认为这张表暂时还没有性能问题有以下两点：</p>
 <ol>
 <li>数据结构简单。这是一张文件表，里面的字段不多，只有主键id、文件名、key、hash、url、大小等字段，占用的空间也不大</li>
 <li>SQL不复杂。我分析了一下与这张表有关系的所有SQL，发现这张表几乎没有update操作（有是有，但是只有一个SQL，而且那个方法还被废弃了，我们现在的业务基本上不会对这张表的数据进行修改），只有insert和select操作，而且select操作大部分都是通过主键id作为条件查询，少量是通过hash字段来进行查询，所以需要维护的索引也不多，只有主键索引和这个hash字段的普通索引。所以这张表的相关SQL是比较简单的。</li>
 </ol>
-<p>虽然现在没有性能问题，但是嘛……现在这张表每个月的增长速度是亿级别的，再不做分库分表，迟早要出问题。所以我决定先对它出手了！另外几张表的数据量也很大，但是与之相关的操作太复杂了，所以我觉得我得先找个简单的表实践实践，积累一点经验后再对其它几张表下手。<br><img src="https://img-blog.csdnimg.cn/60b58989885642a2a029268729dfce20.gif#pic_center" alt="在这里插入图片描述"></p>
+<p>虽然现在没有性能问题，但是嘛……现在这张表每个月的增长速度是亿级别的，再不做分库分表，迟早要出问题。所以我决定先对它出手了！另外几张表的数据量也很大，但是与之相关的操作太复杂了，所以我觉得我得先找个简单的表实践实践，积累一点经验后再对其它几张表下手。</p>
+<p><img src="https://s2.loli.net/2023/07/19/I7mojJDOzVd9wnp.gif" alt="在这里插入图片描述"></p>
 <h1 id="分库分表方案"><a href="#分库分表方案" class="headerlink" title="分库分表方案"></a>分库分表方案</h1><p>分库分表主要有垂直切分和水平水平，这次针对的问题是单表容量达到瓶颈的问题，因此采用<strong>水平切分</strong>。</p>
 <p><strong>以下把这张表叫做 t_file 表吧。</strong></p>
 <h2 id="切分策略"><a href="#切分策略" class="headerlink" title="切分策略"></a>切分策略</h2><p>水平切分策略主要有hash切分和范围切分，优缺点如下表。</p>
@@ -719,8 +761,10 @@
 <li>mycat是proxy层解决方案，需要部署、维护，并且本身是单点的，高可用性差，如果想要集群还需要再引入别的中间件</li>
 <li>tidb资源利用率低、维护成本也很高</li>
 </ol>
-<p><strong>综合业务及中间件优缺点考虑，sharding-jdbc较为合适。</strong><br><img src="https://img-blog.csdnimg.cn/2ccda90f6bbb4040845c37649d4e1bf4.jpg#pic_center" alt="就用sharding-jdbc"></p>
-<h1 id="问题及解决方案"><a href="#问题及解决方案" class="headerlink" title="问题及解决方案"></a>问题及解决方案</h1><p>写的过程碰到了几个问题，搞了点骚操作。<br><img src="https://img-blog.csdnimg.cn/c8f044b7d9664254b89d6f775cac2b1c.gif#pic_center" alt="满脑子骚操作"></p>
+<p><strong>综合业务及中间件优缺点考虑，sharding-jdbc较为合适。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/UzLi1dTkKS3lN6c.jpg" alt="就用sharding-jdbc"></p>
+<h1 id="问题及解决方案"><a href="#问题及解决方案" class="headerlink" title="问题及解决方案"></a>问题及解决方案</h1><p>写的过程碰到了几个问题，搞了点骚操作。</p>
+<p><img src="https://s2.loli.net/2023/07/19/SnwkPHu3e4LJr2D.gif" alt="满脑子骚操作"></p>
 <h2 id="分布式ID实现"><a href="#分布式ID实现" class="headerlink" title="分布式ID实现"></a>分布式ID实现</h2><h3 id="不重复的ID该怎么实现？"><a href="#不重复的ID该怎么实现？" class="headerlink" title="不重复的ID该怎么实现？"></a>不重复的ID该怎么实现？</h3><p><strong>分库分表后，需要保证数据插入后ID的唯一性</strong>，实现不重复的ID一般有以下几种方案：</p>
 <ol>
 <li>使用雪花算法生成ID。雪花算法会生成64 bit的ID，转成字符串后长度是19位（有个表需要存储文件表数据ID），长度比较长。如果我们使用了雪花算法，那另一个表每一行的数据都会膨胀很多，这就不是很划算了……</li>
@@ -736,25 +780,31 @@
 <li>使用自己的策略就意味着不能使用sharding-jdbc的ID生成策略了</li>
 </ol>
 <p>第一个问题只需运维或者后端开发建表前注意一下即可，而第二个问题则需要在代码中解决，而第三个问题，只需要我们把表下标传进mapper，交给mybatis帮我们拼装到SQL里面即可。</p>
-<p><strong>所以现在主要是要解决第二个问题。</strong><br><img src="https://img-blog.csdnimg.cn/6b855c47ef304083ac7fc508239f8912.png#pic_center" alt="愁"></p>
+<p><strong>所以现在主要是要解决第二个问题。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/y9kUqCGojaFpX8g.png" alt="愁"></p>
 <h2 id="表下标维护"><a href="#表下标维护" class="headerlink" title="表下标维护"></a>表下标维护</h2><p>那么要怎么维护这个表下标呢？我当时是思考了一个下午，一步步优化，得到一个自认为不错的方案（太佩服我自己了吧），而且实现也不复杂。<strong>这个方案就是每个表预留一部分ID，然后每个实例各自维护一个表下标，不存储在redis中。</strong></p>
-<p>下面来看看整个优化的过程。<br><img src="https://img-blog.csdnimg.cn/518f43b1fd8f4cc485b3112588ca4d20.png#pic_center" alt="我真是个天才"></p>
-<h3 id="插入前查询maxId"><a href="#插入前查询maxId" class="headerlink" title="插入前查询maxId"></a>插入前查询maxId</h3><p>最直接的写法就是每次批量插入数据前，先查询表的最大ID，再加上当前的数据量，预测插入数据后的ID是否还在范围内，若超过了该范围，就把下标+1，更新到redis中，然后把数据插入到下一个表中。<br><img src="https://img-blog.csdnimg.cn/c780dae7556c4e0bb8396bef588323d3.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="插入前查询maxId"></p>
+<p>下面来看看整个优化的过程。</p>
+<p><img src="https://s2.loli.net/2023/07/19/k8YusoF1cWpKtnj.png" alt="我真是个天才"></p>
+<h3 id="插入前查询maxId"><a href="#插入前查询maxId" class="headerlink" title="插入前查询maxId"></a>插入前查询maxId</h3><p>最直接的写法就是每次批量插入数据前，先查询表的最大ID，再加上当前的数据量，预测插入数据后的ID是否还在范围内，若超过了该范围，就把下标+1，更新到redis中，然后把数据插入到下一个表中。</p>
+<p><img src="https://s2.loli.net/2023/07/19/KEiyTZamtGH3SNQ.jpg" alt="插入前查询maxId"></p>
 <p>单线程下这种做法当然没有问题，但是多线程问题就大了，何况这个业务并发量还那么高。</p>
 <p>假设 t_file_0 的ID范围是0 ~ 9999，现在该表最大的ID是9995，此时2个线程同时插入数据，这2个线程都插入4行数据……2个线程获取到的tableIndex都是0，并且查了一下maxId加上自己的数据量，最后得到9999，在范围内，然后同时插入数据……那么 t_file_0 这个表就会出现ID超过了9999的情况，而 t_file_1 的ID范围是 10000~19999，ID重复了！</p>
 <p>所以很明显，<strong>这个方案不靠谱。</strong></p>
-<h3 id="插入后查询maxId"><a href="#插入后查询maxId" class="headerlink" title="插入后查询maxId"></a>插入后查询maxId</h3><p>既然插入后的ID可能会超出范围，那我们能不能在插入后再检查一下maxId呢？如果maxId超出范围，就回滚事务，再更新tableIndex，把数据插入到下一张表中。<br><img src="https://img-blog.csdnimg.cn/aab14646598542eeaad907c1e0439300.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="插入后查询maxId"><br>这种做法比较靠谱，插入后再检查ID，再决定是否提交事务，就不会出现最大ID超过该表范围这种情况了。<strong>但是却要手动控制事务。</strong></p>
+<h3 id="插入后查询maxId"><a href="#插入后查询maxId" class="headerlink" title="插入后查询maxId"></a>插入后查询maxId</h3><p>既然插入后的ID可能会超出范围，那我们能不能在插入后再检查一下maxId呢？如果maxId超出范围，就回滚事务，再更新tableIndex，把数据插入到下一张表中。</p>
+<p><img src="https://s2.loli.net/2023/07/19/O8TGmfaQsKAMIBl.jpg" alt="插入后查询maxId"></p>
+<p>这种做法比较靠谱，插入后再检查ID，再决定是否提交事务，就不会出现最大ID超过该表范围这种情况了。<strong>但是却要手动控制事务。</strong></p>
 <h3 id="预留ID"><a href="#预留ID" class="headerlink" title="预留ID"></a>预留ID</h3><p>那能不能再优化一下呢？我不想控制事务回滚然后再提交一次……</p>
 <p>所以我想到了预留最后一部分ID的做法，<strong>我可以让每张表都预留一部分ID，这部分ID可以插入一部分数据，但是插入之后，以后的数据就插入到下一张表。只要我们预留的ID范围足够大，那在高并发场景下就不会出现ID超范围的情况。</strong></p>
 <p>比如 t_file_0 的预留ID范围是 9000~9999，当插入一批数据后得到的最大ID是9100，达到了预留ID范围，那就更新表下标，以后的数据插入到 t_file_1 中。即使多个线程同时插入一大批数据，只要我们预留的范围足够大，就不会出现最大ID超过这张表范围的情况。这样就不用手动控制事务了。<br>而我们需要查询的时候，ID为 0 ~ 9999（包括预留的那部分ID，9000 ~ 9999） 还是路由到 t_file_0 进行查询，所以插入和查询都是不会有问题的。</p>
-<p><img src="https://img-blog.csdnimg.cn/21801bc2d7434ba58a98d81d9d9cc30f.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="预留ID"><br>但是这样又依赖与中间件了，这样的话，redis一出问题，那可能就会影响到当前业务的新增操作了。</p>
+<p><img src="https://s2.loli.net/2023/07/19/LtxuMKQ6envg1b3.jpg" alt="预留ID"></p>
+<p>但是这样又依赖与中间件了，这样的话，redis一出问题，那可能就会影响到当前业务的新增操作了。</p>
 <h3 id="预留ID-不依赖redis"><a href="#预留ID-不依赖redis" class="headerlink" title="预留ID + 不依赖redis"></a>预留ID + 不依赖redis</h3><p>上面的方案，都是在redis维护了一个表下标。这样的话，redis一出问题，那可能就会影响到当前业务的新增操作了，但是<strong>实际上表下标是不需要在redis中再维护一份的，我只需要在每个实例中维护自己的一个下标就行了！</strong></p>
 <p>这样的话，会有这个问题：当其中一个实例插入数据后，发现自己的下标要+1了，其它的实例无法感知到。</p>
 <p><strong>但是这个问题并不会使ID重复，因为只要我预留的ID足够大，保证其它实例再插入数据的时候，不会超过当前表的最大ID，就不会出现问题！并且我们插入数据是分批插入的，每批最多100个数据</strong>。比如要插入1000个数据，我会分成10批数据，每批数据插入完成后都会检查一下maxId并更新表。所以理论上，只要满足这个条件，就绝对不会有重复ID的问题发生（<strong>当然我是测过的，你完全可以相信七里翔</strong>）： </p>
 <blockquote>
 <p><strong>预留ID数 &gt; 实例数 <em> 每个实例的最大线程数 </em> 100</strong></p>
 </blockquote>
-<p><img src="https://img-blog.csdnimg.cn/ce063a80027f49f7abd70ba5fb6592b7.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="预留ID + 不依赖redis"></p>
+<p><img src="https://s2.loli.net/2023/07/19/dNnMAb2REB36CkQ.jpg" alt="预留ID + 不依赖redis"></p>
 <h2 id="多数据源、sharding-jdbc、主从怎么结合到一块？"><a href="#多数据源、sharding-jdbc、主从怎么结合到一块？" class="headerlink" title="多数据源、sharding-jdbc、主从怎么结合到一块？"></a>多数据源、sharding-jdbc、主从怎么结合到一块？</h2><p>使用sharding-jdbc的shardingsphere，我又遇到了以下两个问题：</p>
 <ol>
 <li>在项目中使用了我们自己写的一个多数据源的组件，与shardingsphere数据源冲突</li>
@@ -768,9 +818,10 @@
 <li>使用Hint分片策略，强制切换数据源。这种办法不靠谱，每次使用前都需要路由到指定的具体库和表，将产生大量重复的业务代码</li>
 <li>配置shardingsphere的读写分离。这种方法也不靠谱，我们不一定所有的读都走从库，再加上我们有个别sql查询是不走shardingsphere的，这意味着这部分查询语句没法使用shardingsphere的读写分离。</li>
 </ol>
-<p>这两种方法都没法满足我们的业务需求，最终我决定再优化多数据源组件，使用多数据源管理多个shardingsphere DataSource。<br>通过配置多个shardingsphere数据源，把主数据库和从数据库配置到不同的shardingsphere数据源中，再注入到多数据源组件中，通过注解切换到不同的shardingsphere数据源，即可实现主从库数据源的切换，同时还能使用shardingsphere的功能，主从数据源共用同一套表路由算法，并且方便以后其它表使用shardingsphere来进行表路由。<br><img src="https://img-blog.csdnimg.cn/b8ee278f0d934eca934132b32bb878be.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="dynamic-datasource和shardingsphere结合"></p>
+<p>这两种方法都没法满足我们的业务需求，最终我决定再优化多数据源组件，使用多数据源管理多个shardingsphere DataSource。<br>通过配置多个shardingsphere数据源，把主数据库和从数据库配置到不同的shardingsphere数据源中，再注入到多数据源组件中，通过注解切换到不同的shardingsphere数据源，即可实现主从库数据源的切换，同时还能使用shardingsphere的功能，主从数据源共用同一套表路由算法，并且方便以后其它表使用shardingsphere来进行表路由。</p>
+<p><img src="https://s2.loli.net/2023/07/19/aXKSOBAFrs9uPCG.jpg" alt="dynamic-datasource和shardingsphere结合"></p>
 <h1 id="影响"><a href="#影响" class="headerlink" title="影响"></a>影响</h1><h2 id="部分SQL性能问题"><a href="#部分SQL性能问题" class="headerlink" title="部分SQL性能问题"></a>部分SQL性能问题</h2><p>虽然这个表涉及的SQL不多，并且不复杂，但是还是有个别SQL可能会出现问题。<br>比如刚才说到的，通过hash查询某一行数据。有2个SQL，分别是这样：需要通过hash匹配查询第一行数据；需要通过hash匹配查询最后一行数据。<br>这2个SQL肯定不能走shardingsphere来查询的了，因为我的分片键只有id，这种查询条件不是分片键的SQL，会在所有的表中执行一次，最后在汇合处理，这样的效率肯定是非常低的。<br>还好这2个SQL也不复杂，我最后自己优化了一下。不通过shardingsphere去做路由，而是我自己传入表下标。比如需要通过hash匹配查询第一行数据，我传下标0进去执行SQL，数据为空，下标+1再查下一个表。直到查询到一行数据或者下标超出了当前插入数据的表下标（tableIndex）为止。</p>
-<h1 id="上线前准备"><a href="#上线前准备" class="headerlink" title="上线前准备"></a>上线前准备</h1><h2 id="数据迁移"><a href="#数据迁移" class="headerlink" title="数据迁移"></a>数据迁移</h2><p>上线前需要运维协助建表并迁移数据，分表后每张表数据量为20亿，预留10万个ID。<br><img src="https://img-blog.csdnimg.cn/b59c7d9f72bf4cf0ad705e1899dee678.jpg?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="数据迁移"></p>
+<h1 id="上线前准备"><a href="#上线前准备" class="headerlink" title="上线前准备"></a>上线前准备</h1><h2 id="数据迁移"><a href="#数据迁移" class="headerlink" title="数据迁移"></a>数据迁移</h2><p>上线前需要运维协助建表并迁移数据，分表后每张表数据量为20亿，预留10万个ID。<br><img src="https://s2.loli.net/2023/07/19/haI9D1xXf7gBZoV.jpg" alt="数据迁移"></p>
 <h2 id="服务切换"><a href="#服务切换" class="headerlink" title="服务切换"></a>服务切换</h2><p>服务更新与服务回滚是比较重要的环节，这个得要提前规划好。考虑好怎么样才能将服务切换时的影响降到最低。我刚开始的方案是，预留一部分主键ID，具体方案如下。</p>
 <h3 id="预留一部分主键ID"><a href="#预留一部分主键ID" class="headerlink" title="预留一部分主键ID"></a>预留一部分主键ID</h3><p>采取预留一部分主键ID的方案让新旧服务能同时运行而不会产生主键冲突。</p>
 <p>假如现在线上有250亿数据，按照每张表20亿数据分表，则可以分为13张表，下标为 0 ~ 12 ，t_file_12 的主键范围是 240亿~260亿-1，全量同步后开启增量同步，把后续新增的数据也同步过去。</p>
@@ -785,9 +836,17 @@
 <li>上线新服务</li>
 <li>新服务无异常，关掉旧服务和双向同步</li>
 </ol>
-<p><img src="https://img-blog.csdnimg.cn/b668d4869b894181b2215c4c9fc14842.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="预留一部分主键ID"><br>当我说完这个方案后，我自信满满，此时我的表情是这样的👇。<br><img src="https://img-blog.csdnimg.cn/5eacb660f08944a9a652f7b82bda826a.gif#pic_center" alt="自信满满"><br>但是，DBA大佬的表情先是这样的👇。<br><img src="https://img-blog.csdnimg.cn/696b08f5796f485e8e79a6927c252216.png#pic_center" alt="?"><br>然后，变成了这样👇。<br><img src="https://img-blog.csdnimg.cn/6617a978bef2436e9c37020d4ce3f9f0.png#pic_center" alt="!"><br>我内心慌了起来。</p>
+<p><img src="https://s2.loli.net/2023/07/19/GeDQaymw51AxrWv.png" alt="预留一部分主键ID"></p>
+<p>当我说完这个方案后，我自信满满，此时我的表情是这样的👇。</p>
+<p><img src="https://s2.loli.net/2023/07/19/7YipyCTMcRxJFws.gif" alt="自信满满"></p>
+<p>但是，DBA大佬的表情先是这样的👇。</p>
+<p><img src="https://s2.loli.net/2023/07/19/IJqaGMfPzjwN1TQ.png" alt="?"></p>
+<p>然后，变成了这样👇。</p>
+<p><img src="https://s2.loli.net/2023/07/19/bQRGLrxayWH5lVm.png" alt="!"></p>
+<p>我内心慌了起来。</p>
 <p>DBA大佬说：小伙子，这个上线方案不行。假如一个表原本的当前的自增序列号是10，而你插入了一行数据，这行数据里面包含了ID（即不是使用自增ID）的话，是会更新自增序列号的，比如你插入了一个ID为15的数据，那这个时候表的自增序列号就会变成16，而不是原来的10了。</p>
-<p>我……<br><img src="https://img-blog.csdnimg.cn/1abd5ed41885470cba4a540d08e59405.jpg#pic_center" alt="是我太菜"></p>
+<p>我……</p>
+<p><img src="https://s2.loli.net/2023/07/19/1lcmD8Arwxaf94t.jpg" alt="是我太菜"></p>
 <h3 id="最后的方案"><a href="#最后的方案" class="headerlink" title="最后的方案"></a>最后的方案</h3><p>还是DBA大佬经验丰富，和他讨论过后，我豁然开朗。最终的上线步骤是这样的。</p>
 <ol>
 <li>运维开启全量同步，把旧库数据同步到新库中</li>
@@ -813,36 +872,6 @@
         <tag>数据库</tag>
         <tag>分库分表</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>装饰者模式</title>
-    <url>/2019/06/21/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
-    <content><![CDATA[<h2 id="设计模式之装饰者模式"><a href="#设计模式之装饰者模式" class="headerlink" title="设计模式之装饰者模式"></a>设计模式之装饰者模式</h2><p>最近在买奶茶的时候突发奇想，假如我要设计一个奶茶订单系统，这个奶茶价格计算要怎样设计才算方便呢？毕竟奶茶种类那么多，而且能加的配料也很多，并且奶茶店可能随时还会增加奶茶的种类及可选的配料，想要满足这些经常改变或增加的需求，怎么设计代码才是易维护、易扩展的呢？在了解了装饰者模式之后，我终于知道该怎么做了！</p>
-<p><img src="https://i.loli.net/2019/06/21/5d0cf8c3a00af59704.png" alt="奶茶奶茶奶茶"></p>
-<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>装饰者模式(Decorator Pattern)动态地将责任附加在对象上。若要扩展功能，装饰者提供了比继承更有弹性的替代方案。</p>
-<p>装饰者模式包含以下角色：</p>
-<ol>
-<li>抽象构件</li>
-<li>具体构件</li>
-<li>抽象装饰类</li>
-<li>具体装饰类</li>
-</ol>
-<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p> 按照大白话来讲，抽象构件就是奶茶，具体构件是珍珠奶茶、波霸奶茶、红豆奶茶这些具体的奶茶。而抽象装饰类和具体装饰类是装饰者模式的设计核心了，利用它们我们可以动态地给奶茶加上配料。</p>
-<h3 id="2-1-抽象奶茶类"><a href="#2-1-抽象奶茶类" class="headerlink" title="2.1 抽象奶茶类"></a>2.1 抽象奶茶类</h3> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class MilkTea &#123;</span><br><span class="line">    public abstract String getDescription();</span><br><span class="line">    public abstract int cost();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-2-具体奶茶类"><a href="#2-2-具体奶茶类" class="headerlink" title="2.2 具体奶茶类"></a>2.2 具体奶茶类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 波霸奶茶，一杯15块钱</span><br><span class="line">public class BoBaMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;波霸奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 15;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 红豆奶茶，一杯12块钱</span><br><span class="line">public class HongDouMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;红豆奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 12;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-3-抽象配料类"><a href="#2-3-抽象配料类" class="headerlink" title="2.3 抽象配料类"></a>2.3 抽象配料类</h3><p>由于我们是让配料来扩展奶茶，因此需要继承抽象奶茶类并且实现里面的抽象方法。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Decorator extends MilkTea&#123;</span><br><span class="line">    private MilkTea milkTea;</span><br><span class="line"></span><br><span class="line">    public Decorator(MilkTea milkTea)&#123;</span><br><span class="line">        this.milkTea = milkTea;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return milkTea.getDescription();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return milkTea.cost();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-4-具体配料类"><a href="#2-4-具体配料类" class="headerlink" title="2.4 具体配料类"></a>2.4 具体配料类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 加奇异果要3块钱！</span><br><span class="line">public class QiYiGuoDecorator extends Decorator &#123;</span><br><span class="line">    public QiYiGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加奇异果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 加椰果才要2块钱！</span><br><span class="line">public class YeGuoDecorator extends Decorator &#123;</span><br><span class="line">    public YeGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加椰果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String args[])&#123;</span><br><span class="line">        //先来一杯红豆奶茶，加椰果，加奇异果！</span><br><span class="line">        MilkTea hongDouMilkTea = new HongDouMilkTea();</span><br><span class="line">        hongDouMilkTea = new YeGuoDecorator(hongDouMilkTea);</span><br><span class="line">        hongDouMilkTea = new QiYiGuoDecorator(hongDouMilkTea);</span><br><span class="line">        System.out.println(hongDouMilkTea.getDescription() + &quot;，价格：&quot; + hongDouMilkTea.cost() + &quot;元&quot;);</span><br><span class="line"></span><br><span class="line">        //再来一杯波霸奶茶，再加双倍椰果，别问我为什么！我爱椰果！</span><br><span class="line">        MilkTea boBaMilkTea = new BoBaMilkTea();</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        System.out.println(boBaMilkTea.getDescription() + &quot;，价格：&quot; + boBaMilkTea.cost() + &quot;元&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2019/06/22/5d0d03ced660424319.png" alt="测试结果"></p>
-<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.装饰模式与继承关系的目的都是要扩展对象的功能，但是装饰模式可以提供比继承更多的灵活性。<br>2.通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合。可以使用多个具体装饰类来装饰同一对象，得到功能更为强大的对象。<br>3.具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，在使用时再对其进行组合，原有代码无须改变，符合“开闭原则”</p>
-<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>1.使用装饰模式进行系统设计时将产生很多小对象，这些对象的区别在于它们之间相互连接的方式有所不同，而不是它们的类或者属性值有所不同，同时还将产生很多具体装饰类。这些装饰类和小对象的产生将增加系统的复杂度。<br>2.这种比继承更加灵活机动的特性，也同时意味着装饰模式比继承更加易于出错，排错也很困难，对于多次装饰的对象，调试时寻找错误可能需要逐级排查，较为烦琐。</p>
-<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.当不能采用继承的方式对系统进行扩充或者采用继承不利于系统扩展和维护时。不能采用继承的情况主要有两类：第一类是系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类数目呈爆炸性增长；第二类是因为类定义不能继承（如final类）.<br>2.在不影响其他对象的情况下，以动态、透明的方式给单个对象添加职责。</p>
-]]></content>
-      <categories>
-        <category>设计模式</category>
-      </categories>
   </entry>
   <entry>
     <title>观察者模式</title>
@@ -879,6 +908,40 @@
       </categories>
   </entry>
   <entry>
+    <title>记一次简单的服务启动GC优化</title>
+    <url>/2021/01/31/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%8A%A8GC%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。</p>
+<h1 id="症状"><a href="#症状" class="headerlink" title="症状"></a>症状</h1><p>项目启动</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>gc.txt<br><img src="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png" alt="GC记录"><br>好家伙，一启动就来9次 Young GC ，2次 Full GC。</p>
+<p>现在先用jinfo看看配置参数<br><img src="https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png" alt="查看JVM参数"><br>注意几个重要参数：<br><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">-XX:InitialHeapSize=<span class="number">62914560</span>		<span class="comment">//堆初始值</span></span><br><span class="line">-XX:MaxHeapSize=<span class="number">1073741824</span>	<span class="comment">//堆最大值</span></span><br><span class="line">-MaxDirectMemorySize=<span class="number">536870912</span>	<span class="comment">//虚拟机外最大内存</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="Full-GC"><a href="#Full-GC" class="headerlink" title="Full GC"></a>Full GC</h2><p>先来分析这两次Full GC以及它们前面的Young GC</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">2.536</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">19883</span>K-&gt;<span class="number">3584</span>K(<span class="number">128512</span>K)] <span class="number">27143</span>K-&gt;<span class="number">12014</span>K(<span class="number">169472</span>K), <span class="number">0.0158155</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line"><span class="number">2.552</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">3584</span>K-&gt;<span class="number">0</span>K(<span class="number">128512</span>K)] [ParOldGen: <span class="number">8430</span>K-&gt;<span class="number">8782</span>K(<span class="number">32256</span>K)] <span class="number">12014</span>K-&gt;<span class="number">8782</span>K(<span class="number">160768</span>K), [Metaspace: <span class="number">20409</span>K-&gt;<span class="number">20409</span>K(<span class="number">1069056</span>K)], <span class="number">0.0844666</span> secs] [Times: user=<span class="number">0.16</span> sys=<span class="number">0.00</span>, real=<span class="number">0.09</span> secs]</span><br><span class="line"><span class="number">4.965</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">109848</span>K-&gt;<span class="number">8697</span>K(<span class="number">247296</span>K)] <span class="number">119422</span>K-&gt;<span class="number">19608</span>K(<span class="number">279552</span>K), <span class="number">0.0278398</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.01</span>, real=<span class="number">0.03</span> secs]</span><br><span class="line"><span class="number">4.993</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">8697</span>K-&gt;<span class="number">0</span>K(<span class="number">247296</span>K)] [ParOldGen: <span class="number">10910</span>K-&gt;<span class="number">14513</span>K(<span class="number">47104</span>K)] <span class="number">19608</span>K-&gt;<span class="number">14513</span>K(<span class="number">294400</span>K), [Metaspace: <span class="number">33512</span>K-&gt;<span class="number">33512</span>K(<span class="number">1081344</span>K)], <span class="number">0.1136122</span> secs] [Times: user=<span class="number">0.20</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</span><br></pre></td></tr></table></figure>
+<p>可以看到两次Full GC都是由于Metadata GC Threshold造成的。我这里用的是JDK8，参数里没有明确指定metaspace的初始值和上限，这个时候初始值应该是默认的 21M 。问题不大，那我就把它的初始值和上限调大一点吧，调到64M。</p>
+<p>措施：<br><strong>追加元空间初始值</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>这个时候再查看gc.txt<br><img src="https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png" alt="gc.txt"><br>可以看到已经没有Full GC了，不过还是有8次Young GC。</p>
+<h2 id="Young-GC"><a href="#Young-GC" class="headerlink" title="Young GC"></a>Young GC</h2><p>其实从我的启动参数里面就可以看到，<strong>堆的容量我只指定了最大值(-Xmx1024m)</strong>，并没有指定初始值。所以可以在配置参数里面看到 -XX:InitialHeapSize=62082048，即<strong>堆的初始容量只有60m左右。</strong></p>
+<p>而JVM默认的新生代和老年代空间占比为 <strong>1 : 3</strong>，所以新生代在一开始的时候只有15m的内存空间，因此JVM一开始在15m的时候就发生了Young GC。</p>
+<p>所以现在要追加新生代和堆的初始值，新生代、老年代的空间占比我就不调了，使用默认的 1 : 3 即可，而堆的初始值调成1024m，这样新生代的初始值就是256m了。</p>
+<p>措施：<br><strong>追加堆的初始值</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xms1024m -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>现在再来看看gc.txt<br><img src="https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png" alt="gc.txt"><br>可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……</p>
+<p><strong>好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png" alt="过分"></p>
+<p>好吧，公司穷，只能买得起4G的服务器。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png" alt="哭了"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这只是一次很简单的JVM启动参数优化，平时启动应用的时候还是得多注意注意堆的初始值和最大值配置，元空间这部分也不能忽略了。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>JVM优化</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>跳台阶</title>
     <url>/2019/06/20/%E8%B7%B3%E5%8F%B0%E9%98%B6/</url>
     <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>一只青蛙一次可以跳上1级台阶，也可以跳上2级。求该青蛙跳上一个n级的台阶总共有多少种跳法（先后次序不同算不同的结果）。</p>
@@ -892,56 +955,36 @@
       </categories>
   </entry>
   <entry>
-    <title>记一次简单的服务启动GC优化</title>
-    <url>/2021/01/31/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%8A%A8GC%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。</p>
-<h1 id="症状"><a href="#症状" class="headerlink" title="症状"></a>症状</h1><p>项目启动</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>gc.txt<br><img src="https://img-blog.csdnimg.cn/20201203194421400.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="GC记录"><br>好家伙，一启动就来9次 Young GC ，2次 Full GC。</p>
-<p>现在先用jinfo看看配置参数<br><img src="https://img-blog.csdnimg.cn/20201203195944270.png" alt="查看JVM参数"><br>注意几个重要参数：<br><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">-XX:InitialHeapSize=<span class="number">62914560</span>		<span class="comment">//堆初始值</span></span><br><span class="line">-XX:MaxHeapSize=<span class="number">1073741824</span>	<span class="comment">//堆最大值</span></span><br><span class="line">-MaxDirectMemorySize=<span class="number">536870912</span>	<span class="comment">//虚拟机外最大内存</span></span><br></pre></td></tr></table></figure></p>
-<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="Full-GC"><a href="#Full-GC" class="headerlink" title="Full GC"></a>Full GC</h2><p>先来分析这两次Full GC以及它们前面的Young GC</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">2.536</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">19883</span>K-&gt;<span class="number">3584</span>K(<span class="number">128512</span>K)] <span class="number">27143</span>K-&gt;<span class="number">12014</span>K(<span class="number">169472</span>K), <span class="number">0.0158155</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line"><span class="number">2.552</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">3584</span>K-&gt;<span class="number">0</span>K(<span class="number">128512</span>K)] [ParOldGen: <span class="number">8430</span>K-&gt;<span class="number">8782</span>K(<span class="number">32256</span>K)] <span class="number">12014</span>K-&gt;<span class="number">8782</span>K(<span class="number">160768</span>K), [Metaspace: <span class="number">20409</span>K-&gt;<span class="number">20409</span>K(<span class="number">1069056</span>K)], <span class="number">0.0844666</span> secs] [Times: user=<span class="number">0.16</span> sys=<span class="number">0.00</span>, real=<span class="number">0.09</span> secs]</span><br><span class="line"><span class="number">4.965</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">109848</span>K-&gt;<span class="number">8697</span>K(<span class="number">247296</span>K)] <span class="number">119422</span>K-&gt;<span class="number">19608</span>K(<span class="number">279552</span>K), <span class="number">0.0278398</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.01</span>, real=<span class="number">0.03</span> secs]</span><br><span class="line"><span class="number">4.993</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">8697</span>K-&gt;<span class="number">0</span>K(<span class="number">247296</span>K)] [ParOldGen: <span class="number">10910</span>K-&gt;<span class="number">14513</span>K(<span class="number">47104</span>K)] <span class="number">19608</span>K-&gt;<span class="number">14513</span>K(<span class="number">294400</span>K), [Metaspace: <span class="number">33512</span>K-&gt;<span class="number">33512</span>K(<span class="number">1081344</span>K)], <span class="number">0.1136122</span> secs] [Times: user=<span class="number">0.20</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</span><br></pre></td></tr></table></figure>
-<p>可以看到两次Full GC都是由于Metadata GC Threshold造成的。我这里用的是JDK8，参数里没有明确指定metaspace的初始值和上限，这个时候初始值应该是默认的 21M 。问题不大，那我就把它的初始值和上限调大一点吧，调到64M。</p>
-<p>措施：<br><strong>追加元空间初始值</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>这个时候再查看gc.txt<br><img src="https://img-blog.csdnimg.cn/2020120320223724.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70" alt="gc.txt"><br>可以看到已经没有Full GC了，不过还是有8次Young GC。</p>
-<h2 id="Young-GC"><a href="#Young-GC" class="headerlink" title="Young GC"></a>Young GC</h2><p>其实从我的启动参数里面就可以看到，<strong>堆的容量我只指定了最大值(-Xmx1024m)</strong>，并没有指定初始值。所以可以在配置参数里面看到 -XX:InitialHeapSize=62082048，即<strong>堆的初始容量只有60m左右。</strong></p>
-<p>而JVM默认的新生代和老年代空间占比为 <strong>1 : 3</strong>，所以新生代在一开始的时候只有15m的内存空间，因此JVM一开始在15m的时候就发生了Young GC。</p>
-<p>所以现在要追加新生代和堆的初始值，新生代、老年代的空间占比我就不调了，使用默认的 1 : 3 即可，而堆的初始值调成1024m，这样新生代的初始值就是256m了。</p>
-<p>措施：<br><strong>追加堆的初始值</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xms1024m -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>现在再来看看gc.txt<br><img src="https://img-blog.csdnimg.cn/20201203203514210.png" alt="gc.txt"><br>可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……</p>
-<p><strong>好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。</strong><br><img src="https://img-blog.csdnimg.cn/20201203204915316.png#pic_center" alt="过分"><br>好吧，公司穷，只能买得起4G的服务器。<br><img src="https://img-blog.csdnimg.cn/20201203205647704.png#pic_center" alt="哭了"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这只是一次很简单的JVM启动参数优化，平时启动应用的时候还是得多注意注意堆的初始值和最大值配置，元空间这部分也不能忽略了。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>JVM</category>
-      </categories>
-      <tags>
-        <tag>JVM优化</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>除了 Websocket ，服务端还有什么办法能向浏览器主动推送信息？</title>
     <url>/2021/11/13/%E9%99%A4%E4%BA%86-Websocket-%EF%BC%8C%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%BF%98%E6%9C%89%E4%BB%80%E4%B9%88%E5%8A%9E%E6%B3%95%E8%83%BD%E5%90%91%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%BB%E5%8A%A8%E6%8E%A8%E9%80%81%E4%BF%A1%E6%81%AF%EF%BC%9F/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>打工的时候，偶尔在闲暇时刻偷偷打开一下股票网站，看看今天有没有赚钱，说不定哪天一夜暴富，这是我现在唯一的盼头……<br><img src="https://img-blog.csdnimg.cn/d438e273b14e4441a33d184df051d3a3.jpg#pic_center" alt="流泪打工人"></p>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>打工的时候，偶尔在闲暇时刻偷偷打开一下股票网站，看看今天有没有赚钱，说不定哪天一夜暴富，这是我现在唯一的盼头……</p>
+<p><img src="https://s2.loli.net/2023/07/19/euz1TniqLF2o7SI.jpg" alt="流泪打工人"></p>
 <p>今天我一如往常打开熟悉的“XX财富网”，输入熟悉的股票代码，点开我前几天刚买入的“XXX”……</p>
-<p><img src="https://img-blog.csdnimg.cn/838f7986748847e59a211343aa26ef64.gif#pic_center" alt="绿"></p>
-<p>看着冒着绿光并且一闪一闪的屏幕，我陷入了沉思……<br><img src="https://img-blog.csdnimg.cn/0b60fe0fe54042b6bf5e6e55413f4a89.jpg#pic_center" alt="沉思"><br><strong>我恍惚了一下，心想这实时刷新的数据，是后端通过websocket推过来的吗？</strong></p>
-<p>于是我F12看了一下，<strong>没有 websocket 连接啊！</strong><br><img src="https://img-blog.csdnimg.cn/53ee6a9ecb0a4cabbf0b48a4797582ec.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="没有websocket"><br><strong>难道除了 Websocket 还有别的办法能够让后端向前端主动推送消息？</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/7CPtpYo3VjMIRhy.gif" alt="绿"></p>
+<p>看着冒着绿光并且一闪一闪的屏幕，我陷入了沉思……</p>
+<p><img src="https://s2.loli.net/2023/07/19/K6dpJc7P23Z8iSD.jpg" alt="沉思"></p>
+<p><strong>我恍惚了一下，心想这实时刷新的数据，是后端通过websocket推过来的吗？</strong></p>
+<p>于是我F12看了一下，<strong>没有 websocket 连接啊！</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/7NDhloYLMPnKciZ.png" alt="没有websocket"></p>
+<p><strong>难道除了 Websocket 还有别的办法能够让后端向前端主动推送消息？</strong></p>
 <p>我马上想到了 http2.0 的 server push ，但是想了想又觉得不太可能，因为 http2.0 的push并不是这个意思。</p>
 <p><strong>http2.0 的 server push 指的是：服务器还没有收到浏览器的请求，服务器就把各种资源推送给浏览器。比如，浏览器只请求了 index.html，但是服务器发现 index.html 内容里面需要用到 style.css、example.png，于是服务器在浏览器请求 index.html时顺便把 style.css、example.png 也一起发送给浏览器。这样的话，只需要一轮 HTTP 通信，浏览器就得到了全部资源，提高了性能。</strong></p>
 <p>所以很明显，http2.0 的 server push 只是复用其中一条http连接顺便把后续需要发送的一些静态资源提前发给了浏览器，并不<strong>适用于这种推送动态数据的场景</strong>（比如股票涨跌数据实时刷新、直播弹幕推送等）。</p>
 <p>那服务器究竟是怎么实时推送了股票相关的数据呢？</p>
 <h1 id="端倪"><a href="#端倪" class="headerlink" title="端倪"></a>端倪</h1><p>于是我点开了 Fetch/XHR 看看到底是何方神圣，在不断推送数据。于是我发现了这几个请求的内容好像不断地在刷新……</p>
-<p>从下图可以看到一秒钟推送好几条数据过来（现在是十一点半，我打开了美股）<br><img src="https://img-blog.csdnimg.cn/6f0b8750c77d46daa90f071fa3413c14.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16" alt="端倪"><br>查看这几个http请求，很容易就发现请求头和响应头的 Content-Type 和 Accept 跟其它普通的http请求不太一样。<br><img src="https://img-blog.csdnimg.cn/fa084d515ed34d11a2cc56c7d3231db2.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16" alt="头"><br>很明显，这个服务端推送，跟这个 text/event-stream 关系很大。<br><img src="https://img-blog.csdnimg.cn/2378e39bab234a4dbd7637fdd7e0aeb7.gif#pic_center" alt="真相只有一个"><br>于是我去查了一下相关资料，果不其然……<strong>服务器向浏览器推送信息，除了 WebSocket，还有一种方法：Server-Sent Events。</strong></p>
+<p>从下图可以看到一秒钟推送好几条数据过来（现在是十一点半，我打开了美股）</p>
+<p><img src="https://s2.loli.net/2023/07/19/9ROFre7IysTmwzv.png" alt="端倪"></p>
+<p>查看这几个http请求，很容易就发现请求头和响应头的 Content-Type 和 Accept 跟其它普通的http请求不太一样。</p>
+<p><img src="https://s2.loli.net/2023/07/19/U1qVtv7mO6McDiH.png" alt="头"></p>
+<p>很明显，这个服务端推送，跟这个 text/event-stream 关系很大。</p>
+<p><img src="https://s2.loli.net/2023/07/19/DE4y1Q5nNtKHsOI.gif" alt="真相只有一个"></p>
+<p>于是我去查了一下相关资料，果不其然……<strong>服务器向浏览器推送信息，除了 WebSocket，还有一种方法：Server-Sent Events。</strong></p>
 <h1 id="Server-Sent-Events-是什么？"><a href="#Server-Sent-Events-是什么？" class="headerlink" title="Server-Sent Events 是什么？"></a>Server-Sent Events 是什么？</h1><p>Server-Sent Events，服务器发送事件，简称SSE，是一种 HTML 5 事件通知，它允许网页获得来自服务器的更新。</p>
 <p>严格来说，HTTP 协议是没有办法做到服务器主动推送信息的，但是有一种变通的方法可以做到，那就是服务器向客户端声明接下来要发送的是流信息（streaming）。</p>
 <p>也就是说，发送的不是一次性的数据包，而是一个数据流，会连续不断地发送过来。这时，客户端不会关闭连接，会一直等着服务器发过来的新的数据流，视频播放就是这样的例子。本质上，这种通信就是以流信息的方式，完成一次用时很长的下载。</p>
 <p>SSE 就是利用这种机制，使用流信息向浏览器推送信息。它基于 HTTP 协议，目前除了 IE/Edge，其他浏览器都支持。</p>
 <h1 id="Server-Sent-Events-与-Websocket-对比"><a href="#Server-Sent-Events-与-Websocket-对比" class="headerlink" title="Server-Sent Events 与 Websocket 对比"></a>Server-Sent Events 与 Websocket 对比</h1><p>既然能让服务器主动向浏览器推送信息，那我们肯定会想到让websocket来跟它做做对比。</p>
-<p>总的来说，Websocket 应该是更强大、更灵活、应用更广泛的，因为它是全双工通信，可以双向通信；但是SSE是单向通道，只能服务器向浏览器发送，因为流信息本质上就是下载。如果浏览器向服务器发送信息，就变成了另一次 HTTP 请求。<br><img src="https://img-blog.csdnimg.cn/d72f7e95d3904ef6be19429aa813921f.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="SSE"><br>但是，SSE也有自己的优点。</p>
+<p>总的来说，Websocket 应该是更强大、更灵活、应用更广泛的，因为它是全双工通信，可以双向通信；但是SSE是单向通道，只能服务器向浏览器发送，因为流信息本质上就是下载。如果浏览器向服务器发送信息，就变成了另一次 HTTP 请求。<br><img src="https://s2.loli.net/2023/07/19/9QgO1zIvSjAcw7F.png" alt="SSE"><br>但是，SSE也有自己的优点。</p>
 <ul>
 <li>SSE 使用 HTTP 协议，现有的服务器软件都支持。WebSocket 是一个独立协议。</li>
 <li>SSE 比较轻量级，使用较简单；WebSocket 协议相对来说比较复杂。</li>
@@ -953,8 +996,9 @@
 <p>迟点有空的时候写个demo试试。</p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
 <li>除了 Websocket ，服务端还能通过 SSE 向浏览器主动推送消息，其本质上就是一个基于 HTTP 的流。</li>
-<li>今天的工不白打，股市虽绿，但我因此收获了一个冷门的知识点<del>安慰自己</del> 。<br><img src="https://img-blog.csdnimg.cn/eebd561ea8d64cfe9ef490d3baf0bbf5.jpg#pic_center" alt="我真的没哭"></li>
+<li>今天的工不白打，股市虽绿，但我因此收获了一个冷门的知识点<del>安慰自己</del> 。</li>
 </ul>
+<p><img src="https://s2.loli.net/2023/07/19/NAxtRGfvVPlozEe.jpg" alt="我真的没哭"></p>
 ]]></content>
       <categories>
         <category>前端</category>

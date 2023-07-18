@@ -60,17 +60,17 @@ categories:
 
 >假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5。
 
-![扩容前](https://img-blog.csdnimg.cn/20201114210933754.png#pic_center)
+![扩容前](https://s2.loli.net/2023/07/19/blEqv2TKHC8zY7P.png#pic_center)
 >1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 **Entry<K,V> next = e.next;** 这一步后，e指向3，next指向7。
 >这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。
 >这个时候旧数组、链表和两个线程的状态是这样的。
-![线程二扩容完成](https://img-blog.csdnimg.cn/20201114211611593.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![线程二扩容完成](https://s2.loli.net/2023/07/19/o47McDelJqGOxyA.png#pic_center)
 
 >2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：
-![第一次循环结束](https://img-blog.csdnimg.cn/20201114211819832.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![第一次循环结束](https://s2.loli.net/2023/07/19/5yFvHUxTd697JDj.png#pic_center)
 
 >3 下次循环一开始，**Entry<K,V> next = e.next** 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？
-![第二次循环结束](https://img-blog.csdnimg.cn/20201114212639171.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![第二次循环结束](https://s2.loli.net/2023/07/19/efA5nEC3gvOi4jr.png#pic_center)
 
 >4 这次循环执行情况是这样的
 >Entry<K,V> next = e.next;    现在e是3，而3的next是null，所以next指向了null
@@ -78,7 +78,7 @@ categories:
 >newTable[i] = e;			把桶指向3
 >e = next;		由于next是null了，所以e指向了null，跳出了while进行后面的for循环
 现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：
-![第三次循环结束出大问题](https://img-blog.csdnimg.cn/20201114214042697.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![第三次循环结束出大问题](https://s2.loli.net/2023/07/19/hHXCscelu493RST.png#pic_center)
 
 显而易见，环形链表出现，这个时候如果我们再去做一些查询，查到这个桶3上面来的话，遍历的时候就出现了死循环，直接出不去了，出大问题……
 还好JDK8修复了这个死循环问题。

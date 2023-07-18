@@ -13,7 +13,7 @@ categories:
 
 # 一、数据结构
 HashMap的数据结构是数组+链表，数组里面是一个个Node，在JDK8中加入了红黑树。HashMap根据存入的对象的hash跟数组长度取模得出下标，如果发生了哈希冲突，则新插入的键值对会放到上一个节点的后面，形成链表。当链表长度超过8且数组长度也不小于64时会转为红黑树，同理，链表长度小于6时会再次变回链表。数组里的每个存储空间，我们称为桶(bucket)。
-![HashMap内部](https://img-blog.csdnimg.cn/20201114005720673.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![HashMap内部](https://s2.loli.net/2023/07/19/FLEQBtTJXvwnz1l.png#pic_center)
 ## 1.1 Node
 Node封装了key和value，我们使用put方法塞进去key和value其实都存到了Node里面，看看Node里面的成员变量有哪些。
 ```c

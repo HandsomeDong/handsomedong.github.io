@@ -18,11 +18,11 @@ java -server -Xmx1024m -XX:MaxDirectMemorySize=512M -XX:+PrintGCDetails -XX:+Pri
 ```
 
 gc.txt
-![GC记录](https://img-blog.csdnimg.cn/20201203194421400.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![GC记录](https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png)
 好家伙，一启动就来9次 Young GC ，2次 Full GC。
 
 现在先用jinfo看看配置参数
-![查看JVM参数](https://img-blog.csdnimg.cn/20201203195944270.png)
+![查看JVM参数](https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png)
 注意几个重要参数：
 ```C
 -XX:InitialHeapSize=62914560		//堆初始值
@@ -52,7 +52,7 @@ java -server -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=64m -Xmx1024m -XX:MaxDir
 ```
 
 这个时候再查看gc.txt
-![gc.txt](https://img-blog.csdnimg.cn/2020120320223724.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![gc.txt](https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png)
 可以看到已经没有Full GC了，不过还是有8次Young GC。
 
 ## Young GC
@@ -70,13 +70,16 @@ java -server -Xms1024m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=64m -Xmx1024m 
 ```
 
 现在再来看看gc.txt
-![gc.txt](https://img-blog.csdnimg.cn/20201203203514210.png)
+![gc.txt](https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png)
 可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……
 
 **好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。**
-![过分](https://img-blog.csdnimg.cn/20201203204915316.png#pic_center)
+
+![过分](https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png)
+
 好吧，公司穷，只能买得起4G的服务器。
-![哭了](https://img-blog.csdnimg.cn/20201203205647704.png#pic_center)
+
+![哭了](https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png)
 
 
 # 总结

@@ -14,7 +14,7 @@ Java Virtual Machine简称JVM。各个操作系统之间存在着硬件、指令
 
 ## 运行时数据区域
 JVM在执行Java程序的过程中，会把它所管理的内存划分为若干个不同的数据区域，这些区域都有各自的用途以及创建和销毁的时间。如下图所示。
-![运行时数据区域](https://img-blog.csdnimg.cn/20201114183116339.png)
+![运行时数据区域](https://s2.loli.net/2023/07/19/xtwkZ395WSn41om.png)
 
 ### 方法区（Method Area）
 方法区用于存储被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据，它是各个线程共享的内存区域。
@@ -40,13 +40,13 @@ Java堆中可细分为新生代和老年代，新生代还可以分为Eden、Fro
 Java和C#都是使用这一方法来判定对象是否存活的。它的基本思路是通过一系列名为“GC Roots”的对象作为起始点，从这些节点开始向下搜索，搜索所走过的路径成为引用链，当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的，此时这个对象就是可回收的。
 如下图，object5、object6、object7虽然是有关联的，但是它们到GC Roots是不可达的，所以它们被判定为是可回收的。
 
-![GC Roots](https://img-blog.csdnimg.cn/20201114183443761.jpg)
+![GC Roots](https://s2.loli.net/2023/07/19/83vrZykwUfn6EIY.jpg)
 
 ### 垃圾收集算法
 #### 复制算法
 将内存按容量划分为大小相等的两块，每次只使用其中一块。当这块内存用完了，就将还存活的对象复制到另一块，然后把这一块全部清理掉。
 
-![复制算法](https://img-blog.csdnimg.cn/2020111418370090.png)
+![复制算法](https://s2.loli.net/2023/07/19/QAXBEHLoWDl1bFI.webp)
 
 >优点：
 >内存分配时不用考虑内存碎片等复杂情况，只需要移动堆顶指针即可
@@ -56,7 +56,7 @@ Java和C#都是使用这一方法来判定对象是否存活的。它的基本�
 #### 标记-清除算法（Mark-Sweep）
 分为“标记”和“清除”两个阶段。在标记阶段，通过根搜索，标记所有从根节点开始的可达对象；然后在清楚阶段，清楚所有未被标记的对象。
 
-![标记-清除算法](https://img-blog.csdnimg.cn/2020111418380812.png)
+![标记-清除算法](https://s2.loli.net/2023/07/19/Ie6KCdnfT5lqcAg.webp)
 
 >缺点：
 >1.效率问题，无论是标记还是清除过程，效率都不高；
@@ -65,7 +65,7 @@ Java和C#都是使用这一方法来判定对象是否存活的。它的基本�
 #### 标记-整理算法（Mark-Compact）
 分为“标记”和“整理”两个阶段。标记阶段仍和“标记-清除”算法一样，但是后续步骤直接清理可回收对象，而是让所有存活对象都向一端移动，然后直接清理掉端边界以外的内存。
 
-![标记-整理算法](https://img-blog.csdnimg.cn/20201114183925804.png)
+![标记-整理算法](https://s2.loli.net/2023/07/19/AfUeJGiQbmVZuTs.webp)
 
 >优点：
 >1.解决了内存碎片问题；
@@ -76,22 +76,20 @@ Java和C#都是使用这一方法来判定对象是否存活的。它的基本�
 #### 分代收集算法（Generational Collection）
 根据对象存活周期的不同将内存分为几块，像Java堆就是分为新生代和老年代，然后根据各个年代的特点采用适当的收集算法。新生代采用复制算法，老年代采用“标记-清除”或“标记-整理”算法。
 
-![分代收集算法](https://img-blog.csdnimg.cn/20201114184017593.png)
+![分代收集算法](https://s2.loli.net/2023/07/19/6MDYeUNOuIHolhZ.webp)
 
 ### 垃圾收集器
 收集算法是内存回收的方法论，而垃圾收集器是内存回收的具体实现。
 
-![垃圾收集器](https://img-blog.csdnimg.cn/20201114184247458.jpg)
+![垃圾收集器](https://s2.loli.net/2023/07/19/Mm5K8VuB4S1jRpW.jpg)
 
 #### Serial（串行）收集器
 这种收集器是最基本、历史最悠久的收集器，它是一个单线程的收集器，使用复制算法，简单高效，Serial收集器由于没有线程交互的开销，专心做垃圾收集可以获得很高的单线程收集效率。它在进行垃圾收集时，必须暂停其它所有的工作线程，直到收集结束（“Stop The World”）。这就有点难受……想象一下你玩手机的时候隔一段时间就卡一卡，还卡很久……
-![Serial收集器](https://img-blog.csdnimg.cn/img_convert/afd01489ff7c43f20911847f7ee5ed53.png)
 
 #### ParNew
 实际上这个收集器就是Serial收集器的多线程版本，它除了多线程收集之外，其它与Serial没多大区别。这是第一款真正意义的并发收集器，它实现了让垃圾收集线程与用户线程同时工作。
 ParNew收集器在单CPU的环境中不会比Serial收集器有更好的效果，而且由于存在线程交互的开销，该收集器可能回避Serial收集器表现更差。但是，随着可以使用的CPU数量的增加，它的表现它对于GC时系统资源的利用还是很有好处的。它默认开启的收集线程数与CPU的数量相同，在CPU非常多的情况下可使用-XX:ParallerGCThreads参数设置。
 
-![ParNew收集器](https://img-blog.csdnimg.cn/img_convert/44b019d07e684205a84d8896216ed4c1.png)
 
 #### Parallel（并行） Scavenge 收集器
 这个收集器是一个并行的多线程新生代收集器，也是使用复制算法。它的关注点与其它收集器不同，其它收集器的关注点是尽可能缩短垃圾收集时用户线程的停顿时间，而它的目标是达到一个可控制的吞吐量（吞吐量就是CPU用于运行用户代码的时间与CPU总消耗时间的比值，即吞吐量 = 运行用户代码时间 /（运行用户代码时间 + 垃圾收集时间））。
@@ -102,12 +100,9 @@ Serial Old是Serial收集器的老年代版本，同样是一个单线程收集�
 * 此收集器的主要意义也是在于给Client模式下的虚拟机使用。如果在Server模式下，它还有两大用途：
 * 作为CMS收集器的后备预案，在并发收集发生Concurrent Mode Failure时使用。
 
-![Serial Old收集器](https://img-blog.csdnimg.cn/img_convert/afd01489ff7c43f20911847f7ee5ed53.png)
-
 #### Parallel Old收集器
 Parallel Old是Parallel Scavenge收集器的老年代版本，使用多线程和“标记-整理”算法。在注重吞吐量以及CPU资源敏感的场合，都可以优先考虑Parallel Scavenge与Parallel Old组合。
 
-![Parallel Old收集器](https://img-blog.csdnimg.cn/img_convert/704ccbaa6bf0a2010625164999ed999d.png)
 
 #### CMS收集器
 CMS（Concurrent Mark Sweep）收集器是一种以获取最短回收停顿时间为目标的收集器，它非常符合那些集中在互联网站或者B/S系统的服务端上的Java应用，这些应用都非常重视服务的响应速度。
@@ -120,7 +115,7 @@ CMS（Concurrent Mark Sweep）收集器是一种以获取最短回收停顿时�
 
 由于整个过程中耗时最长的并发标记和并发清除过程收集器线程都可以与用户线程一起工作，所以，从总体上来说，CMS收集器的内存回收过程是与用户线程一起并发执行的。
 
-![CMS收集器](https://img-blog.csdnimg.cn/img_convert/32e2b43663e2d0a4548446032f15491d.png)
+![CMS收集器](https://s2.loli.net/2023/07/19/HhEvo1V3N6qOYjT.jpg)
 
 >优点：
 >并发收集、低停顿
@@ -154,7 +149,7 @@ G1（Garbage-First）收集器是当今收集器技术发展最前沿的成果�
 ### 类加载的过程
 类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载、验证、准备、解析、初始化、使用和卸载七个结点。其中验证、准备和解析三个部分统称为连接。
 
-![类加载过程](https://img-blog.csdnimg.cn/img_convert/612e4e344a18a9be5fbe8fde9e2ee05c.png)
+![类加载过程](https://s2.loli.net/2023/07/19/ALrz9SgRtDF5NEh.jpg)
 
 #### 加载
 在加载阶段，虚拟机需要完成三件事情：
@@ -196,7 +191,7 @@ public static int v = 321;
 * **扩展类加载器（Extension ClassLoader）** 这个加载器由sun.misc.Launcher$ExtClassLoader实现，它负责加载<JAVA_HOME>\lib\ext目录中的，或者被java.ext.dirs系统变量所指定的路径中的所有类库，开发者可以直接使用扩展类加载器
 * **应用程序类加载器（Application ClassLoader）** 这个类加载器由sun.misc.Launcher@AppClassLoader来实现。由于这个类加载器是ClassLoader中的getSystemClassLoader()方法的返回值，所以一般也称它为系统类加载器。它负责加载用户类路径上所指定的类库，开发者可以直接使用这个类加载器，如果应用程序中没有自定义自己的类加载器，一般情况下这个就是程序中默认的类加载器
 
-![双亲委派模型](https://img-blog.csdnimg.cn/20201114184531212.png)
+![双亲委派模型](https://s2.loli.net/2023/07/19/xfpEW9gmt2eSNMb.png)
 
 上图所展示的类加载器之间的层次关系就称为双亲委派模型。它要求除了顶层的启动类加载器外，其余的类加载器都应有自己的父类加载器。使用组合（Composition）关系来复用父加载器。
 

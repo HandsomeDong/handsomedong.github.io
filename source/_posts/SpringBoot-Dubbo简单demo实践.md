@@ -21,7 +21,7 @@ categories:
 Dubbo 是一款 RPC 服务框架，它最大的优势在于提供了面向接口代理的服务编程模型，对开发者屏蔽了底层的远程通信细节。同时 Dubbo 也是一款服务治理框架，它为分布式部署的微服务提供了服务发现、流量调度等服务治理解决方案。
 
 下图是 Dubbo 的基本工作原理图(在官网找的)，服务提供者与服务消费者之间通过注册中心协调地址，通过约定的协议实现数据交换。
-![Dubbo 基本工作原理图](https://img-blog.csdnimg.cn/20210702113353557.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![Dubbo 基本工作原理图](https://s2.loli.net/2023/07/19/RmB1wsW5jqTYAZv.png#pic_center)
 接下来就搭建一个 demo ，感受一下 Dubbo 的使用和 Spring Cloud 有什么区别。
 
 ## Zookeeper搭建
@@ -41,7 +41,7 @@ clientPort=2181
 ### 启动
 进入bin文件夹可以看到里面有很多脚本，zkServer.cmd 和 zkServer.sh 就是启动脚本，我的电脑系统是 windows ，所以直接双击 zkServer.cmd 即可启动。
 
-![启动Zookeeper](https://img-blog.csdnimg.cn/20210702113029700.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![启动Zookeeper](https://s2.loli.net/2023/07/19/SnKa5EN2pIZO9RL.png#pic_center)
 
 ## Dubbo 可视化管理界面搭建
 Zookeeper 启动完成之后，我们需要一个可视化界面方便对服务进行观察和管理。
@@ -62,7 +62,7 @@ mvn clean package -Dmaven.test.skip=true
 ### 启动项目
 可以直接在项目根目录运行 mvn --projects dubbo-admin-server spring-boot:run 启动项目，也可以进入 dubbo-admin-distribution\target 运行里面的jar包。
 
-![启动 dubbo-admin](https://img-blog.csdnimg.cn/20210702120409974.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![启动 dubbo-admin](https://s2.loli.net/2023/07/19/SVJFBcPLXlzGxmb.png#pic_center)
 
 
 
@@ -75,14 +75,15 @@ admin.serverPort=8081
 
 ### 进入管理界面
 启动成功后就可以访问 http://127.0.0.1:8080 了，默认的账号密码都是root。
-![登录](https://img-blog.csdnimg.cn/20210702120820273.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
-![Dubbo Admin](https://img-blog.csdnimg.cn/20210702120905244.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
+![登录](https://s2.loli.net/2023/07/19/fv5lIzuOY4d6RWZ.png#pic_center)
+
+![Dubbo Admin](https://s2.loli.net/2023/07/19/kWJmSxy5gLArGPE.png#pic_center)
 ## 工程创建
 接下来就要创建工程了，先创建个 maven 多模块工程，里面需要包含三个模块，一个是 api 模块，一个是服务提供者模块，一个是服务消费者模块。
 
 ### api模块
 假设我这个服务是一个用户查询的服务，那我就需要先创建一个 dto 和一个接口。
-![api 模块](https://img-blog.csdnimg.cn/20210702122334353.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![api 模块](https://s2.loli.net/2023/07/19/N2jn3OCBtpPaT4r.png)
 #### 创建 UserInfo 类
 创建一个用户信息类，需要注意的是，dto 要实现 Serializable 接口进行序列化。当然，也可以使用其它的序列化方式，hessian2、json等。
 
@@ -187,7 +188,7 @@ public interface UserService {
 
 #### 配置
 配置文件主要需要以下配置：
-![配置文件](https://img-blog.csdnimg.cn/20210702124035217.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![配置文件](https://s2.loli.net/2023/07/19/d3WH21YxENk7fZ6.png)
 
 
 根据上图的配置，修改 application.yml，我的配置如下：
@@ -250,8 +251,9 @@ public class UserProviderApplication {
 
 #### 查看 Dubbo Admin
 现在再去 Dubbo Admin 上面就可以看到这个服务注册成功了！点击详情也可以看到服务的具体信息。
-![Dubbo Admin](https://img-blog.csdnimg.cn/20210702124820859.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
-![服务详情](https://img-blog.csdnimg.cn/20210702124935459.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![Dubbo Admin](https://s2.loli.net/2023/07/19/aF1lCeZkbI8HYtA.png)
+
+![服务详情](https://s2.loli.net/2023/07/19/x9IWKMvbJnLVBl4.png)
 ### 服务消费者模块
 最后就是创建服务消费者模块了，在该模块下进行服务调用。
 
@@ -370,9 +372,11 @@ public class UserConsumerApplication {
 
 ### 测试
 启动服务消费者后，断点调试、用 postman 测试一下。
-![断点调试](https://img-blog.csdnimg.cn/2021070213174837.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70#pic_center)
 
-![postman](https://img-blog.csdnimg.cn/20210702131812576.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![断点调试](https://s2.loli.net/2023/07/19/UGLvxHwCRNcMsqI.png)
+
+![postman](https://s2.loli.net/2023/07/19/rXKsIJBAYU1Hlpk.png)
+
 可以看到已经大功告成了！！！
 
 ## 总结
@@ -383,4 +387,4 @@ public class UserConsumerApplication {
 4. 社区方面，Spring Cloud 要比 Dubbo 活跃很多很多很多很多……Dubbo 好久没更新了，而 Spring Cloud 目前还一直在更新，很活跃！
 
 
-![Dubbo 流泪](https://img-blog.csdnimg.cn/20210702134836992.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjEwMTE1NQ==,size_16,color_FFFFFF,t_70)
+![Dubbo 流泪](https://s2.loli.net/2023/07/19/Qt4rfk8dsqL1Ugb.png)

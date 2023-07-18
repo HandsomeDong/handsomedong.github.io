@@ -10,18 +10,23 @@ categories:
 ---
 # 前言
 打工的时候，偶尔在闲暇时刻偷偷打开一下股票网站，看看今天有没有赚钱，说不定哪天一夜暴富，这是我现在唯一的盼头……
-![流泪打工人](https://img-blog.csdnimg.cn/d438e273b14e4441a33d184df051d3a3.jpg#pic_center)
+
+![流泪打工人](https://s2.loli.net/2023/07/19/euz1TniqLF2o7SI.jpg)
 
 今天我一如往常打开熟悉的“XX财富网”，输入熟悉的股票代码，点开我前几天刚买入的“XXX”……
 
-![绿](https://img-blog.csdnimg.cn/838f7986748847e59a211343aa26ef64.gif#pic_center)
+![绿](https://s2.loli.net/2023/07/19/7CPtpYo3VjMIRhy.gif)
 
 看着冒着绿光并且一闪一闪的屏幕，我陷入了沉思……
-![沉思](https://img-blog.csdnimg.cn/0b60fe0fe54042b6bf5e6e55413f4a89.jpg#pic_center)
+
+![沉思](https://s2.loli.net/2023/07/19/K6dpJc7P23Z8iSD.jpg)
+
 **我恍惚了一下，心想这实时刷新的数据，是后端通过websocket推过来的吗？**
 
 于是我F12看了一下，**没有 websocket 连接啊！**
-![没有websocket](https://img-blog.csdnimg.cn/53ee6a9ecb0a4cabbf0b48a4797582ec.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center)
+
+![没有websocket](https://s2.loli.net/2023/07/19/7NDhloYLMPnKciZ.png)
+
 **难道除了 Websocket 还有别的办法能够让后端向前端主动推送消息？**
 
 我马上想到了 http2.0 的 server push ，但是想了想又觉得不太可能，因为 http2.0 的push并不是这个意思。
@@ -35,11 +40,17 @@ categories:
 于是我点开了 Fetch/XHR 看看到底是何方神圣，在不断推送数据。于是我发现了这几个请求的内容好像不断地在刷新……
 
 从下图可以看到一秒钟推送好几条数据过来（现在是十一点半，我打开了美股）
-![端倪](https://img-blog.csdnimg.cn/6f0b8750c77d46daa90f071fa3413c14.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16)
+
+![端倪](https://s2.loli.net/2023/07/19/9ROFre7IysTmwzv.png)
+
 查看这几个http请求，很容易就发现请求头和响应头的 Content-Type 和 Accept 跟其它普通的http请求不太一样。
-![头](https://img-blog.csdnimg.cn/fa084d515ed34d11a2cc56c7d3231db2.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16)
+
+![头](https://s2.loli.net/2023/07/19/U1qVtv7mO6McDiH.png)
+
 很明显，这个服务端推送，跟这个 text/event-stream 关系很大。
-![真相只有一个](https://img-blog.csdnimg.cn/2378e39bab234a4dbd7637fdd7e0aeb7.gif#pic_center)
+
+![真相只有一个](https://s2.loli.net/2023/07/19/DE4y1Q5nNtKHsOI.gif)
+
 于是我去查了一下相关资料，果不其然……**服务器向浏览器推送信息，除了 WebSocket，还有一种方法：Server-Sent Events。**
 
 # Server-Sent Events 是什么？
@@ -55,7 +66,7 @@ SSE 就是利用这种机制，使用流信息向浏览器推送信息。它基�
 既然能让服务器主动向浏览器推送信息，那我们肯定会想到让websocket来跟它做做对比。
 
 总的来说，Websocket 应该是更强大、更灵活、应用更广泛的，因为它是全双工通信，可以双向通信；但是SSE是单向通道，只能服务器向浏览器发送，因为流信息本质上就是下载。如果浏览器向服务器发送信息，就变成了另一次 HTTP 请求。
-![SSE](https://img-blog.csdnimg.cn/d72f7e95d3904ef6be19429aa813921f.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA5LiD6YeM57-U,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center)
+![SSE](https://s2.loli.net/2023/07/19/9QgO1zIvSjAcw7F.png)
 但是，SSE也有自己的优点。
 * SSE 使用 HTTP 协议，现有的服务器软件都支持。WebSocket 是一个独立协议。
 * SSE 比较轻量级，使用较简单；WebSocket 协议相对来说比较复杂。
@@ -70,4 +81,5 @@ SSE 就是利用这种机制，使用流信息向浏览器推送信息。它基�
 # 总结
 * 除了 Websocket ，服务端还能通过 SSE 向浏览器主动推送消息，其本质上就是一个基于 HTTP 的流。
 * 今天的工不白打，股市虽绿，但我因此收获了一个冷门的知识点~~安慰自己~~ 。
-![我真的没哭](https://img-blog.csdnimg.cn/eebd561ea8d64cfe9ef490d3baf0bbf5.jpg#pic_center)
+
+![我真的没哭](https://s2.loli.net/2023/07/19/NAxtRGfvVPlozEe.jpg)

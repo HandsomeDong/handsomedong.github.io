@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/27/Git-恢复本地分支/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/15/策略模式/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/04/27/Git-恢复本地分支/" itemprop="url">Git恢复本地分支</a></h1>
+                <a class="post-title-link" href="/2019/06/15/策略模式/" itemprop="url">策略模式</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-27T00:52:45+08:00">
-                2019-04-27
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-15T22:48:41+08:00">
+                2019-06-15
               </time>
             
 
@@ -336,19 +336,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Git/" itemprop="url" rel="index">
-                    <span itemprop="name">Git</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Git/工作中的Git/" itemprop="url" rel="index">
-                    <span itemprop="name">工作中的Git</span>
+                  <a href="/categories/设计模式/" itemprop="url" rel="index">
+                    <span itemprop="name">设计模式</span>
                   </a>
                 </span>
 
@@ -386,33 +375,24 @@
       
         
           
-            <p>一般来说，我们开发新功能都会在develop分支下新建一个分支，命名为 <strong>feature/新功能</strong>，测试没问题后再合并到develop推到远程分支。由于我是新手，老大通常要我先别合并，先推到远程的新分支下等他review没问题后再合并到develop。</p>
-<p>有强迫症的我，看到本地太多分支就不舒服，推到远程分支后直接就删掉本地分支，只留master和develop两个分支，干干净净舒舒服服！！！</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34c7e105f4.png" alt="帅字贯穿了我的一生"></p>
-<p>万万没想到没想到老大也喜欢干干净净舒舒服服，但他不仅喜欢本地干干净净，也喜欢远程分支干干净净……然后今天早上问我这个功能的代码推到哪个分支了，我看了半天好像也找不到，老大说可能是他误删了……我……</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34c7e15923.png" alt="枯了"></p>
-<p>原谅我是个菜鸡，Git可以恢复本地分支我都唔鸡，老大提醒我后我赶紧看了一下如何恢复本地分支，没想到如此简单！我只知道怎么在现有分支回滚代码，万万没想到连分支都能恢复！</p>
-<p><img src="https://i.loli.net/2019/04/28/5cc59b0db9ebe.png" alt="流下了没技术的泪水"></p>
-<p><strong>仅需两步即可找回丢失分支！</strong><br>1.git log -g 找到删除分支前的commit_id<br>2.git branch recover commit_id  把代码恢复到新分支recover下</p>
-<h1 id="下面来演示全过程"><a href="#下面来演示全过程" class="headerlink" title="下面来演示全过程"></a>下面来演示全过程</h1><h2 id="1-新建并切换到新分支test"><a href="#1-新建并切换到新分支test" class="headerlink" title="1.新建并切换到新分支test"></a>1.新建并切换到新分支test</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ls</span><br><span class="line">git checkout -b test</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8b4584c.png" alt="新建并切换到新分支test"></p>
-<h2 id="2-新建文件随便写点东西"><a href="#2-新建文件随便写点东西" class="headerlink" title="2.新建文件随便写点东西"></a>2.新建文件随便写点东西</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim test.txt</span><br></pre></td></tr></table></figure>
-<p>我随便写了个 “test”</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8b487e8.png" alt="新建文件随便写点东西"></p>
-<h2 id="3-提交代码"><a href="#3-提交代码" class="headerlink" title="3.提交代码"></a>3.提交代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;Add test.txt&quot;</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
-<p>可以看到现在有master和test两个分支</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8bb2edf.png" alt="提交代码"></p>
-<h2 id="4-切换回master分支并删除test分支"><a href="#4-切换回master分支并删除test分支" class="headerlink" title="4.切换回master分支并删除test分支"></a>4.切换回master分支并删除test分支</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git checkout master</span><br><span class="line">git branch -D test</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
-<p>可以看到现在只有master一个分支了</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8bcdea0.png" alt="删除分支"></p>
-<h2 id="5-git-log-g查看提交记录"><a href="#5-git-log-g查看提交记录" class="headerlink" title="5.git log -g查看提交记录"></a>5.git log -g查看提交记录</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git log -g</span><br></pre></td></tr></table></figure>
-<p>可以从提交记录可以看到commit、commit的id及提交者等信息。通过conmit来找到你想要恢复的代码，所以一个好的commit很重要哦。</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8be96b9.png" alt="查看提交记录"></p>
-<h2 id="6-找到commit-id并恢复到新分支"><a href="#6-找到commit-id并恢复到新分支" class="headerlink" title="6.找到commit_id并恢复到新分支"></a>6.找到commit_id并恢复到新分支</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch recover d0bd911dcbe57eb4ff1c99dd03b42da34a75640a</span><br></pre></td></tr></table></figure>
-<h2 id="查看结果"><a href="#查看结果" class="headerlink" title="查看结果"></a>查看结果</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git branch</span><br><span class="line">git checkout recover</span><br><span class="line">ls</span><br><span class="line">cat test.txt</span><br></pre></td></tr></table></figure>
-<p>可以看到在recover分支和之前删除的test分支是一样的，文件一样，文件内容也一样，恢复分支成功！</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8beb6a2.png" alt="查看结果"></p>
-<p>所以一定要好好commit啊，不然不管是回滚代码还是恢复分支，光是找节点就能让你找半天！</p>
+            <h1 id="设计模式之策略模式"><a href="#设计模式之策略模式" class="headerlink" title="设计模式之策略模式"></a>设计模式之策略模式</h1><p>以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！</p>
+<p><img src="https://i.loli.net/2019/06/17/5d067ce888ffd96560.png" alt="我技术好菜啊"></p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>策略模式(Strategy Pattern)是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。</p>
+<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p>比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前的一个动作、状态，我们可以把这一类随时可变的动作从角色里抽离出来并封装起来。</p>
+<h3 id="2-1-动作接口"><a href="#2-1-动作接口" class="headerlink" title="2.1 动作接口"></a>2.1 动作接口</h3><p>首先定义一个动作接口，所有的具体动作都要实现这个接口。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Action &#123;</span><br><span class="line">    public void action();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-具体动作实现接口"><a href="#2-2-具体动作实现接口" class="headerlink" title="2.2 具体动作实现接口"></a>2.2 具体动作实现接口</h3><p>接下来就是具体动作了，授课、学习、睡觉。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// 授课动作</span><br><span class="line">public class TeachAction implements Action &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在授课！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 学习动作</span><br><span class="line">public class LearnAction implements Action&#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在学习！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 睡觉动作</span><br><span class="line">public class SleepAction implements Action &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在睡大觉！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-Person抽象类"><a href="#2-3-Person抽象类" class="headerlink" title="2.3 Person抽象类"></a>2.3 Person抽象类</h3><p>定义抽象类 Person，在该类里加入两个实例变量，一个是字符串变量name，一个是Action接口类型action（而不是具体类实现类型）。方法doing()里调用action的action()方法。Person抽象类不用关心action的具体对象到底是什么，它只需关心该对象能有action()就行了。并且建一个setAction()来通过动态改变action的具体实现类型。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Person &#123;</span><br><span class="line">    Action action;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    public Person()&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void doing() &#123;</span><br><span class="line">        System.out.print(name);</span><br><span class="line">        action.action();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setAction(Action action)&#123;</span><br><span class="line">        this.action = action;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-具体角色类继承Person类"><a href="#2-4-具体角色类继承Person类" class="headerlink" title="2.4 具体角色类继承Person类"></a>2.4 具体角色类继承Person类</h3><p>Teacher类在构造时将action实例变量初始化为TeachAction的新实例，而Student类则将action实例变量初始化为LearnAction的新实例。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">// Teacher类</span><br><span class="line">public class Teacher extends Person&#123;</span><br><span class="line">    public Teacher(String name) &#123;</span><br><span class="line">        this.action = new TeachAction();</span><br><span class="line">        this.name = name + &quot;老师&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Student类</span><br><span class="line">public class Student extends Person &#123;</span><br><span class="line">    public Student(String name)&#123;</span><br><span class="line">        this.action = new LearnAction();</span><br><span class="line">        this.name = name + &quot;同学&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String args[])&#123;</span><br><span class="line">    Person handsomeDong = new Teacher(&quot;帅比东&quot;);</span><br><span class="line">    Person xiaoQiang = new Student(&quot;小强&quot;);</span><br><span class="line"></span><br><span class="line">    handsomeDong.doing();</span><br><span class="line">    xiaoQiang.doing();</span><br><span class="line"></span><br><span class="line">    xiaoQiang.setAction(new SleepAction());</span><br><span class="line">    xiaoQiang.doing();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/06/16/5d0517243e28624089.png" alt="测试结果"></p>
+<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.算法可以自由切换，改策略很方便<br>2.增加一个策略，就多增加一个类实现接口就好了。</p>
+<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>每一个策略都是一个类，复用的可能性很小、类数量增多</p>
+<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.许多相关类仅仅是行为不同。<br>2.需要使用一个算法的不同实现。<br>3.算法使用了客户不应该知道的数据。策略模式可以避免暴露复杂的、与算法相关的数据结构。</p>
 
           
         
@@ -452,7 +432,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/21/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/21/">21</a><span class="page-number current">22</span><a class="page-number" href="/page/23/">23</a><a class="extend next" rel="next" href="/page/23/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/21/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/21/">21</a><span class="page-number current">22</span><a class="page-number" href="/page/23/">23</a><a class="page-number" href="/page/24/">24</a><a class="extend next" rel="next" href="/page/23/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -500,7 +480,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -511,7 +491,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -522,7 +502,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-count">10</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

@@ -105,7 +105,7 @@
 <meta property="og:image" content="https://s2.loli.net/2025/08/09/1T8fLmZjkMVv2W3.png">
 <meta property="og:image" content="https://s2.loli.net/2025/08/09/MsNDXunrwGg6tlo.png">
 <meta property="og:image" content="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png">
-<meta property="og:updated_time" content="2025-08-09T09:34:31.876Z">
+<meta property="og:updated_time" content="2025-08-09T09:51:33.131Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="sqli-labs 第一关">
 <meta name="twitter:description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
@@ -494,6 +494,10 @@
 </ol>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security -T users --columns --dump</span><br></pre></td></tr></table></figure>
 <p><img src="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png" alt="image.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>先确认是字符型注入还是数字型注入，再使用注释把后面的 SQL 注释掉，然后确认注入格式，再使用联合注入查询库、表名，最后查询数据</li>
+<li>这种简单的 case，sqlmap 直接能解决。不过现在处于练习阶段，还是得手工注入，理解原理</li>
+</ol>
 
       
     </div>
@@ -688,7 +692,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手工注入"><span class="nav-number">2.</span> <span class="nav-text">手工注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#判断是否存在-SQL-注入"><span class="nav-number">2.1.</span> <span class="nav-text">判断是否存在 SQL 注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#联合注入爆数据"><span class="nav-number">2.2.</span> <span class="nav-text">联合注入爆数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlmap"><span class="nav-number">3.</span> <span class="nav-text">sqlmap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-sqlmap-注入"><span class="nav-number">3.1.</span> <span class="nav-text">使用 sqlmap 注入</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手工注入"><span class="nav-number">2.</span> <span class="nav-text">手工注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#判断是否存在-SQL-注入"><span class="nav-number">2.1.</span> <span class="nav-text">判断是否存在 SQL 注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#联合注入爆数据"><span class="nav-number">2.2.</span> <span class="nav-text">联合注入爆数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlmap"><span class="nav-number">3.</span> <span class="nav-text">sqlmap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-sqlmap-注入"><span class="nav-number">3.1.</span> <span class="nav-text">使用 sqlmap 注入</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
 
           </div>

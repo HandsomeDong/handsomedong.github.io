@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/12/29/Golang大坑之循环goroutine闭包调用/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2024/04/26/Triton入门初体验/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2022/12/29/Golang大坑之循环goroutine闭包调用/" itemprop="url">Golang大坑之循环goroutine闭包调用</a></h1>
+                <a class="post-title-link" href="/2024/04/26/Triton入门初体验/" itemprop="url">Triton入门初体验</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-12-29T23:40:35+08:00">
-                2022-12-29
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-04-26T21:42:23+08:00">
+                2024-04-26
               </time>
             
 
@@ -336,8 +336,19 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Golang/" itemprop="url" rel="index">
-                    <span itemprop="name">Golang</span>
+                  <a href="/categories/机器学习/" itemprop="url" rel="index">
+                    <span itemprop="name">机器学习</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/机器学习/Triton/" itemprop="url" rel="index">
+                    <span itemprop="name">Triton</span>
                   </a>
                 </span>
 
@@ -375,22 +386,43 @@
       
         
           
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>回顾整个2022，突然发现我一篇博客都没写，趁着还没2022还没过去，赶紧<del>水一篇博客</del> 分享一下我最近学习到的一些东西，这次的主题是“Golang大坑之循环goroutine闭包调用”，大家就当小故事来看吧。<br><img src="https://s2.loli.net/2023/07/18/LvX3ADzcOTSGIVE.jpg" alt="躺好，听我讲故事"></p>
-<h1 id="小美又写了bug"><a href="#小美又写了bug" class="headerlink" title="小美又写了bug"></a>小美又写了bug</h1><p>仔细看，这个女孩叫小美，她最近刚入职某Go大厂，从Java转了Go，小美入职仅仅花了半天就学完了Go语法，然后三天写了5个bug，隔三差五就被leader小帅叫到会议室臭骂。<br><img src="https://s2.loli.net/2023/07/18/jbJHKo89QlLeGDF.gif" alt="小美"><br>这不，正当小美写bug写得起劲，小帅又过来拍了拍小美肩膀：“小美，来下会议室”。<br><img src="https://s2.loli.net/2023/07/18/9MyjaQRfYD4btHi.png" alt="小美来下会议室"><br>一来到会议室，小帅直接把笔记本拍到小美脸上：“看看你干的好事。”<br>笔记本上面是小美的提交记录，上面有这么一段代码。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>小美看完表示很委屈：“这有什么毛病吗？这里一共开了十个协程，每个协程打印的编号都不一样，这里的输出应该是下面这样啊？出什么问题了吗？”<br>小美预期的结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">打工人9号</span><br><span class="line">打工人2号</span><br><span class="line">打工人3号</span><br><span class="line">打工人0号</span><br><span class="line">打工人1号</span><br><span class="line">打工人5号</span><br><span class="line">打工人7号</span><br><span class="line">打工人8号</span><br><span class="line">打工人4号</span><br><span class="line">打工人6号</span><br></pre></td></tr></table></figure></p>
-<p>小帅一巴掌甩小美脸上：“要不你看看运行结果？”<br><img src="https://s2.loli.net/2023/07/18/ki8THV2BS59mp3j.png" alt="一巴掌"><br>小美运行了一下，结果让她大吃一斤翔。<br><img src="https://s2.loli.net/2023/07/18/uH72A3kwbyYTBpG.png" alt="运行结果"><br>面对这个结果，坚强的小美也落下了泪，她实在不明白为什么会这样。<br><img src="https://s2.loli.net/2023/07/18/PUwFegCSKybEuOp.jpg" alt="落泪的小美"></p>
-<h1 id="小翔看出问题所在"><a href="#小翔看出问题所在" class="headerlink" title="小翔看出问题所在"></a>小翔看出问题所在</h1><p>谁也没有注意到，此时坐在会议室角落旁的小翔缓缓站了起来：“真相只有一个！”<br><img src="https://s2.loli.net/2023/07/18/9peBGu6UAgKX3tM.png" alt="小翔登场"><br>小翔继续说：“这是Golang新手及其容易犯的一个错误！<strong>你这里的goroutine执行了闭包内的程序，而闭包内直接引用了num变量，这个值并没有被保存到goroutine栈中，这样写会导致for循环结束后才执行goroutine多线程操作，所以你看，很多个协程打印的编号都是9，即for循环结束后协程才运行，这个时候num值其实指向了最后一个元素。当然，有个别协程打印的不是9，因为它们运行得比较早。</strong> 这样写及其容易窜数据，产生严重bug！”</p>
-<p><strong>小帅一巴掌甩小翔脸上：“还TM装逼？快给我修bug。”</strong><br><img src="https://s2.loli.net/2023/07/18/7QXlSIWFbunADCv.jpg" alt="逼都让你装完了"></p>
-<h1 id="小翔的解决方案"><a href="#小翔的解决方案" class="headerlink" title="小翔的解决方案"></a>小翔的解决方案</h1><p>小翔不愧是小翔，是见过各种大场面的男人，只见他不慌不忙给出了几种解决方案。</p>
-<h2 id="正确写法1：不使用闭包"><a href="#正确写法1：不使用闭包" class="headerlink" title="正确写法1：不使用闭包"></a>正确写法1：不使用闭包</h2><p>既然闭包有问题，那我们不使用闭包不就行了？多大点事啊？<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="built_in">print</span>(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法2：循环内定义新变量"><a href="#正确写法2：循环内定义新变量" class="headerlink" title="正确写法2：循环内定义新变量"></a>正确写法2：循环内定义新变量</h2><p>由于循环内定义的变量在循环遍历过程中是不共享的，所以我们可以在循环内再定义新变量。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		num := num</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法3：闭包传参（优雅，推荐）"><a href="#正确写法3：闭包传参（优雅，推荐）" class="headerlink" title="正确写法3：闭包传参（优雅，推荐）"></a>正确写法3：闭包传参（优雅，推荐）</h2><p>使用闭包时，我们还是尽量使用闭包传参，避免直接在闭包内使用外部的变量，比较容易出错。我个人认为这样写起来会比较优雅，推荐这种写法。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><p>上面3种写法都会得到正确的结果<br><img src="https://s2.loli.net/2023/07/18/Rhwtgy1VmQq65sp.png" alt="运行结果"></p>
-<h1 id="小翔的静态扫描工具"><a href="#小翔的静态扫描工具" class="headerlink" title="小翔的静态扫描工具"></a>小翔的静态扫描工具</h1><h2 id="怎么从根源上避免这个问题"><a href="#怎么从根源上避免这个问题" class="headerlink" title="怎么从根源上避免这个问题"></a>怎么从根源上避免这个问题</h2><p>解决完了这个bug之后，leader小帅的脸色也有所好转，然后问了问小翔：“既然新手都比较容易犯这个错误，那我们有没有什么办法或手段来尽量让后面入职的同学少犯甚至不犯这个错误呢？换句话说，<strong>怎么从根源上避免出现这个问题</strong>？”<br><img src="https://s2.loli.net/2023/07/18/MfEN1ryj9IKbJC4.png" alt="怎么从根源上避免这个问题"><br>小翔推了推眼镜，冷静回答：“这个简单，回头我出个《Golang大坑》系列文档，让入职转Golang的新同学都看一下这个文档，他们就不会犯这个错误了！”<br><img src="https://s2.loli.net/2023/07/19/JxfvHYz5siP8hkA.jpg" alt="小帅推眼镜"><br>小帅直接就是一巴掌：“其实，我对你是有点失望的。你这个职级，不是把事情做完就可以的。你需要有体系化思考的能力。你做的事情，他的价值点在哪里？你是否作出了壁垒，形成了核心竞争力？你做的事情，和公司内其他团队的差异化在哪里？你的事情，是否沉淀了一套可复用的物理资料和方法论？为什么是你来做，其他人不能做吗？你需要有自己的判断力，而不是我说什么你就做什么…………（省略一千字）<strong>你确定你写个文档大家就会去看，就能遵守这一套约定？</strong>”<br><img src="https://s2.loli.net/2023/07/19/fQA2MdKrhJmBYgn.jpg" alt="小帅装逼"></p>
-<h2 id="静态扫描工具"><a href="#静态扫描工具" class="headerlink" title="静态扫描工具"></a>静态扫描工具</h2><p>小翔这次终于是忍不住了，直接甩出了他的终极大招 – 静态扫描工具，缓缓说道：<strong>“这个是我写的Golang静态扫描工具，名叫 </strong>xianggolint<strong>，我刚刚加上了一个新规则：loopgoroutinecheck，它能扫描出循环内goroutine闭包直接引用循环index、value、key的代码，这种代码都是有问题的，Github 链接点<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">这里</a>，具体的使用方法可以看 readme 文档，以下是测试的扫描结果，可以看到扫描结果显示某个文件的第 12 行代码是有问题的，提示信息非常清晰。如果我们的CI/CD做得比较完善的话，我们还能将这种静态扫描工具接入到上面，在MR的时候进行扫描，扫出问题时就block进程，并提示该问题，这样我们就能在代码合入的阶段防止问题代码合入主分支啦！</strong>”<br><img src="https://s2.loli.net/2023/07/19/n8RsUdqv19WIZ7P.png" alt="代码"><br><img src="https://s2.loli.net/2023/07/19/6wmpHsRQBC1Z4ug.png" alt="代码"><br>小翔此时心里默默说：“今天这个装逼王，我当定了！”<br><img src="https://s2.loli.net/2023/07/19/jkBn7hNmvOAC4ZV.png" alt="小翔装逼王"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>循环goroutine闭包不能直接使用循环的index、key、value，因为这些变量没有被保存到goroutine栈中，比如以下代码，三个循环内的goroutine都不会得到我们所预期的结果。</strong><br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> index, value := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"slice index: %d\n"</span>, index)</span><br><span class="line">			fmt.Printf(<span class="string">"slice value: %d\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"1"</span>: <span class="string">"1"</span>, <span class="string">"2"</span>: <span class="string">"2"</span>, <span class="string">"3"</span>: <span class="string">"3"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> m &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"map key: %s\n"</span>, key)</span><br><span class="line">			fmt.Printf(<span class="string">"map value: %s\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"range i: %d\n"</span>, i)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><strong>我写了个静态扫描工具，针对这种代码写了相应的规则，能扫描出问题，欢迎使用，Github地址：<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">https://github.com/HandsomeDong/xianggolint</a></strong></p>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
+<p>最近玩AIGC玩得不亦乐乎（<a href="https://www.douyin.com/user/MS4wLjABAAAAbp_jw1fRXJUZ5KdXt7cYjGg84WcTVL-FHFL_Fz9_d3w" target="_blank" rel="noopener">我的视频账号</a>），对相关的技术也产生了浓厚的兴趣，所以也了解了一些机器学习相关的知识，也自己动手折腾了一下。<del>正好也挺久没水博客了呢，今天正好有时间，顺便水一篇吧。</del></p>
+</blockquote>
+<p>最近这两年随着ChatCPT、Stable Diffusion等生成式AI极速发展，各种AI模型也如雨后春笋般涌现，现在各大厂都在训练大模型，以及开发AIGC平台。</p>
+<p>NVIDIA Triton Inference Server是一个针对CPU和GPU进行优化的云端推理的解决方案，支持绝大部分主流的模型框架，包括TensorFlow、TensorRT、PyTorch、ONNX Runtime等，为我们在生产环境中部署及使用AI模型提供了极大的便利，估计现在很多大厂开发的AIGC平台都用到Triton或者其它类似的服务化框架（比如TensorFlow Serving、Torch Serve、Kubeflow等），所以学习了Triton的一些基础架构和设计原理后，动手部署并且用了一下，<del>顺便水一篇文章</del>。</p>
+<p><img src="https://s2.loli.net/2024/04/26/x7GyPLwXmbJDdaE.png" alt="别打了"></p>
+<h1 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h1><h2 id="Docker-WSL2安装"><a href="#Docker-WSL2安装" class="headerlink" title="Docker WSL2安装"></a>Docker WSL2安装</h2><p>从0编译Triton服务端应该会非常麻烦，一定会被不计其数的依赖报错困扰半天，所以我直接用Docker来部署。<br>由于我用的是Windows，所以需要在安装<a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Docker Desktop</a>来使得WSL2可以使用Docker CLI以及Docker Daemon等核心组件，具体安装以及设置过程这里就不多做赘述，直接到Docker官网及Windows官网查阅相关资料step by step即可。</p>
+<h2 id="注册-amp-登录NGC平台账号"><a href="#注册-amp-登录NGC平台账号" class="headerlink" title="注册&amp;登录NGC平台账号"></a>注册&amp;登录NGC平台账号</h2><p>NGC简单来说就是NVIDIA的一个官方软件仓库，仓库里有很多编译好的软件、Docker镜像等，你需要注册NGC并生成api key，用这个api key来登录NGC并下载里面的镜像。具体可参考<a href="https://docs.nvidia.com/ngc/gpu-cloud/ngc-catalog-user-guide/index.html#registering-activating-ngc-account" target="_blank" rel="noopener">官方教程</a>，比较简单，这里也不过多赘述。</p>
+<p>完成注册后直接使用指令登录即可</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker login nvcr.io</span><br></pre></td></tr></table></figure>
+<p>之后会需要输入用户名以及api key，出现 Login Successed 即登录成功。</p>
+<h2 id="拉取镜像"><a href="#拉取镜像" class="headerlink" title="拉取镜像"></a>拉取镜像</h2><p>接下来就要拉取镜像了</p>
+<p><img src="https://s2.loli.net/2024/04/27/PGw7hT6nNayI4VE.png" alt="搜索截图"></p>
+<p>从官方文档可以看到，xx.yy-py3 就是能支持Tensorflow、PyTorch等主流模型框架的Triton服务端镜像，而下面还有个 xx.yy-py3-sdk 镜像包含了客户端相关库、例子可以让我们请求服务端，以方便测试。这两个镜像都下载下来，前者是服务端镜像，后者是客户端测试镜像。</p>
+<p><img src="https://s2.loli.net/2024/04/27/U5HCdXRDIoLfQsS.png" alt="镜像说明"></p>
+<p>点进来可以找到镜像路径，直接copy即可，然后拉取镜像</p>
+<p><img src="https://s2.loli.net/2024/04/27/nvHTSPjoK6pGZRw.png" alt="镜像路径"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker pull nvcr.io/nvidia/tritonserver:24.03-py3</span><br><span class="line">docker pull nvcr.io/nvidia/tritonserver:24.03-py3-sdk</span><br></pre></td></tr></table></figure>
+<h2 id="准备测试模型和数据"><a href="#准备测试模型和数据" class="headerlink" title="准备测试模型和数据"></a>准备测试模型和数据</h2><p>接下来需要先准备测试模型和数据，<a href="https://github.com/triton-inference-server/server" target="_blank" rel="noopener">Triton Server</a>仓库准备了很多onnx模型和测试图片，直接拿来用就行了。</p>
+<p>先下载仓库<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone -b r22.12 https://github.com/triton-inference-server/server.git</span><br></pre></td></tr></table></figure></p>
+<p>执行fetch_models.sh，下载ONNX测试模型<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd server/docs/examples</span><br><span class="line">./fetch_models.sh</span><br></pre></td></tr></table></figure></p>
+<h2 id="服务启动"><a href="#服务启动" class="headerlink" title="服务启动"></a>服务启动</h2><p>一切准备就绪，接下来启动容器吧！<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --gpus=1 --rm --net=host -v $&#123;PWD&#125;/model_repository:/models nvcr.io/nvidia/tritonserver:24.03-py3 tritonserver --model-repository=/models</span><br></pre></td></tr></table></figure></p>
+<p>挑几个重要参数说说</p>
+<ul>
+<li>-gpus=1：代表是否启动GPU容器，如果该值为0，则Triton将运行在CPU Only模式，此时Triton的吞吐量和单个request的执行延迟会大幅增加，建议在条件允许的情况下默认打开。</li>
+<li>-v：代表目录挂载。这里我们将examples下的model_repository目录挂载到了/models下</li>
+<li>tritonserver：即代表我们要执行的二进制程序是tritonserver</li>
+<li>–model-repository=/models：用于指定模型的仓库位置，由于我们之前将我们宿主机的模型挂载到容器的/models目录下，所以这里写/models就好了</li>
+</ul>
+<h2 id="验证服务可用性"><a href="#验证服务可用性" class="headerlink" title="验证服务可用性"></a>验证服务可用性</h2><p>发个HTTP请求获取服务器的状态（这里说明一下，启动容器后默认会占用3个端口，8000为http服务端口，8001为GRPC服务端端口，8002为metrics端口，启动服务时可以看到相关信息）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -v localhost:8000/v2/health/ready</span><br></pre></td></tr></table></figure></p>
+<p>得到响应<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">*   Trying 127.0.0.1:8000...</span><br><span class="line">* TCP_NODELAY set</span><br><span class="line">* Connected to localhost (127.0.0.1) port 8000 (#0)</span><br><span class="line">&gt; GET /v2/health/ready HTTP/1.1</span><br><span class="line">&gt; Host: localhost:8000</span><br><span class="line">&gt; User-Agent: curl/7.68.0</span><br><span class="line">&gt; Accept: */*</span><br><span class="line">&gt;</span><br><span class="line">* Mark bundle as not supporting multiuse</span><br><span class="line">&lt; HTTP/1.1 200 OK</span><br><span class="line">&lt; Content-Length: 0</span><br><span class="line">&lt; Content-Type: text/plain</span><br><span class="line">&lt;</span><br><span class="line">* Connection #0 to host localhost left intact</span><br></pre></td></tr></table></figure></p>
+<p>可以看出来服务是正常的</p>
+<h2 id="验证推理服务"><a href="#验证推理服务" class="headerlink" title="验证推理服务"></a>验证推理服务</h2><p>既然服务状态正常，那接下来看看推理是否正常，之前拉取的第二个镜像现在就派上了用场<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm --net=host nvcr.io/nvidia/tritonserver:24.03-py3-sdk</span><br><span class="line">/workspace/install/bin/image_client -m densenet_onnx -c 3 -s INCEPTION /workspace/images/mug.jpg</span><br></pre></td></tr></table></figure></p>
+<p>得到响应<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Image &apos;/workspace/images/mug.jpg&apos;:</span><br><span class="line">    15.349571 (504) = COFFEE MUG</span><br><span class="line">    13.227469 (968) = CUP</span><br><span class="line">    10.424896 (505) = COFFEEPOT</span><br></pre></td></tr></table></figure></p>
+<p>可以看到Triton Server的推理结果是<b>咖啡杯</b>，我看了看图片确实如此，所以模型没有异常，完美！</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Triton Inference Server通过将模型统一放置在模型仓库中进行统一管理，使用gRPC/HTTP2接受及响应推理请求，使得Triton在保证高性能的同时，也有着极强的可用性和扩展性，怪不得大家都在用呢！我这次简单的使用只能说是大概了解了Triton的基本使用方法，它的很多特性我都还没使用到，恐怕入门都还没达到，有空再继续探索一下！</p>
+<p><img src="https://s2.loli.net/2024/04/27/yxsbT4tnXI39uaq.png" alt="完美"></p>
 
           
         
@@ -430,7 +462,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/24/">24</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -478,7 +510,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -489,7 +521,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -500,7 +532,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>
@@ -551,7 +583,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

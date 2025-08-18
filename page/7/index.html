@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/14/JDK7HashMap多线程扩容导致的死循环问题/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/01/31/记一次简单的服务启动GC优化/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/11/14/JDK7HashMap多线程扩容导致的死循环问题/" itemprop="url">JDK7HashMap多线程扩容导致的死循环问题</a></h1>
+                <a class="post-title-link" href="/2021/01/31/记一次简单的服务启动GC优化/" itemprop="url">记一次简单的服务启动GC优化</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-11-14T21:46:19+08:00">
-                2020-11-14
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-01-31T23:31:36+08:00">
+                2021-01-31
               </time>
             
 
@@ -347,8 +347,8 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/基础/" itemprop="url" rel="index">
-                    <span itemprop="name">基础</span>
+                  <a href="/categories/Java/JVM/" itemprop="url" rel="index">
+                    <span itemprop="name">JVM</span>
                   </a>
                 </span>
 
@@ -386,30 +386,28 @@
       
         
           
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><font color="#999AAA">JDK8以前的HashMap，多线程扩容的时候可能会出现死循环，这个问题在JDK8得到了修复。本翔看了大半天JDK7HashMap扩容源码找这个问题，所以写篇博客记录记录。</font></p>
-<h1 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h1><p>先来看看JDK7的HashMap扩容相关源码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">//扩容</span><br><span class="line">void resize(int newCapacity) &#123;</span><br><span class="line">       Entry[] oldTable = table;</span><br><span class="line">       int oldCapacity = oldTable.length;</span><br><span class="line">       if (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">           threshold = Integer.MAX_VALUE;</span><br><span class="line">           return;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       Entry[] newTable = new Entry[newCapacity];</span><br><span class="line">       transfer(newTable, initHashSeedAsNeeded(newCapacity));</span><br><span class="line">       table = newTable;</span><br><span class="line">       threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   void transfer(Entry[] newTable, boolean rehash) &#123;</span><br><span class="line">       int newCapacity = newTable.length;</span><br><span class="line">       //遍历旧桶数组</span><br><span class="line">       for (Entry&lt;K,V&gt; e : table) &#123;</span><br><span class="line">           while(null != e) &#123;</span><br><span class="line">           	//先记录下一次循环要插入的节点</span><br><span class="line">               Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">               if (rehash) &#123;</span><br><span class="line">                   e.hash = null == e.key ? 0 : hash(e.key);</span><br><span class="line">               &#125;</span><br><span class="line">               //计算新下标</span><br><span class="line">               int i = indexFor(e.hash, newCapacity);</span><br><span class="line">               //下面这两步很明显了，头插法。即先拿到桶原本指向的节点，把要插入的节点的next指向它，然后再把桶指向这个要插入的节点</span><br><span class="line">               e.next = newTable[i];</span><br><span class="line">               newTable[i] = e;</span><br><span class="line">               //next记录了旧数组旧链表里的下一个节点，现在把e指向它，准备下次循环把它插到新桶</span><br><span class="line">               e = next;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
-<p>可以看到 transfer 方法用的是头插法，我们重点注意以下几个步骤：</p>
-<blockquote>
-<p>1.Entry&lt;K,V&gt; next = e.next;     next指向旧链表中的下一个节点<br>2.e.next = newTable[i];      把新链表的头结点摘下来放到将要插入的节点的尾部<br>3.newTable[i] = e;        插入节点，即把桶指向e<br>4.e = next;        把e指向next，准备继续插入下一个节点</p>
-</blockquote>
-<h1 id="多线程扩容"><a href="#多线程扩容" class="headerlink" title="多线程扩容"></a>多线程扩容</h1><p>单线程的情况下扩容，是没什么问题的，我们直接来一步步分析多线程扩容的时候会出现什么问题。</p>
-<blockquote>
-<p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5。</p>
-</blockquote>
-<p><img src="https://s2.loli.net/2023/07/19/blEqv2TKHC8zY7P.png#pic_center" alt="扩容前"></p>
-<blockquote>
-<p>1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 <strong>Entry&lt;K,V&gt; next = e.next;</strong> 这一步后，e指向3，next指向7。<br>这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。<br>这个时候旧数组、链表和两个线程的状态是这样的。<br><img src="https://s2.loli.net/2023/07/19/o47McDelJqGOxyA.png#pic_center" alt="线程二扩容完成"></p>
-</blockquote>
-<blockquote>
-<p>2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：<br><img src="https://s2.loli.net/2023/07/19/5yFvHUxTd697JDj.png#pic_center" alt="第一次循环结束"></p>
-</blockquote>
-<blockquote>
-<p>3 下次循环一开始，<strong>Entry&lt;K,V&gt; next = e.next</strong> 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？<br><img src="https://s2.loli.net/2023/07/19/efA5nEC3gvOi4jr.png#pic_center" alt="第二次循环结束"></p>
-</blockquote>
-<blockquote>
-<p>4 这次循环执行情况是这样的<br>Entry&lt;K,V&gt; next = e.next;    现在e是3，而3的next是null，所以next指向了null<br>e.next = newTable[i];        这一步把3的next指向了7，因为桶现在是指向7的<br>newTable[i] = e;            把桶指向3<br>e = next;        由于next是null了，所以e指向了null，跳出了while进行后面的for循环<br>现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：<br><img src="https://s2.loli.net/2023/07/19/hHXCscelu493RST.png#pic_center" alt="第三次循环结束出大问题"></p>
-</blockquote>
-<p>显而易见，环形链表出现，这个时候如果我们再去做一些查询，查到这个桶3上面来的话，遍历的时候就出现了死循环，直接出不去了，出大问题……<br>还好JDK8修复了这个死循环问题。</p>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。</p>
+<h1 id="症状"><a href="#症状" class="headerlink" title="症状"></a>症状</h1><p>项目启动</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -server -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>gc.txt<br><img src="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png" alt="GC记录"><br>好家伙，一启动就来9次 Young GC ，2次 Full GC。</p>
+<p>现在先用jinfo看看配置参数<br><img src="https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png" alt="查看JVM参数"><br>注意几个重要参数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-XX:InitialHeapSize=<span class="number">62914560</span>		<span class="comment">//堆初始值</span></span><br><span class="line">-XX:MaxHeapSize=<span class="number">1073741824</span>	<span class="comment">//堆最大值</span></span><br><span class="line">-MaxDirectMemorySize=<span class="number">536870912</span>	<span class="comment">//虚拟机外最大内存</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="Full-GC"><a href="#Full-GC" class="headerlink" title="Full GC"></a>Full GC</h2><p>先来分析这两次Full GC以及它们前面的Young GC</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2.536</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">19883</span>K-&gt;<span class="number">3584</span>K(<span class="number">128512</span>K)] <span class="number">27143</span>K-&gt;<span class="number">12014</span>K(<span class="number">169472</span>K), <span class="number">0.0158155</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line"><span class="number">2.552</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">3584</span>K-&gt;<span class="number">0</span>K(<span class="number">128512</span>K)] [ParOldGen: <span class="number">8430</span>K-&gt;<span class="number">8782</span>K(<span class="number">32256</span>K)] <span class="number">12014</span>K-&gt;<span class="number">8782</span>K(<span class="number">160768</span>K), [Metaspace: <span class="number">20409</span>K-&gt;<span class="number">20409</span>K(<span class="number">1069056</span>K)], <span class="number">0.0844666</span> secs] [Times: user=<span class="number">0.16</span> sys=<span class="number">0.00</span>, real=<span class="number">0.09</span> secs]</span><br><span class="line"><span class="number">4.965</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">109848</span>K-&gt;<span class="number">8697</span>K(<span class="number">247296</span>K)] <span class="number">119422</span>K-&gt;<span class="number">19608</span>K(<span class="number">279552</span>K), <span class="number">0.0278398</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.01</span>, real=<span class="number">0.03</span> secs]</span><br><span class="line"><span class="number">4.993</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">8697</span>K-&gt;<span class="number">0</span>K(<span class="number">247296</span>K)] [ParOldGen: <span class="number">10910</span>K-&gt;<span class="number">14513</span>K(<span class="number">47104</span>K)] <span class="number">19608</span>K-&gt;<span class="number">14513</span>K(<span class="number">294400</span>K), [Metaspace: <span class="number">33512</span>K-&gt;<span class="number">33512</span>K(<span class="number">1081344</span>K)], <span class="number">0.1136122</span> secs] [Times: user=<span class="number">0.20</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</span><br></pre></td></tr></table></figure>
+<p>可以看到两次Full GC都是由于Metadata GC Threshold造成的。我这里用的是JDK8，参数里没有明确指定metaspace的初始值和上限，这个时候初始值应该是默认的 21M 。问题不大，那我就把它的初始值和上限调大一点吧，调到64M。</p>
+<p>措施：<br><strong>追加元空间初始值</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -server -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>这个时候再查看gc.txt<br><img src="https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png" alt="gc.txt"><br>可以看到已经没有Full GC了，不过还是有8次Young GC。</p>
+<h2 id="Young-GC"><a href="#Young-GC" class="headerlink" title="Young GC"></a>Young GC</h2><p>其实从我的启动参数里面就可以看到，<strong>堆的容量我只指定了最大值(-Xmx1024m)</strong>，并没有指定初始值。所以可以在配置参数里面看到 -XX:InitialHeapSize=62082048，即<strong>堆的初始容量只有60m左右。</strong></p>
+<p>而JVM默认的新生代和老年代空间占比为 <strong>1 : 3</strong>，所以新生代在一开始的时候只有15m的内存空间，因此JVM一开始在15m的时候就发生了Young GC。</p>
+<p>所以现在要追加新生代和堆的初始值，新生代、老年代的空间占比我就不调了，使用默认的 1 : 3 即可，而堆的初始值调成1024m，这样新生代的初始值就是256m了。</p>
+<p>措施：<br><strong>追加堆的初始值</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -server -Xms1024m -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>现在再来看看gc.txt<br><img src="https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png" alt="gc.txt"><br>可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……</p>
+<p><strong>好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png" alt="过分"></p>
+<p>好吧，公司穷，只能买得起4G的服务器。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png" alt="哭了"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这只是一次很简单的JVM启动参数优化，平时启动应用的时候还是得多注意注意堆的初始值和最大值配置，元空间这部分也不能忽略了。</p>
 
           
         
@@ -449,7 +447,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/page/26/">26</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -497,7 +495,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -508,7 +506,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">22</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -519,7 +517,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

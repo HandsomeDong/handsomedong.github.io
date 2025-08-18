@@ -108,3 +108,7 @@ sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security -T users --columns
 ```
 
 ![image.png](https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png)
+
+# 总结
+1. 先确认是字符型注入还是数字型注入，再使用注释把后面的 SQL 注释掉，然后确认注入格式，再使用联合注入查询库、表名，最后查询数据
+2. 这种简单的 case，sqlmap 直接能解决。不过现在处于练习阶段，还是得手工注入，理解原理

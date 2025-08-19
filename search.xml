@@ -1,30 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Golang大坑之循环goroutine闭包调用</title>
-    <url>/2022/12/29/Golang%E5%A4%A7%E5%9D%91%E4%B9%8B%E5%BE%AA%E7%8E%AFgoroutine%E9%97%AD%E5%8C%85%E8%B0%83%E7%94%A8/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>回顾整个2022，突然发现我一篇博客都没写，趁着还没2022还没过去，赶紧<del>水一篇博客</del> 分享一下我最近学习到的一些东西，这次的主题是“Golang大坑之循环goroutine闭包调用”，大家就当小故事来看吧。<br><img src="https://s2.loli.net/2023/07/18/LvX3ADzcOTSGIVE.jpg" alt="躺好，听我讲故事"></p>
-<h1 id="小美又写了bug"><a href="#小美又写了bug" class="headerlink" title="小美又写了bug"></a>小美又写了bug</h1><p>仔细看，这个女孩叫小美，她最近刚入职某Go大厂，从Java转了Go，小美入职仅仅花了半天就学完了Go语法，然后三天写了5个bug，隔三差五就被leader小帅叫到会议室臭骂。<br><img src="https://s2.loli.net/2023/07/18/jbJHKo89QlLeGDF.gif" alt="小美"><br>这不，正当小美写bug写得起劲，小帅又过来拍了拍小美肩膀：“小美，来下会议室”。<br><img src="https://s2.loli.net/2023/07/18/9MyjaQRfYD4btHi.png" alt="小美来下会议室"><br>一来到会议室，小帅直接把笔记本拍到小美脸上：“看看你干的好事。”<br>笔记本上面是小美的提交记录，上面有这么一段代码。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>小美看完表示很委屈：“这有什么毛病吗？这里一共开了十个协程，每个协程打印的编号都不一样，这里的输出应该是下面这样啊？出什么问题了吗？”<br>小美预期的结果：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">打工人9号</span><br><span class="line">打工人2号</span><br><span class="line">打工人3号</span><br><span class="line">打工人0号</span><br><span class="line">打工人1号</span><br><span class="line">打工人5号</span><br><span class="line">打工人7号</span><br><span class="line">打工人8号</span><br><span class="line">打工人4号</span><br><span class="line">打工人6号</span><br></pre></td></tr></table></figure></p>
-<p>小帅一巴掌甩小美脸上：“要不你看看运行结果？”<br><img src="https://s2.loli.net/2023/07/18/ki8THV2BS59mp3j.png" alt="一巴掌"><br>小美运行了一下，结果让她大吃一斤翔。<br><img src="https://s2.loli.net/2023/07/18/uH72A3kwbyYTBpG.png" alt="运行结果"><br>面对这个结果，坚强的小美也落下了泪，她实在不明白为什么会这样。<br><img src="https://s2.loli.net/2023/07/18/PUwFegCSKybEuOp.jpg" alt="落泪的小美"></p>
-<h1 id="小翔看出问题所在"><a href="#小翔看出问题所在" class="headerlink" title="小翔看出问题所在"></a>小翔看出问题所在</h1><p>谁也没有注意到，此时坐在会议室角落旁的小翔缓缓站了起来：“真相只有一个！”<br><img src="https://s2.loli.net/2023/07/18/9peBGu6UAgKX3tM.png" alt="小翔登场"><br>小翔继续说：“这是Golang新手及其容易犯的一个错误！<strong>你这里的goroutine执行了闭包内的程序，而闭包内直接引用了num变量，这个值并没有被保存到goroutine栈中，这样写会导致for循环结束后才执行goroutine多线程操作，所以你看，很多个协程打印的编号都是9，即for循环结束后协程才运行，这个时候num值其实指向了最后一个元素。当然，有个别协程打印的不是9，因为它们运行得比较早。</strong> 这样写及其容易窜数据，产生严重bug！”</p>
-<p><strong>小帅一巴掌甩小翔脸上：“还TM装逼？快给我修bug。”</strong><br><img src="https://s2.loli.net/2023/07/18/7QXlSIWFbunADCv.jpg" alt="逼都让你装完了"></p>
-<h1 id="小翔的解决方案"><a href="#小翔的解决方案" class="headerlink" title="小翔的解决方案"></a>小翔的解决方案</h1><p>小翔不愧是小翔，是见过各种大场面的男人，只见他不慌不忙给出了几种解决方案。</p>
-<h2 id="正确写法1：不使用闭包"><a href="#正确写法1：不使用闭包" class="headerlink" title="正确写法1：不使用闭包"></a>正确写法1：不使用闭包</h2><p>既然闭包有问题，那我们不使用闭包不就行了？多大点事啊？<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="built_in">print</span>(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法2：循环内定义新变量"><a href="#正确写法2：循环内定义新变量" class="headerlink" title="正确写法2：循环内定义新变量"></a>正确写法2：循环内定义新变量</h2><p>由于循环内定义的变量在循环遍历过程中是不共享的，所以我们可以在循环内再定义新变量。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		num := num</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法3：闭包传参（优雅，推荐）"><a href="#正确写法3：闭包传参（优雅，推荐）" class="headerlink" title="正确写法3：闭包传参（优雅，推荐）"></a>正确写法3：闭包传参（优雅，推荐）</h2><p>使用闭包时，我们还是尽量使用闭包传参，避免直接在闭包内使用外部的变量，比较容易出错。我个人认为这样写起来会比较优雅，推荐这种写法。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><p>上面3种写法都会得到正确的结果<br><img src="https://s2.loli.net/2023/07/18/Rhwtgy1VmQq65sp.png" alt="运行结果"></p>
-<h1 id="小翔的静态扫描工具"><a href="#小翔的静态扫描工具" class="headerlink" title="小翔的静态扫描工具"></a>小翔的静态扫描工具</h1><h2 id="怎么从根源上避免这个问题"><a href="#怎么从根源上避免这个问题" class="headerlink" title="怎么从根源上避免这个问题"></a>怎么从根源上避免这个问题</h2><p>解决完了这个bug之后，leader小帅的脸色也有所好转，然后问了问小翔：“既然新手都比较容易犯这个错误，那我们有没有什么办法或手段来尽量让后面入职的同学少犯甚至不犯这个错误呢？换句话说，<strong>怎么从根源上避免出现这个问题</strong>？”<br><img src="https://s2.loli.net/2023/07/18/MfEN1ryj9IKbJC4.png" alt="怎么从根源上避免这个问题"><br>小翔推了推眼镜，冷静回答：“这个简单，回头我出个《Golang大坑》系列文档，让入职转Golang的新同学都看一下这个文档，他们就不会犯这个错误了！”<br><img src="https://s2.loli.net/2023/07/19/JxfvHYz5siP8hkA.jpg" alt="小帅推眼镜"><br>小帅直接就是一巴掌：“其实，我对你是有点失望的。你这个职级，不是把事情做完就可以的。你需要有体系化思考的能力。你做的事情，他的价值点在哪里？你是否作出了壁垒，形成了核心竞争力？你做的事情，和公司内其他团队的差异化在哪里？你的事情，是否沉淀了一套可复用的物理资料和方法论？为什么是你来做，其他人不能做吗？你需要有自己的判断力，而不是我说什么你就做什么…………（省略一千字）<strong>你确定你写个文档大家就会去看，就能遵守这一套约定？</strong>”<br><img src="https://s2.loli.net/2023/07/19/fQA2MdKrhJmBYgn.jpg" alt="小帅装逼"></p>
-<h2 id="静态扫描工具"><a href="#静态扫描工具" class="headerlink" title="静态扫描工具"></a>静态扫描工具</h2><p>小翔这次终于是忍不住了，直接甩出了他的终极大招 – 静态扫描工具，缓缓说道：<strong>“这个是我写的Golang静态扫描工具，名叫 </strong>xianggolint<strong>，我刚刚加上了一个新规则：loopgoroutinecheck，它能扫描出循环内goroutine闭包直接引用循环index、value、key的代码，这种代码都是有问题的，Github 链接点<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">这里</a>，具体的使用方法可以看 readme 文档，以下是测试的扫描结果，可以看到扫描结果显示某个文件的第 12 行代码是有问题的，提示信息非常清晰。如果我们的CI/CD做得比较完善的话，我们还能将这种静态扫描工具接入到上面，在MR的时候进行扫描，扫出问题时就block进程，并提示该问题，这样我们就能在代码合入的阶段防止问题代码合入主分支啦！</strong>”<br><img src="https://s2.loli.net/2023/07/19/n8RsUdqv19WIZ7P.png" alt="代码"><br><img src="https://s2.loli.net/2023/07/19/6wmpHsRQBC1Z4ug.png" alt="代码"><br>小翔此时心里默默说：“今天这个装逼王，我当定了！”<br><img src="https://s2.loli.net/2023/07/19/jkBn7hNmvOAC4ZV.png" alt="小翔装逼王"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>循环goroutine闭包不能直接使用循环的index、key、value，因为这些变量没有被保存到goroutine栈中，比如以下代码，三个循环内的goroutine都不会得到我们所预期的结果。</strong><br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> index, value := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"slice index: %d\n"</span>, index)</span><br><span class="line">			fmt.Printf(<span class="string">"slice value: %d\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"1"</span>: <span class="string">"1"</span>, <span class="string">"2"</span>: <span class="string">"2"</span>, <span class="string">"3"</span>: <span class="string">"3"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> m &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"map key: %s\n"</span>, key)</span><br><span class="line">			fmt.Printf(<span class="string">"map value: %s\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"range i: %d\n"</span>, i)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><strong>我写了个静态扫描工具，针对这种代码写了相应的规则，能扫描出问题，欢迎使用，Github地址：<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">https://github.com/HandsomeDong/xianggolint</a></strong></p>
+    <title>Git恢复本地分支</title>
+    <url>/2019/04/27/Git-%E6%81%A2%E5%A4%8D%E6%9C%AC%E5%9C%B0%E5%88%86%E6%94%AF/</url>
+    <content><![CDATA[<p>一般来说，我们开发新功能都会在develop分支下新建一个分支，命名为 <strong>feature/新功能</strong>，测试没问题后再合并到develop推到远程分支。由于我是新手，老大通常要我先别合并，先推到远程的新分支下等他review没问题后再合并到develop。</p>
+<p>有强迫症的我，看到本地太多分支就不舒服，推到远程分支后直接就删掉本地分支，只留master和develop两个分支，干干净净舒舒服服！！！</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34c7e105f4.png" alt="帅字贯穿了我的一生"></p>
+<p>万万没想到没想到老大也喜欢干干净净舒舒服服，但他不仅喜欢本地干干净净，也喜欢远程分支干干净净……然后今天早上问我这个功能的代码推到哪个分支了，我看了半天好像也找不到，老大说可能是他误删了……我……</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34c7e15923.png" alt="枯了"></p>
+<p>原谅我是个菜鸡，Git可以恢复本地分支我都唔鸡，老大提醒我后我赶紧看了一下如何恢复本地分支，没想到如此简单！我只知道怎么在现有分支回滚代码，万万没想到连分支都能恢复！</p>
+<p><img src="https://i.loli.net/2019/04/28/5cc59b0db9ebe.png" alt="流下了没技术的泪水"></p>
+<p><strong>仅需两步即可找回丢失分支！</strong><br>1.git log -g 找到删除分支前的commit_id<br>2.git branch recover commit_id  把代码恢复到新分支recover下</p>
+<h1 id="下面来演示全过程"><a href="#下面来演示全过程" class="headerlink" title="下面来演示全过程"></a>下面来演示全过程</h1><h2 id="1-新建并切换到新分支test"><a href="#1-新建并切换到新分支test" class="headerlink" title="1.新建并切换到新分支test"></a>1.新建并切换到新分支test</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ls</span><br><span class="line">git checkout -b test</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8b4584c.png" alt="新建并切换到新分支test"></p>
+<h2 id="2-新建文件随便写点东西"><a href="#2-新建文件随便写点东西" class="headerlink" title="2.新建文件随便写点东西"></a>2.新建文件随便写点东西</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">vim test.txt</span><br></pre></td></tr></table></figure>
+<p>我随便写了个 “test”</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8b487e8.png" alt="新建文件随便写点东西"></p>
+<h2 id="3-提交代码"><a href="#3-提交代码" class="headerlink" title="3.提交代码"></a>3.提交代码</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;Add test.txt&quot;</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
+<p>可以看到现在有master和test两个分支</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8bb2edf.png" alt="提交代码"></p>
+<h2 id="4-切换回master分支并删除test分支"><a href="#4-切换回master分支并删除test分支" class="headerlink" title="4.切换回master分支并删除test分支"></a>4.切换回master分支并删除test分支</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git checkout master</span><br><span class="line">git branch -D test</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
+<p>可以看到现在只有master一个分支了</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8bcdea0.png" alt="删除分支"></p>
+<h2 id="5-git-log-g查看提交记录"><a href="#5-git-log-g查看提交记录" class="headerlink" title="5.git log -g查看提交记录"></a>5.git log -g查看提交记录</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git log -g</span><br></pre></td></tr></table></figure>
+<p>可以从提交记录可以看到commit、commit的id及提交者等信息。通过conmit来找到你想要恢复的代码，所以一个好的commit很重要哦。</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8be96b9.png" alt="查看提交记录"></p>
+<h2 id="6-找到commit-id并恢复到新分支"><a href="#6-找到commit-id并恢复到新分支" class="headerlink" title="6.找到commit_id并恢复到新分支"></a>6.找到commit_id并恢复到新分支</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git branch recover d0bd911dcbe57eb4ff1c99dd03b42da34a75640a</span><br></pre></td></tr></table></figure>
+<h2 id="查看结果"><a href="#查看结果" class="headerlink" title="查看结果"></a>查看结果</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git branch</span><br><span class="line">git checkout recover</span><br><span class="line">ls</span><br><span class="line">cat test.txt</span><br></pre></td></tr></table></figure>
+<p>可以看到在recover分支和之前删除的test分支是一样的，文件一样，文件内容也一样，恢复分支成功！</p>
+<p><img src="https://i.loli.net/2019/04/27/5cc34a8beb6a2.png" alt="查看结果"></p>
+<p>所以一定要好好commit啊，不然不管是回滚代码还是恢复分支，光是找节点就能让你找半天！</p>
 ]]></content>
       <categories>
-        <category>Golang</category>
+        <category>Git</category>
+        <category>工作中的Git</category>
       </categories>
       <tags>
-        <tag>高并发编程</tag>
+        <tag>Git</tag>
       </tags>
   </entry>
   <entry>
@@ -77,144 +89,6 @@
       </categories>
       <tags>
         <tag>HashMap</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>JDK7HashMap多线程扩容导致的死循环问题</title>
-    <url>/2020/11/14/JDK7HashMap%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%89%A9%E5%AE%B9%E5%AF%BC%E8%87%B4%E7%9A%84%E6%AD%BB%E5%BE%AA%E7%8E%AF%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><font color="#999AAA">JDK8以前的HashMap，多线程扩容的时候可能会出现死循环，这个问题在JDK8得到了修复。本翔看了大半天JDK7HashMap扩容源码找这个问题，所以写篇博客记录记录。</font></p>
-<h1 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h1><p>先来看看JDK7的HashMap扩容相关源码。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//扩容</span><br><span class="line">void resize(int newCapacity) &#123;</span><br><span class="line">       Entry[] oldTable = table;</span><br><span class="line">       int oldCapacity = oldTable.length;</span><br><span class="line">       if (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">           threshold = Integer.MAX_VALUE;</span><br><span class="line">           return;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       Entry[] newTable = new Entry[newCapacity];</span><br><span class="line">       transfer(newTable, initHashSeedAsNeeded(newCapacity));</span><br><span class="line">       table = newTable;</span><br><span class="line">       threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   void transfer(Entry[] newTable, boolean rehash) &#123;</span><br><span class="line">       int newCapacity = newTable.length;</span><br><span class="line">       //遍历旧桶数组</span><br><span class="line">       for (Entry&lt;K,V&gt; e : table) &#123;</span><br><span class="line">           while(null != e) &#123;</span><br><span class="line">           	//先记录下一次循环要插入的节点</span><br><span class="line">               Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">               if (rehash) &#123;</span><br><span class="line">                   e.hash = null == e.key ? 0 : hash(e.key);</span><br><span class="line">               &#125;</span><br><span class="line">               //计算新下标</span><br><span class="line">               int i = indexFor(e.hash, newCapacity);</span><br><span class="line">               //下面这两步很明显了，头插法。即先拿到桶原本指向的节点，把要插入的节点的next指向它，然后再把桶指向这个要插入的节点</span><br><span class="line">               e.next = newTable[i];</span><br><span class="line">               newTable[i] = e;</span><br><span class="line">               //next记录了旧数组旧链表里的下一个节点，现在把e指向它，准备下次循环把它插到新桶</span><br><span class="line">               e = next;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
-<p>可以看到 transfer 方法用的是头插法，我们重点注意以下几个步骤：</p>
-<blockquote>
-<p>1.Entry&lt;K,V&gt; next = e.next;     next指向旧链表中的下一个节点<br>2.e.next = newTable[i];      把新链表的头结点摘下来放到将要插入的节点的尾部<br>3.newTable[i] = e;        插入节点，即把桶指向e<br>4.e = next;        把e指向next，准备继续插入下一个节点</p>
-</blockquote>
-<h1 id="多线程扩容"><a href="#多线程扩容" class="headerlink" title="多线程扩容"></a>多线程扩容</h1><p>单线程的情况下扩容，是没什么问题的，我们直接来一步步分析多线程扩容的时候会出现什么问题。</p>
-<blockquote>
-<p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5。</p>
-</blockquote>
-<p><img src="https://s2.loli.net/2023/07/19/blEqv2TKHC8zY7P.png#pic_center" alt="扩容前"></p>
-<blockquote>
-<p>1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 <strong>Entry&lt;K,V&gt; next = e.next;</strong> 这一步后，e指向3，next指向7。<br>这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。<br>这个时候旧数组、链表和两个线程的状态是这样的。<br><img src="https://s2.loli.net/2023/07/19/o47McDelJqGOxyA.png#pic_center" alt="线程二扩容完成"></p>
-</blockquote>
-<blockquote>
-<p>2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：<br><img src="https://s2.loli.net/2023/07/19/5yFvHUxTd697JDj.png#pic_center" alt="第一次循环结束"></p>
-</blockquote>
-<blockquote>
-<p>3 下次循环一开始，<strong>Entry&lt;K,V&gt; next = e.next</strong> 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？<br><img src="https://s2.loli.net/2023/07/19/efA5nEC3gvOi4jr.png#pic_center" alt="第二次循环结束"></p>
-</blockquote>
-<blockquote>
-<p>4 这次循环执行情况是这样的<br>Entry&lt;K,V&gt; next = e.next;    现在e是3，而3的next是null，所以next指向了null<br>e.next = newTable[i];        这一步把3的next指向了7，因为桶现在是指向7的<br>newTable[i] = e;            把桶指向3<br>e = next;        由于next是null了，所以e指向了null，跳出了while进行后面的for循环<br>现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：<br><img src="https://s2.loli.net/2023/07/19/hHXCscelu493RST.png#pic_center" alt="第三次循环结束出大问题"></p>
-</blockquote>
-<p>显而易见，环形链表出现，这个时候如果我们再去做一些查询，查到这个桶3上面来的话，遍历的时候就出现了死循环，直接出不去了，出大问题……<br>还好JDK8修复了这个死循环问题。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>基础</category>
-      </categories>
-      <tags>
-        <tag>HashMap</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Write-up: CTFHUB web之Git泄露</title>
-    <url>/2025/08/18/Write-up-CTFHUB-web%E4%B9%8BGit%E6%B3%84%E9%9C%B2/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>git应该是最主流的版本控制工具了，但是如果配置不当，可能会不小心把 .git 文件夹直接部署到生产环境。当然，这都2025了，不太可能会有开发出现这种错误了……</p>
-<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="Githack"><a href="#Githack" class="headerlink" title="Githack"></a>Githack</h2><p>项目地址：<a href="https://github.com/lijiejie/GitHack" target="_blank" rel="noopener">https://github.com/lijiejie/GitHack</a><br>这是一个.git泄露利用脚本，可以通过.git文件夹下的文件，重建还原工程源代码。</p>
-<p>下载后，用python2就可以运行该脚本<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python GitHack.py http://www.openssl.org/.git/</span><br></pre></td></tr></table></figure></p>
-<h1 id="Log"><a href="#Log" class="headerlink" title="Log"></a>Log</h1><p>ctfhub 的 git 泄露一共有3道，先来做第一道：Log</p>
-<p><img src="https://s2.loli.net/2025/08/18/Pg46BCWhMVmY3al.png" alt="image.png"></p>
-<p>打开后就一个页面，显示“Where is flag?”<br><img src="https://s2.loli.net/2025/08/18/cktFWeN5zHpI1jQ.png" alt="image.png"></p>
-<p>直接用脚本下载并重建工程<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python2 GitHack.py http://challenge-4b71d7d837e22605.sandbox.ctfhub.com:10800/.git</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/dKW8nlYpC6hax9S.png" alt="image.png"></p>
-<p>全局搜索 “ctfhub” 或者 “flag”，在源代码中搜不到，但是在git log相关文件中能看到提交记录有端倪，应该是添加了 flag 后又删掉了。</p>
-<p><img src="https://s2.loli.net/2025/08/18/5QATtId8aDZfn6o.png" alt="image.png"></p>
-<p>用 git reset 回滚到 “add flag” 那一次提交后再全局搜索 “ctfhub” 或者 “flag”，可以在一个 txt 文件里找到 flag 了</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png" alt="image.png"></p>
-<h2 id="Stash"><a href="#Stash" class="headerlink" title="Stash"></a>Stash</h2><p>前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了<br><img src="https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png" alt="image.png"></p>
-<p>但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 <a href="https://git-scm.com/docs/git-stash/zh_HANS-CN" target="_blank" rel="noopener">https://git-scm.com/docs/git-stash/zh_HANS-CN</a><br><img src="https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png" alt="image.png"></p>
-<p>用 git stash list 看看暂存的修改<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png" alt="image.png"></p>
-<p>用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png" alt="image.png"></p>
-<h2 id="Index"><a href="#Index" class="headerlink" title="Index"></a>Index</h2><p>前几步步骤仍然和上面一样，但是txt文件直接就有flag了……<br>突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！</p>
-]]></content>
-      <categories>
-        <category>CTF</category>
-        <category>Web</category>
-        <category>Writeup</category>
-        <category>web</category>
-      </categories>
-      <tags>
-        <tag>CTF</tag>
-        <tag>Web安全</tag>
-        <tag>Writeup</tag>
-        <tag>信息泄露</tag>
-        <tag>Git泄露</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Git恢复本地分支</title>
-    <url>/2019/04/27/Git-%E6%81%A2%E5%A4%8D%E6%9C%AC%E5%9C%B0%E5%88%86%E6%94%AF/</url>
-    <content><![CDATA[<p>一般来说，我们开发新功能都会在develop分支下新建一个分支，命名为 <strong>feature/新功能</strong>，测试没问题后再合并到develop推到远程分支。由于我是新手，老大通常要我先别合并，先推到远程的新分支下等他review没问题后再合并到develop。</p>
-<p>有强迫症的我，看到本地太多分支就不舒服，推到远程分支后直接就删掉本地分支，只留master和develop两个分支，干干净净舒舒服服！！！</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34c7e105f4.png" alt="帅字贯穿了我的一生"></p>
-<p>万万没想到没想到老大也喜欢干干净净舒舒服服，但他不仅喜欢本地干干净净，也喜欢远程分支干干净净……然后今天早上问我这个功能的代码推到哪个分支了，我看了半天好像也找不到，老大说可能是他误删了……我……</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34c7e15923.png" alt="枯了"></p>
-<p>原谅我是个菜鸡，Git可以恢复本地分支我都唔鸡，老大提醒我后我赶紧看了一下如何恢复本地分支，没想到如此简单！我只知道怎么在现有分支回滚代码，万万没想到连分支都能恢复！</p>
-<p><img src="https://i.loli.net/2019/04/28/5cc59b0db9ebe.png" alt="流下了没技术的泪水"></p>
-<p><strong>仅需两步即可找回丢失分支！</strong><br>1.git log -g 找到删除分支前的commit_id<br>2.git branch recover commit_id  把代码恢复到新分支recover下</p>
-<h1 id="下面来演示全过程"><a href="#下面来演示全过程" class="headerlink" title="下面来演示全过程"></a>下面来演示全过程</h1><h2 id="1-新建并切换到新分支test"><a href="#1-新建并切换到新分支test" class="headerlink" title="1.新建并切换到新分支test"></a>1.新建并切换到新分支test</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ls</span><br><span class="line">git checkout -b test</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8b4584c.png" alt="新建并切换到新分支test"></p>
-<h2 id="2-新建文件随便写点东西"><a href="#2-新建文件随便写点东西" class="headerlink" title="2.新建文件随便写点东西"></a>2.新建文件随便写点东西</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">vim test.txt</span><br></pre></td></tr></table></figure>
-<p>我随便写了个 “test”</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8b487e8.png" alt="新建文件随便写点东西"></p>
-<h2 id="3-提交代码"><a href="#3-提交代码" class="headerlink" title="3.提交代码"></a>3.提交代码</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;Add test.txt&quot;</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
-<p>可以看到现在有master和test两个分支</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8bb2edf.png" alt="提交代码"></p>
-<h2 id="4-切换回master分支并删除test分支"><a href="#4-切换回master分支并删除test分支" class="headerlink" title="4.切换回master分支并删除test分支"></a>4.切换回master分支并删除test分支</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git checkout master</span><br><span class="line">git branch -D test</span><br><span class="line">git branch</span><br></pre></td></tr></table></figure>
-<p>可以看到现在只有master一个分支了</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8bcdea0.png" alt="删除分支"></p>
-<h2 id="5-git-log-g查看提交记录"><a href="#5-git-log-g查看提交记录" class="headerlink" title="5.git log -g查看提交记录"></a>5.git log -g查看提交记录</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git log -g</span><br></pre></td></tr></table></figure>
-<p>可以从提交记录可以看到commit、commit的id及提交者等信息。通过conmit来找到你想要恢复的代码，所以一个好的commit很重要哦。</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8be96b9.png" alt="查看提交记录"></p>
-<h2 id="6-找到commit-id并恢复到新分支"><a href="#6-找到commit-id并恢复到新分支" class="headerlink" title="6.找到commit_id并恢复到新分支"></a>6.找到commit_id并恢复到新分支</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git branch recover d0bd911dcbe57eb4ff1c99dd03b42da34a75640a</span><br></pre></td></tr></table></figure>
-<h2 id="查看结果"><a href="#查看结果" class="headerlink" title="查看结果"></a>查看结果</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git branch</span><br><span class="line">git checkout recover</span><br><span class="line">ls</span><br><span class="line">cat test.txt</span><br></pre></td></tr></table></figure>
-<p>可以看到在recover分支和之前删除的test分支是一样的，文件一样，文件内容也一样，恢复分支成功！</p>
-<p><img src="https://i.loli.net/2019/04/27/5cc34a8beb6a2.png" alt="查看结果"></p>
-<p>所以一定要好好commit啊，不然不管是回滚代码还是恢复分支，光是找节点就能让你找半天！</p>
-]]></content>
-      <categories>
-        <category>Git</category>
-        <category>工作中的Git</category>
-      </categories>
-      <tags>
-        <tag>Git</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Spring @Autowire注入Map和List</title>
-    <url>/2019/10/17/Spring-Autowire%E6%B3%A8%E5%85%A5Map%E5%92%8CList/</url>
-    <content><![CDATA[<p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
-<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
-<p>那么就不多BB了，直接上代码。</p>
-<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
-<p>下面是运行结果。</p>
-<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>框架</category>
-        <category>Spring</category>
-      </categories>
-      <tags>
-        <tag>Spring</tag>
       </tags>
   </entry>
   <entry>
@@ -380,23 +254,40 @@
       </categories>
   </entry>
   <entry>
-    <title>Spring Security CSRF防御</title>
-    <url>/2019/09/08/Spring-Security%E7%9A%84%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<p>最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;input type=&quot;hidden&quot; name=&quot;$&#123;_csrf.parameterName&#125;&quot; value=&quot;$&#123;_csrf.token&#125;&quot;/&gt;</span><br></pre></td></tr></table></figure></p>
-<p>详情可以在官方文档中看到，<a href="https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html" target="_blank" rel="noopener">https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html</a></p>
-<h3 id="什么是CSRF攻击"><a href="#什么是CSRF攻击" class="headerlink" title="什么是CSRF攻击"></a>什么是CSRF攻击</h3><p>看了一下官方文档才了解到这CSRF到底是什么，就像文档所说的，假如银行网站向用户提供转账功能，转账请求的代码是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">POST /transfer HTTP/1.1</span><br><span class="line">Host: bank.example.com</span><br><span class="line">Cookie: JSESSIONID=randomid; Domain=bank.example.com; Secure; HttpOnly</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line"></span><br><span class="line">amount=100.00&amp;routingNumber=1234&amp;account=9876</span><br></pre></td></tr></table></figure>
-<p>但是假如你登录到了银行网站，然后在还没注销的情况下又访问了一个恶意网站，这时你看到恶意网站上有个【领取奖品】按钮，你美滋滋地点击了这个按钮，却不知道这个按钮会提交这样的表单信息：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;form action=&quot;https://bank.example.com/transfer&quot; method=&quot;post&quot;&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;amount&quot;</span><br><span class="line">      value=&quot;100.00&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;routingNumber&quot;</span><br><span class="line">      value=&quot;evilsRoutingNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;account&quot;</span><br><span class="line">      value=&quot;evilsAccountNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;submit&quot;</span><br><span class="line">      value=&quot;Win Money!&quot;/&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
-<p>最后你会收到一条信息，您向银行卡号XXX转账100元……当场流下悔恨的泪水，大喊三声“为什么”？！<br>因为恶意网站虽然没办法获取你的cookie信息，但是它向银行后端请求的时候，浏览器还是会将cookie信息一起发送的，银行当然不知道这个请求是恶意网站向它发送的，它只知道cookie是你的！</p>
-<p><strong>像这种伪装成当前已登录认证用户去请求正在访问的网站后端的攻击方式，就被称为CSRF。</strong></p>
-<p>所以解决办法就是增加一些表单信息，而这些信息是恶意网站所无法获取的！例如图片验证码什么的。但是除了登录注册的时候使用验证码外，其它时候也使用验证码的话，用户岂不是会觉得很烦，所以Spring Sercurity通过在WEB应用中增加前端过滤器，验证请求是否包含CSRF的token信息，不包含的自然就是非法请求咯，因为攻击网站是无法获取到token信息的，只要是跨域提交的信息，都是无法通过这个过滤器的校验的。</p>
-<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><p>下面是CsrfFilter中的doFilterInternal源码。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Override</span><br><span class="line">	protected void doFilterInternal(HttpServletRequest request,</span><br><span class="line">			HttpServletResponse response, FilterChain filterChain)</span><br><span class="line">					throws ServletException, IOException &#123;</span><br><span class="line">		request.setAttribute(HttpServletResponse.class.getName(), response);</span><br><span class="line">		// 先从tokenRepository中加载token</span><br><span class="line">		CsrfToken csrfToken = this.tokenRepository.loadToken(request);</span><br><span class="line">		final boolean missingToken = csrfToken == null;</span><br><span class="line">		  // 如果为空，则tokenRepository生成新的token，并保存到tokenRepository中</span><br><span class="line">		if (missingToken) &#123;</span><br><span class="line">			csrfToken = this.tokenRepository.generateToken(request);</span><br><span class="line">			this.tokenRepository.saveToken(csrfToken, request, response);</span><br><span class="line">		&#125;</span><br><span class="line">        // 将token写入request的attribute中，方便页面上使用</span><br><span class="line">		request.setAttribute(CsrfToken.class.getName(), csrfToken);</span><br><span class="line">		request.setAttribute(csrfToken.getParameterName(), csrfToken);</span><br><span class="line">		//这个macher就是我们在Spring配置文件中自定义的过滤器，也就是GET，HEAD, TRACE, OPTIONS和我们的rest都不处理</span><br><span class="line"> </span><br><span class="line">        // 这个macher就是我们在Spring配置文件中自定义的过滤器，</span><br><span class="line">		//如果不需要csrf验证的请求，则直接下传请求（requireCsrfProtectionMatcher是默认的对象，对符合^(GET|HEAD|TRACE|OPTIONS)$的请求和我们自定义的请求不验证）</span><br><span class="line">		if (!this.requireCsrfProtectionMatcher.matches(request)) &#123;</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">        // 从用户请求中获取token信息</span><br><span class="line">		String actualToken = request.getHeader(csrfToken.getHeaderName());</span><br><span class="line">		if (actualToken == null) &#123;</span><br><span class="line">			actualToken = request.getParameter(csrfToken.getParameterName());</span><br><span class="line">		&#125;</span><br><span class="line">        // 验证，如果相同，则下传请求，如果不同，则抛出异常</span><br><span class="line">		if (!csrfToken.getToken().equals(actualToken)) &#123;</span><br><span class="line">			if (this.logger.isDebugEnabled()) &#123;</span><br><span class="line">				this.logger.debug(&quot;Invalid CSRF token found for &quot;</span><br><span class="line">						+ UrlUtils.buildFullRequestUrl(request));</span><br><span class="line">			&#125;</span><br><span class="line">			if (missingToken) &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new MissingCsrfTokenException(actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			else &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new InvalidCsrfTokenException(csrfToken, actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		filterChain.doFilter(request, response);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
-<p>唉，有空还是得多到Spring官网看看文档了解了解框架啊，不然一个简单的问题就得搞半天！</p>
+    <title>JDK7HashMap多线程扩容导致的死循环问题</title>
+    <url>/2020/11/14/JDK7HashMap%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%89%A9%E5%AE%B9%E5%AF%BC%E8%87%B4%E7%9A%84%E6%AD%BB%E5%BE%AA%E7%8E%AF%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><font color="#999AAA">JDK8以前的HashMap，多线程扩容的时候可能会出现死循环，这个问题在JDK8得到了修复。本翔看了大半天JDK7HashMap扩容源码找这个问题，所以写篇博客记录记录。</font></p>
+<h1 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h1><p>先来看看JDK7的HashMap扩容相关源码。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//扩容</span><br><span class="line">void resize(int newCapacity) &#123;</span><br><span class="line">       Entry[] oldTable = table;</span><br><span class="line">       int oldCapacity = oldTable.length;</span><br><span class="line">       if (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">           threshold = Integer.MAX_VALUE;</span><br><span class="line">           return;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       Entry[] newTable = new Entry[newCapacity];</span><br><span class="line">       transfer(newTable, initHashSeedAsNeeded(newCapacity));</span><br><span class="line">       table = newTable;</span><br><span class="line">       threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   void transfer(Entry[] newTable, boolean rehash) &#123;</span><br><span class="line">       int newCapacity = newTable.length;</span><br><span class="line">       //遍历旧桶数组</span><br><span class="line">       for (Entry&lt;K,V&gt; e : table) &#123;</span><br><span class="line">           while(null != e) &#123;</span><br><span class="line">           	//先记录下一次循环要插入的节点</span><br><span class="line">               Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">               if (rehash) &#123;</span><br><span class="line">                   e.hash = null == e.key ? 0 : hash(e.key);</span><br><span class="line">               &#125;</span><br><span class="line">               //计算新下标</span><br><span class="line">               int i = indexFor(e.hash, newCapacity);</span><br><span class="line">               //下面这两步很明显了，头插法。即先拿到桶原本指向的节点，把要插入的节点的next指向它，然后再把桶指向这个要插入的节点</span><br><span class="line">               e.next = newTable[i];</span><br><span class="line">               newTable[i] = e;</span><br><span class="line">               //next记录了旧数组旧链表里的下一个节点，现在把e指向它，准备下次循环把它插到新桶</span><br><span class="line">               e = next;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到 transfer 方法用的是头插法，我们重点注意以下几个步骤：</p>
+<blockquote>
+<p>1.Entry&lt;K,V&gt; next = e.next;     next指向旧链表中的下一个节点<br>2.e.next = newTable[i];      把新链表的头结点摘下来放到将要插入的节点的尾部<br>3.newTable[i] = e;        插入节点，即把桶指向e<br>4.e = next;        把e指向next，准备继续插入下一个节点</p>
+</blockquote>
+<h1 id="多线程扩容"><a href="#多线程扩容" class="headerlink" title="多线程扩容"></a>多线程扩容</h1><p>单线程的情况下扩容，是没什么问题的，我们直接来一步步分析多线程扩容的时候会出现什么问题。</p>
+<blockquote>
+<p>假如扩容前的数组和链表是这样的，数组里有2个桶，桶1里有三个节点，它们的键分别为3、7、5。</p>
+</blockquote>
+<p><img src="https://s2.loli.net/2023/07/19/blEqv2TKHC8zY7P.png#pic_center" alt="扩容前"></p>
+<blockquote>
+<p>1 现在有两个线程同时扩容这个数组。假如线程一先拿到了cpu资源，执行完了 <strong>Entry&lt;K,V&gt; next = e.next;</strong> 这一步后，e指向3，next指向7。<br>这时CPU资源交给了线程二，好家伙，线程二啪啦啪啦啪啦一下子就把整个链表都迁移了过去，直接扩容完成。<br>这个时候旧数组、链表和两个线程的状态是这样的。<br><img src="https://s2.loli.net/2023/07/19/o47McDelJqGOxyA.png#pic_center" alt="线程二扩容完成"></p>
+</blockquote>
+<blockquote>
+<p>2 现在轮到线程一继续执行了。线程一一顿操作猛如虎，执行完第一次循环后，把3插了进去，然后把next赋给了e，还记得在线程二执行的时候，线程一的next是7吗？现在e指向的节点就是7，准备下一次循环插入7。第一次循环过后变成了这样：<br><img src="https://s2.loli.net/2023/07/19/5yFvHUxTd697JDj.png#pic_center" alt="第一次循环结束"></p>
+</blockquote>
+<blockquote>
+<p>3 下次循环一开始，<strong>Entry&lt;K,V&gt; next = e.next</strong> 直接把next指向3。问题不大，没毛病。现在继续执行下去，把7的next指向3，然后再把桶指向7，即用头插法插入了7。执行完第二次循环后如下图，现在问题已经差不多出来了，执行完此次循环后，e指向了3，但是3已经被插入了，继续执行下去会怎么样呢？<br><img src="https://s2.loli.net/2023/07/19/efA5nEC3gvOi4jr.png#pic_center" alt="第二次循环结束"></p>
+</blockquote>
+<blockquote>
+<p>4 这次循环执行情况是这样的<br>Entry&lt;K,V&gt; next = e.next;    现在e是3，而3的next是null，所以next指向了null<br>e.next = newTable[i];        这一步把3的next指向了7，因为桶现在是指向7的<br>newTable[i] = e;            把桶指向3<br>e = next;        由于next是null了，所以e指向了null，跳出了while进行后面的for循环<br>现在问题出来了，3的next指向了7，而7的next原本就指向3，情况如下图：<br><img src="https://s2.loli.net/2023/07/19/hHXCscelu493RST.png#pic_center" alt="第三次循环结束出大问题"></p>
+</blockquote>
+<p>显而易见，环形链表出现，这个时候如果我们再去做一些查询，查到这个桶3上面来的话，遍历的时候就出现了死循环，直接出不去了，出大问题……<br>还好JDK8修复了这个死循环问题。</p>
 ]]></content>
       <categories>
-        <category>工作中遇到的问题</category>
+        <category>Java</category>
+        <category>基础</category>
       </categories>
+      <tags>
+        <tag>HashMap</tag>
+      </tags>
   </entry>
   <entry>
     <title>Spring 学习—第一个MVC：Hello World</title>
@@ -460,6 +351,107 @@
       </categories>
       <tags>
         <tag>Spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring @Autowire注入Map和List</title>
+    <url>/2019/10/17/Spring-Autowire%E6%B3%A8%E5%85%A5Map%E5%92%8CList/</url>
+    <content><![CDATA[<p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
+<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
+<p>那么就不多BB了，直接上代码。</p>
+<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
+<p>下面是运行结果。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>框架</category>
+        <category>Spring</category>
+      </categories>
+      <tags>
+        <tag>Spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Golang大坑之循环goroutine闭包调用</title>
+    <url>/2022/12/29/Golang%E5%A4%A7%E5%9D%91%E4%B9%8B%E5%BE%AA%E7%8E%AFgoroutine%E9%97%AD%E5%8C%85%E8%B0%83%E7%94%A8/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>回顾整个2022，突然发现我一篇博客都没写，趁着还没2022还没过去，赶紧<del>水一篇博客</del> 分享一下我最近学习到的一些东西，这次的主题是“Golang大坑之循环goroutine闭包调用”，大家就当小故事来看吧。<br><img src="https://s2.loli.net/2023/07/18/LvX3ADzcOTSGIVE.jpg" alt="躺好，听我讲故事"></p>
+<h1 id="小美又写了bug"><a href="#小美又写了bug" class="headerlink" title="小美又写了bug"></a>小美又写了bug</h1><p>仔细看，这个女孩叫小美，她最近刚入职某Go大厂，从Java转了Go，小美入职仅仅花了半天就学完了Go语法，然后三天写了5个bug，隔三差五就被leader小帅叫到会议室臭骂。<br><img src="https://s2.loli.net/2023/07/18/jbJHKo89QlLeGDF.gif" alt="小美"><br>这不，正当小美写bug写得起劲，小帅又过来拍了拍小美肩膀：“小美，来下会议室”。<br><img src="https://s2.loli.net/2023/07/18/9MyjaQRfYD4btHi.png" alt="小美来下会议室"><br>一来到会议室，小帅直接把笔记本拍到小美脸上：“看看你干的好事。”<br>笔记本上面是小美的提交记录，上面有这么一段代码。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>小美看完表示很委屈：“这有什么毛病吗？这里一共开了十个协程，每个协程打印的编号都不一样，这里的输出应该是下面这样啊？出什么问题了吗？”<br>小美预期的结果：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">打工人9号</span><br><span class="line">打工人2号</span><br><span class="line">打工人3号</span><br><span class="line">打工人0号</span><br><span class="line">打工人1号</span><br><span class="line">打工人5号</span><br><span class="line">打工人7号</span><br><span class="line">打工人8号</span><br><span class="line">打工人4号</span><br><span class="line">打工人6号</span><br></pre></td></tr></table></figure></p>
+<p>小帅一巴掌甩小美脸上：“要不你看看运行结果？”<br><img src="https://s2.loli.net/2023/07/18/ki8THV2BS59mp3j.png" alt="一巴掌"><br>小美运行了一下，结果让她大吃一斤翔。<br><img src="https://s2.loli.net/2023/07/18/uH72A3kwbyYTBpG.png" alt="运行结果"><br>面对这个结果，坚强的小美也落下了泪，她实在不明白为什么会这样。<br><img src="https://s2.loli.net/2023/07/18/PUwFegCSKybEuOp.jpg" alt="落泪的小美"></p>
+<h1 id="小翔看出问题所在"><a href="#小翔看出问题所在" class="headerlink" title="小翔看出问题所在"></a>小翔看出问题所在</h1><p>谁也没有注意到，此时坐在会议室角落旁的小翔缓缓站了起来：“真相只有一个！”<br><img src="https://s2.loli.net/2023/07/18/9peBGu6UAgKX3tM.png" alt="小翔登场"><br>小翔继续说：“这是Golang新手及其容易犯的一个错误！<strong>你这里的goroutine执行了闭包内的程序，而闭包内直接引用了num变量，这个值并没有被保存到goroutine栈中，这样写会导致for循环结束后才执行goroutine多线程操作，所以你看，很多个协程打印的编号都是9，即for循环结束后协程才运行，这个时候num值其实指向了最后一个元素。当然，有个别协程打印的不是9，因为它们运行得比较早。</strong> 这样写及其容易窜数据，产生严重bug！”</p>
+<p><strong>小帅一巴掌甩小翔脸上：“还TM装逼？快给我修bug。”</strong><br><img src="https://s2.loli.net/2023/07/18/7QXlSIWFbunADCv.jpg" alt="逼都让你装完了"></p>
+<h1 id="小翔的解决方案"><a href="#小翔的解决方案" class="headerlink" title="小翔的解决方案"></a>小翔的解决方案</h1><p>小翔不愧是小翔，是见过各种大场面的男人，只见他不慌不忙给出了几种解决方案。</p>
+<h2 id="正确写法1：不使用闭包"><a href="#正确写法1：不使用闭包" class="headerlink" title="正确写法1：不使用闭包"></a>正确写法1：不使用闭包</h2><p>既然闭包有问题，那我们不使用闭包不就行了？多大点事啊？<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="built_in">print</span>(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="正确写法2：循环内定义新变量"><a href="#正确写法2：循环内定义新变量" class="headerlink" title="正确写法2：循环内定义新变量"></a>正确写法2：循环内定义新变量</h2><p>由于循环内定义的变量在循环遍历过程中是不共享的，所以我们可以在循环内再定义新变量。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		num := num</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="正确写法3：闭包传参（优雅，推荐）"><a href="#正确写法3：闭包传参（优雅，推荐）" class="headerlink" title="正确写法3：闭包传参（优雅，推荐）"></a>正确写法3：闭包传参（优雅，推荐）</h2><p>使用闭包时，我们还是尽量使用闭包传参，避免直接在闭包内使用外部的变量，比较容易出错。我个人认为这样写起来会比较优雅，推荐这种写法。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><p>上面3种写法都会得到正确的结果<br><img src="https://s2.loli.net/2023/07/18/Rhwtgy1VmQq65sp.png" alt="运行结果"></p>
+<h1 id="小翔的静态扫描工具"><a href="#小翔的静态扫描工具" class="headerlink" title="小翔的静态扫描工具"></a>小翔的静态扫描工具</h1><h2 id="怎么从根源上避免这个问题"><a href="#怎么从根源上避免这个问题" class="headerlink" title="怎么从根源上避免这个问题"></a>怎么从根源上避免这个问题</h2><p>解决完了这个bug之后，leader小帅的脸色也有所好转，然后问了问小翔：“既然新手都比较容易犯这个错误，那我们有没有什么办法或手段来尽量让后面入职的同学少犯甚至不犯这个错误呢？换句话说，<strong>怎么从根源上避免出现这个问题</strong>？”<br><img src="https://s2.loli.net/2023/07/18/MfEN1ryj9IKbJC4.png" alt="怎么从根源上避免这个问题"><br>小翔推了推眼镜，冷静回答：“这个简单，回头我出个《Golang大坑》系列文档，让入职转Golang的新同学都看一下这个文档，他们就不会犯这个错误了！”<br><img src="https://s2.loli.net/2023/07/19/JxfvHYz5siP8hkA.jpg" alt="小帅推眼镜"><br>小帅直接就是一巴掌：“其实，我对你是有点失望的。你这个职级，不是把事情做完就可以的。你需要有体系化思考的能力。你做的事情，他的价值点在哪里？你是否作出了壁垒，形成了核心竞争力？你做的事情，和公司内其他团队的差异化在哪里？你的事情，是否沉淀了一套可复用的物理资料和方法论？为什么是你来做，其他人不能做吗？你需要有自己的判断力，而不是我说什么你就做什么…………（省略一千字）<strong>你确定你写个文档大家就会去看，就能遵守这一套约定？</strong>”<br><img src="https://s2.loli.net/2023/07/19/fQA2MdKrhJmBYgn.jpg" alt="小帅装逼"></p>
+<h2 id="静态扫描工具"><a href="#静态扫描工具" class="headerlink" title="静态扫描工具"></a>静态扫描工具</h2><p>小翔这次终于是忍不住了，直接甩出了他的终极大招 – 静态扫描工具，缓缓说道：<strong>“这个是我写的Golang静态扫描工具，名叫 </strong>xianggolint<strong>，我刚刚加上了一个新规则：loopgoroutinecheck，它能扫描出循环内goroutine闭包直接引用循环index、value、key的代码，这种代码都是有问题的，Github 链接点<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">这里</a>，具体的使用方法可以看 readme 文档，以下是测试的扫描结果，可以看到扫描结果显示某个文件的第 12 行代码是有问题的，提示信息非常清晰。如果我们的CI/CD做得比较完善的话，我们还能将这种静态扫描工具接入到上面，在MR的时候进行扫描，扫出问题时就block进程，并提示该问题，这样我们就能在代码合入的阶段防止问题代码合入主分支啦！</strong>”<br><img src="https://s2.loli.net/2023/07/19/n8RsUdqv19WIZ7P.png" alt="代码"><br><img src="https://s2.loli.net/2023/07/19/6wmpHsRQBC1Z4ug.png" alt="代码"><br>小翔此时心里默默说：“今天这个装逼王，我当定了！”<br><img src="https://s2.loli.net/2023/07/19/jkBn7hNmvOAC4ZV.png" alt="小翔装逼王"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>循环goroutine闭包不能直接使用循环的index、key、value，因为这些变量没有被保存到goroutine栈中，比如以下代码，三个循环内的goroutine都不会得到我们所预期的结果。</strong><br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> index, value := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"slice index: %d\n"</span>, index)</span><br><span class="line">			fmt.Printf(<span class="string">"slice value: %d\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"1"</span>: <span class="string">"1"</span>, <span class="string">"2"</span>: <span class="string">"2"</span>, <span class="string">"3"</span>: <span class="string">"3"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> m &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"map key: %s\n"</span>, key)</span><br><span class="line">			fmt.Printf(<span class="string">"map value: %s\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"range i: %d\n"</span>, i)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>我写了个静态扫描工具，针对这种代码写了相应的规则，能扫描出问题，欢迎使用，Github地址：<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">https://github.com/HandsomeDong/xianggolint</a></strong></p>
+]]></content>
+      <categories>
+        <category>Golang</category>
+      </categories>
+      <tags>
+        <tag>高并发编程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Triton入门初体验</title>
+    <url>/2024/04/26/Triton%E5%85%A5%E9%97%A8%E5%88%9D%E4%BD%93%E9%AA%8C/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
+<p>最近玩AIGC玩得不亦乐乎（<a href="https://www.douyin.com/user/MS4wLjABAAAAbp_jw1fRXJUZ5KdXt7cYjGg84WcTVL-FHFL_Fz9_d3w" target="_blank" rel="noopener">我的视频账号</a>），对相关的技术也产生了浓厚的兴趣，所以也了解了一些机器学习相关的知识，也自己动手折腾了一下。<del>正好也挺久没水博客了呢，今天正好有时间，顺便水一篇吧。</del></p>
+</blockquote>
+<p>最近这两年随着ChatCPT、Stable Diffusion等生成式AI极速发展，各种AI模型也如雨后春笋般涌现，现在各大厂都在训练大模型，以及开发AIGC平台。</p>
+<p>NVIDIA Triton Inference Server是一个针对CPU和GPU进行优化的云端推理的解决方案，支持绝大部分主流的模型框架，包括TensorFlow、TensorRT、PyTorch、ONNX Runtime等，为我们在生产环境中部署及使用AI模型提供了极大的便利，估计现在很多大厂开发的AIGC平台都用到Triton或者其它类似的服务化框架（比如TensorFlow Serving、Torch Serve、Kubeflow等），所以学习了Triton的一些基础架构和设计原理后，动手部署并且用了一下，<del>顺便水一篇文章</del>。</p>
+<p><img src="https://s2.loli.net/2024/04/26/x7GyPLwXmbJDdaE.png" alt="别打了"></p>
+<h1 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h1><h2 id="Docker-WSL2安装"><a href="#Docker-WSL2安装" class="headerlink" title="Docker WSL2安装"></a>Docker WSL2安装</h2><p>从0编译Triton服务端应该会非常麻烦，一定会被不计其数的依赖报错困扰半天，所以我直接用Docker来部署。<br>由于我用的是Windows，所以需要在安装<a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Docker Desktop</a>来使得WSL2可以使用Docker CLI以及Docker Daemon等核心组件，具体安装以及设置过程这里就不多做赘述，直接到Docker官网及Windows官网查阅相关资料step by step即可。</p>
+<h2 id="注册-amp-登录NGC平台账号"><a href="#注册-amp-登录NGC平台账号" class="headerlink" title="注册&amp;登录NGC平台账号"></a>注册&amp;登录NGC平台账号</h2><p>NGC简单来说就是NVIDIA的一个官方软件仓库，仓库里有很多编译好的软件、Docker镜像等，你需要注册NGC并生成api key，用这个api key来登录NGC并下载里面的镜像。具体可参考<a href="https://docs.nvidia.com/ngc/gpu-cloud/ngc-catalog-user-guide/index.html#registering-activating-ngc-account" target="_blank" rel="noopener">官方教程</a>，比较简单，这里也不过多赘述。</p>
+<p>完成注册后直接使用指令登录即可</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker login nvcr.io</span><br></pre></td></tr></table></figure>
+<p>之后会需要输入用户名以及api key，出现 Login Successed 即登录成功。</p>
+<h2 id="拉取镜像"><a href="#拉取镜像" class="headerlink" title="拉取镜像"></a>拉取镜像</h2><p>接下来就要拉取镜像了</p>
+<p><img src="https://s2.loli.net/2024/04/27/PGw7hT6nNayI4VE.png" alt="搜索截图"></p>
+<p>从官方文档可以看到，xx.yy-py3 就是能支持Tensorflow、PyTorch等主流模型框架的Triton服务端镜像，而下面还有个 xx.yy-py3-sdk 镜像包含了客户端相关库、例子可以让我们请求服务端，以方便测试。这两个镜像都下载下来，前者是服务端镜像，后者是客户端测试镜像。</p>
+<p><img src="https://s2.loli.net/2024/04/27/U5HCdXRDIoLfQsS.png" alt="镜像说明"></p>
+<p>点进来可以找到镜像路径，直接copy即可，然后拉取镜像</p>
+<p><img src="https://s2.loli.net/2024/04/27/nvHTSPjoK6pGZRw.png" alt="镜像路径"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker pull nvcr.io/nvidia/tritonserver:24.03-py3</span><br><span class="line">docker pull nvcr.io/nvidia/tritonserver:24.03-py3-sdk</span><br></pre></td></tr></table></figure>
+<h2 id="准备测试模型和数据"><a href="#准备测试模型和数据" class="headerlink" title="准备测试模型和数据"></a>准备测试模型和数据</h2><p>接下来需要先准备测试模型和数据，<a href="https://github.com/triton-inference-server/server" target="_blank" rel="noopener">Triton Server</a>仓库准备了很多onnx模型和测试图片，直接拿来用就行了。</p>
+<p>先下载仓库<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone -b r22.12 https://github.com/triton-inference-server/server.git</span><br></pre></td></tr></table></figure></p>
+<p>执行fetch_models.sh，下载ONNX测试模型<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">cd server/docs/examples</span><br><span class="line">./fetch_models.sh</span><br></pre></td></tr></table></figure></p>
+<h2 id="服务启动"><a href="#服务启动" class="headerlink" title="服务启动"></a>服务启动</h2><p>一切准备就绪，接下来启动容器吧！<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker run --gpus=1 --rm --net=host -v $&#123;PWD&#125;/model_repository:/models nvcr.io/nvidia/tritonserver:24.03-py3 tritonserver --model-repository=/models</span><br></pre></td></tr></table></figure></p>
+<p>挑几个重要参数说说</p>
+<ul>
+<li>-gpus=1：代表是否启动GPU容器，如果该值为0，则Triton将运行在CPU Only模式，此时Triton的吞吐量和单个request的执行延迟会大幅增加，建议在条件允许的情况下默认打开。</li>
+<li>-v：代表目录挂载。这里我们将examples下的model_repository目录挂载到了/models下</li>
+<li>tritonserver：即代表我们要执行的二进制程序是tritonserver</li>
+<li>–model-repository=/models：用于指定模型的仓库位置，由于我们之前将我们宿主机的模型挂载到容器的/models目录下，所以这里写/models就好了</li>
+</ul>
+<h2 id="验证服务可用性"><a href="#验证服务可用性" class="headerlink" title="验证服务可用性"></a>验证服务可用性</h2><p>发个HTTP请求获取服务器的状态（这里说明一下，启动容器后默认会占用3个端口，8000为http服务端口，8001为GRPC服务端端口，8002为metrics端口，启动服务时可以看到相关信息）<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">curl -v localhost:8000/v2/health/ready</span><br></pre></td></tr></table></figure></p>
+<p>得到响应<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">*   Trying 127.0.0.1:8000...</span><br><span class="line">* TCP_NODELAY set</span><br><span class="line">* Connected to localhost (127.0.0.1) port 8000 (#0)</span><br><span class="line">&gt; GET /v2/health/ready HTTP/1.1</span><br><span class="line">&gt; Host: localhost:8000</span><br><span class="line">&gt; User-Agent: curl/7.68.0</span><br><span class="line">&gt; Accept: */*</span><br><span class="line">&gt;</span><br><span class="line">* Mark bundle as not supporting multiuse</span><br><span class="line">&lt; HTTP/1.1 200 OK</span><br><span class="line">&lt; Content-Length: 0</span><br><span class="line">&lt; Content-Type: text/plain</span><br><span class="line">&lt;</span><br><span class="line">* Connection #0 to host localhost left intact</span><br></pre></td></tr></table></figure></p>
+<p>可以看出来服务是正常的</p>
+<h2 id="验证推理服务"><a href="#验证推理服务" class="headerlink" title="验证推理服务"></a>验证推理服务</h2><p>既然服务状态正常，那接下来看看推理是否正常，之前拉取的第二个镜像现在就派上了用场<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker run -it --rm --net=host nvcr.io/nvidia/tritonserver:24.03-py3-sdk</span><br><span class="line">/workspace/install/bin/image_client -m densenet_onnx -c 3 -s INCEPTION /workspace/images/mug.jpg</span><br></pre></td></tr></table></figure></p>
+<p>得到响应<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Image &apos;/workspace/images/mug.jpg&apos;:</span><br><span class="line">    15.349571 (504) = COFFEE MUG</span><br><span class="line">    13.227469 (968) = CUP</span><br><span class="line">    10.424896 (505) = COFFEEPOT</span><br></pre></td></tr></table></figure></p>
+<p>可以看到Triton Server的推理结果是<b>咖啡杯</b>，我看了看图片确实如此，所以模型没有异常，完美！</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Triton Inference Server通过将模型统一放置在模型仓库中进行统一管理，使用gRPC/HTTP2接受及响应推理请求，使得Triton在保证高性能的同时，也有着极强的可用性和扩展性，怪不得大家都在用呢！我这次简单的使用只能说是大概了解了Triton的基本使用方法，它的很多特性我都还没使用到，恐怕入门都还没达到，有空再继续探索一下！</p>
+<p><img src="https://s2.loli.net/2024/04/27/yxsbT4tnXI39uaq.png" alt="完美"></p>
+]]></content>
+      <categories>
+        <category>机器学习</category>
+        <category>Triton</category>
+      </categories>
+      <tags>
+        <tag>AIGC</tag>
+        <tag>机器学习</tag>
       </tags>
   </entry>
   <entry>
@@ -540,53 +532,42 @@
       </tags>
   </entry>
   <entry>
-    <title>Triton入门初体验</title>
-    <url>/2024/04/26/Triton%E5%85%A5%E9%97%A8%E5%88%9D%E4%BD%93%E9%AA%8C/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
-<p>最近玩AIGC玩得不亦乐乎（<a href="https://www.douyin.com/user/MS4wLjABAAAAbp_jw1fRXJUZ5KdXt7cYjGg84WcTVL-FHFL_Fz9_d3w" target="_blank" rel="noopener">我的视频账号</a>），对相关的技术也产生了浓厚的兴趣，所以也了解了一些机器学习相关的知识，也自己动手折腾了一下。<del>正好也挺久没水博客了呢，今天正好有时间，顺便水一篇吧。</del></p>
-</blockquote>
-<p>最近这两年随着ChatCPT、Stable Diffusion等生成式AI极速发展，各种AI模型也如雨后春笋般涌现，现在各大厂都在训练大模型，以及开发AIGC平台。</p>
-<p>NVIDIA Triton Inference Server是一个针对CPU和GPU进行优化的云端推理的解决方案，支持绝大部分主流的模型框架，包括TensorFlow、TensorRT、PyTorch、ONNX Runtime等，为我们在生产环境中部署及使用AI模型提供了极大的便利，估计现在很多大厂开发的AIGC平台都用到Triton或者其它类似的服务化框架（比如TensorFlow Serving、Torch Serve、Kubeflow等），所以学习了Triton的一些基础架构和设计原理后，动手部署并且用了一下，<del>顺便水一篇文章</del>。</p>
-<p><img src="https://s2.loli.net/2024/04/26/x7GyPLwXmbJDdaE.png" alt="别打了"></p>
-<h1 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h1><h2 id="Docker-WSL2安装"><a href="#Docker-WSL2安装" class="headerlink" title="Docker WSL2安装"></a>Docker WSL2安装</h2><p>从0编译Triton服务端应该会非常麻烦，一定会被不计其数的依赖报错困扰半天，所以我直接用Docker来部署。<br>由于我用的是Windows，所以需要在安装<a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Docker Desktop</a>来使得WSL2可以使用Docker CLI以及Docker Daemon等核心组件，具体安装以及设置过程这里就不多做赘述，直接到Docker官网及Windows官网查阅相关资料step by step即可。</p>
-<h2 id="注册-amp-登录NGC平台账号"><a href="#注册-amp-登录NGC平台账号" class="headerlink" title="注册&amp;登录NGC平台账号"></a>注册&amp;登录NGC平台账号</h2><p>NGC简单来说就是NVIDIA的一个官方软件仓库，仓库里有很多编译好的软件、Docker镜像等，你需要注册NGC并生成api key，用这个api key来登录NGC并下载里面的镜像。具体可参考<a href="https://docs.nvidia.com/ngc/gpu-cloud/ngc-catalog-user-guide/index.html#registering-activating-ngc-account" target="_blank" rel="noopener">官方教程</a>，比较简单，这里也不过多赘述。</p>
-<p>完成注册后直接使用指令登录即可</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker login nvcr.io</span><br></pre></td></tr></table></figure>
-<p>之后会需要输入用户名以及api key，出现 Login Successed 即登录成功。</p>
-<h2 id="拉取镜像"><a href="#拉取镜像" class="headerlink" title="拉取镜像"></a>拉取镜像</h2><p>接下来就要拉取镜像了</p>
-<p><img src="https://s2.loli.net/2024/04/27/PGw7hT6nNayI4VE.png" alt="搜索截图"></p>
-<p>从官方文档可以看到，xx.yy-py3 就是能支持Tensorflow、PyTorch等主流模型框架的Triton服务端镜像，而下面还有个 xx.yy-py3-sdk 镜像包含了客户端相关库、例子可以让我们请求服务端，以方便测试。这两个镜像都下载下来，前者是服务端镜像，后者是客户端测试镜像。</p>
-<p><img src="https://s2.loli.net/2024/04/27/U5HCdXRDIoLfQsS.png" alt="镜像说明"></p>
-<p>点进来可以找到镜像路径，直接copy即可，然后拉取镜像</p>
-<p><img src="https://s2.loli.net/2024/04/27/nvHTSPjoK6pGZRw.png" alt="镜像路径"></p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker pull nvcr.io/nvidia/tritonserver:24.03-py3</span><br><span class="line">docker pull nvcr.io/nvidia/tritonserver:24.03-py3-sdk</span><br></pre></td></tr></table></figure>
-<h2 id="准备测试模型和数据"><a href="#准备测试模型和数据" class="headerlink" title="准备测试模型和数据"></a>准备测试模型和数据</h2><p>接下来需要先准备测试模型和数据，<a href="https://github.com/triton-inference-server/server" target="_blank" rel="noopener">Triton Server</a>仓库准备了很多onnx模型和测试图片，直接拿来用就行了。</p>
-<p>先下载仓库<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone -b r22.12 https://github.com/triton-inference-server/server.git</span><br></pre></td></tr></table></figure></p>
-<p>执行fetch_models.sh，下载ONNX测试模型<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">cd server/docs/examples</span><br><span class="line">./fetch_models.sh</span><br></pre></td></tr></table></figure></p>
-<h2 id="服务启动"><a href="#服务启动" class="headerlink" title="服务启动"></a>服务启动</h2><p>一切准备就绪，接下来启动容器吧！<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker run --gpus=1 --rm --net=host -v $&#123;PWD&#125;/model_repository:/models nvcr.io/nvidia/tritonserver:24.03-py3 tritonserver --model-repository=/models</span><br></pre></td></tr></table></figure></p>
-<p>挑几个重要参数说说</p>
-<ul>
-<li>-gpus=1：代表是否启动GPU容器，如果该值为0，则Triton将运行在CPU Only模式，此时Triton的吞吐量和单个request的执行延迟会大幅增加，建议在条件允许的情况下默认打开。</li>
-<li>-v：代表目录挂载。这里我们将examples下的model_repository目录挂载到了/models下</li>
-<li>tritonserver：即代表我们要执行的二进制程序是tritonserver</li>
-<li>–model-repository=/models：用于指定模型的仓库位置，由于我们之前将我们宿主机的模型挂载到容器的/models目录下，所以这里写/models就好了</li>
-</ul>
-<h2 id="验证服务可用性"><a href="#验证服务可用性" class="headerlink" title="验证服务可用性"></a>验证服务可用性</h2><p>发个HTTP请求获取服务器的状态（这里说明一下，启动容器后默认会占用3个端口，8000为http服务端口，8001为GRPC服务端端口，8002为metrics端口，启动服务时可以看到相关信息）<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">curl -v localhost:8000/v2/health/ready</span><br></pre></td></tr></table></figure></p>
-<p>得到响应<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">*   Trying 127.0.0.1:8000...</span><br><span class="line">* TCP_NODELAY set</span><br><span class="line">* Connected to localhost (127.0.0.1) port 8000 (#0)</span><br><span class="line">&gt; GET /v2/health/ready HTTP/1.1</span><br><span class="line">&gt; Host: localhost:8000</span><br><span class="line">&gt; User-Agent: curl/7.68.0</span><br><span class="line">&gt; Accept: */*</span><br><span class="line">&gt;</span><br><span class="line">* Mark bundle as not supporting multiuse</span><br><span class="line">&lt; HTTP/1.1 200 OK</span><br><span class="line">&lt; Content-Length: 0</span><br><span class="line">&lt; Content-Type: text/plain</span><br><span class="line">&lt;</span><br><span class="line">* Connection #0 to host localhost left intact</span><br></pre></td></tr></table></figure></p>
-<p>可以看出来服务是正常的</p>
-<h2 id="验证推理服务"><a href="#验证推理服务" class="headerlink" title="验证推理服务"></a>验证推理服务</h2><p>既然服务状态正常，那接下来看看推理是否正常，之前拉取的第二个镜像现在就派上了用场<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker run -it --rm --net=host nvcr.io/nvidia/tritonserver:24.03-py3-sdk</span><br><span class="line">/workspace/install/bin/image_client -m densenet_onnx -c 3 -s INCEPTION /workspace/images/mug.jpg</span><br></pre></td></tr></table></figure></p>
-<p>得到响应<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Image &apos;/workspace/images/mug.jpg&apos;:</span><br><span class="line">    15.349571 (504) = COFFEE MUG</span><br><span class="line">    13.227469 (968) = CUP</span><br><span class="line">    10.424896 (505) = COFFEEPOT</span><br></pre></td></tr></table></figure></p>
-<p>可以看到Triton Server的推理结果是<b>咖啡杯</b>，我看了看图片确实如此，所以模型没有异常，完美！</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Triton Inference Server通过将模型统一放置在模型仓库中进行统一管理，使用gRPC/HTTP2接受及响应推理请求，使得Triton在保证高性能的同时，也有着极强的可用性和扩展性，怪不得大家都在用呢！我这次简单的使用只能说是大概了解了Triton的基本使用方法，它的很多特性我都还没使用到，恐怕入门都还没达到，有空再继续探索一下！</p>
-<p><img src="https://s2.loli.net/2024/04/27/yxsbT4tnXI39uaq.png" alt="完美"></p>
+    <title>Write-up: CTFHUB web之Git泄露</title>
+    <url>/2025/08/18/Write-up-CTFHUB-web%E4%B9%8BGit%E6%B3%84%E9%9C%B2/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>git应该是最主流的版本控制工具了，但是如果配置不当，可能会不小心把 .git 文件夹直接部署到生产环境。当然，这都2025了，不太可能会有开发出现这种错误了……</p>
+<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="Githack"><a href="#Githack" class="headerlink" title="Githack"></a>Githack</h2><p>项目地址：<a href="https://github.com/lijiejie/GitHack" target="_blank" rel="noopener">https://github.com/lijiejie/GitHack</a><br>这是一个.git泄露利用脚本，可以通过.git文件夹下的文件，重建还原工程源代码。</p>
+<p>下载后，用python2就可以运行该脚本<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python GitHack.py http://www.openssl.org/.git/</span><br></pre></td></tr></table></figure></p>
+<h1 id="Log"><a href="#Log" class="headerlink" title="Log"></a>Log</h1><p>ctfhub 的 git 泄露一共有3道，先来做第一道：Log</p>
+<p><img src="https://s2.loli.net/2025/08/18/Pg46BCWhMVmY3al.png" alt="image.png"></p>
+<p>打开后就一个页面，显示“Where is flag?”<br><img src="https://s2.loli.net/2025/08/18/cktFWeN5zHpI1jQ.png" alt="image.png"></p>
+<p>直接用脚本下载并重建工程<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python2 GitHack.py http://challenge-4b71d7d837e22605.sandbox.ctfhub.com:10800/.git</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/dKW8nlYpC6hax9S.png" alt="image.png"></p>
+<p>全局搜索 “ctfhub” 或者 “flag”，在源代码中搜不到，但是在git log相关文件中能看到提交记录有端倪，应该是添加了 flag 后又删掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/18/5QATtId8aDZfn6o.png" alt="image.png"></p>
+<p>用 git reset 回滚到 “add flag” 那一次提交后再全局搜索 “ctfhub” 或者 “flag”，可以在一个 txt 文件里找到 flag 了</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png" alt="image.png"></p>
+<h2 id="Stash"><a href="#Stash" class="headerlink" title="Stash"></a>Stash</h2><p>前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了<br><img src="https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png" alt="image.png"></p>
+<p>但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 <a href="https://git-scm.com/docs/git-stash/zh_HANS-CN" target="_blank" rel="noopener">https://git-scm.com/docs/git-stash/zh_HANS-CN</a><br><img src="https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png" alt="image.png"></p>
+<p>用 git stash list 看看暂存的修改<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png" alt="image.png"></p>
+<p>用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png" alt="image.png"></p>
+<h2 id="Index"><a href="#Index" class="headerlink" title="Index"></a>Index</h2><p>前几步步骤仍然和上面一样，但是txt文件直接就有flag了……<br>突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！</p>
 ]]></content>
       <categories>
-        <category>机器学习</category>
-        <category>Triton</category>
+        <category>CTF</category>
+        <category>Web</category>
+        <category>Writeup</category>
+        <category>web</category>
       </categories>
       <tags>
-        <tag>AIGC</tag>
-        <tag>机器学习</tag>
+        <tag>CTF</tag>
+        <tag>Web安全</tag>
+        <tag>Writeup</tag>
+        <tag>信息泄露</tag>
+        <tag>Git泄露</tag>
       </tags>
   </entry>
   <entry>
@@ -664,6 +645,7 @@
         <category>CTF</category>
         <category>Web</category>
         <category>Writeup</category>
+        <category>web</category>
         <category>sqli-labs</category>
       </categories>
       <tags>
@@ -673,6 +655,17 @@
         <tag>sqli-labs</tag>
         <tag>sql注入</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>二维数组的查找</title>
+    <url>/2019/06/19/%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84%E7%9A%84%E6%9F%A5%E6%89%BE/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    bool Find(int target, vector&lt;vector&lt;int&gt; &gt; array) &#123;</span><br><span class="line">        int rowTotal = array.size(), columnTotal = array[0].size();</span><br><span class="line">        bool hasTarget = false;</span><br><span class="line">		</span><br><span class="line">        if ((rowTotal == 0) || (columnTotal == 0))&#123;</span><br><span class="line">            return false;  //空数组直接返回false</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for (int i = 0, j = columnTotal - 1; (i &lt;= rowTotal - 1) &amp;&amp;(j &gt;= 0);)&#123;</span><br><span class="line">            if (array[i][j] == target)&#123;</span><br><span class="line">                hasTarget = true;</span><br><span class="line">                break;</span><br><span class="line">            &#125;else if (array[i][j] &lt; target)&#123;</span><br><span class="line">                ++i;</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                --j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return hasTarget;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
   </entry>
   <entry>
     <title>Write-up-CTFHUB-web之SVN泄露</title>
@@ -705,6 +698,40 @@
         <tag>信息泄露</tag>
         <tag>SVN泄露</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>使用cryptsetup加密硬盘</title>
+    <url>/2019/12/09/%E4%BD%BF%E7%94%A8cryptsetup%E5%8A%A0%E5%AF%86%E7%A1%AC%E7%9B%98/</url>
+    <content><![CDATA[<p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
+<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
+<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
+<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
+<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
+<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
+<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
+<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
+<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
+<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
+<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
+<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
+<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
+<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
+<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
+<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
+<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
+<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
+<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
+<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
+<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
+]]></content>
+      <categories>
+        <category>树莓派</category>
+      </categories>
   </entry>
   <entry>
     <title>单例模式</title>
@@ -746,6 +773,35 @@
       </categories>
   </entry>
   <entry>
+    <title>删除链表中重复的结点</title>
+    <url>/2019/06/21/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E7%BB%93%E7%82%B9/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5 处理后为 1-&gt;2-&gt;5</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这道题做了比较久……感觉有一点点难写。</p>
+<p>主要看下面这幅图理解</p>
+<p><img src="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png" alt="思路图"></p>
+<p>先建一个头结点，返回的时候返回这个头结点。<br>再建两个临时结点p、q，p用来作存储结点，q用来跳过重复结点。如图中第二个q的位置，先判断p的下一个结点位置是否与q一样，不一样的话先把q的下一个结点位置存到p的下一个结点，这样就先跳过了前面的重复结点。如果p的下一个结点是一样的，那就是图中第二个p的位置那里，这个时候证明了当前的q结点是不重复的，此时p直接存储q结点。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/*</span><br><span class="line">struct ListNode &#123;</span><br><span class="line">    int val;</span><br><span class="line">    struct ListNode *next;</span><br><span class="line">    ListNode(int x) :</span><br><span class="line">        val(x), next(NULL) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    ListNode* deleteDuplication(ListNode* pHead)</span><br><span class="line">    &#123;</span><br><span class="line">        if (pHead == NULL || pHead-&gt;next == NULL) &#123;</span><br><span class="line">            return pHead;</span><br><span class="line">        &#125;</span><br><span class="line">        int first = -1;</span><br><span class="line">        if (pHead-&gt;val == first) &#123;</span><br><span class="line">            first = -2;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        ListNode *head = new ListNode(first);</span><br><span class="line">        head-&gt;next = pHead;</span><br><span class="line">        </span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        ListNode *q = head-&gt;next;</span><br><span class="line">        </span><br><span class="line">        while (q != NULL) &#123;</span><br><span class="line">            while ((q-&gt;next != NULL) &amp;&amp; (q-&gt;val == q-&gt;next-&gt;val)) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (p-&gt;next != q) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">                p-&gt;next = q;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                p = q;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return head-&gt;next;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>替换空格</title>
+    <url>/2019/06/19/%E6%9B%BF%E6%8D%A2%E7%A9%BA%E6%A0%BC/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>先从前到后遍历一次，计算有多少个空格，然后再从后到前逐个替换。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void replaceSpace(char *str,int length) &#123;</span><br><span class="line">        int count=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(*(str+i)==&apos; &apos;)</span><br><span class="line">                count++;</span><br><span class="line">			cout &lt;&lt; *(str+i);</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">        for (int i = length - 1; i &gt;= 0; i--)&#123;</span><br><span class="line">            if (*(str+i) != &apos; &apos;)&#123;</span><br><span class="line">                *(str+i+count*2) = *(str+i);</span><br><span class="line">            &#125;else&#123;</span><br><span class="line">                count--;</span><br><span class="line">                *(str+i+(count)*2) = &apos;%&apos;;</span><br><span class="line">                *(str+i+(count)*2+1) = &apos;2&apos;;</span><br><span class="line">                *(str+i+(count)*2+2) = &apos;0&apos;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public String replaceSpace(StringBuffer str) &#123;</span><br><span class="line">        char ch[] = str.toString().toCharArray();</span><br><span class="line">        int count = 0;</span><br><span class="line">        for (int i = 0; i &lt; ch.length; i++) &#123;</span><br><span class="line">            if (ch[i] == &apos; &apos;) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        char tmp[] = new char[ch.length + 2 * count];</span><br><span class="line"></span><br><span class="line">        for (int i = ch.length-1; i &gt;= 0; i--) &#123;</span><br><span class="line">            if (ch[i] != &apos; &apos;) &#123;</span><br><span class="line">                tmp[i + 2 * count] = ch[i];</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                tmp[i + 2 * count] = &apos;0&apos;;</span><br><span class="line">                tmp[i + 2 * count - 1] = &apos;2&apos;;</span><br><span class="line">                tmp[i + 2 * count - 2] = &apos;%&apos;;</span><br><span class="line">                count--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return String.valueOf(tmp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
+  </entry>
+  <entry>
     <title>树莓派使用samba在局域网共享文件</title>
     <url>/2019/12/15/%E6%A0%91%E8%8E%93%E6%B4%BE%E4%BD%BF%E7%94%A8samba%E5%9C%A8%E5%B1%80%E5%9F%9F%E7%BD%91%E5%85%B1%E4%BA%AB%E6%96%87%E4%BB%B6/</url>
     <content><![CDATA[<p>新买的树莓派4终于到了！！！我的树莓派3B+光荣退休！到手第一步当然是用树莓派通过SMB共享我硬盘里的文件啦，随传随看。</p>
@@ -772,64 +828,52 @@
       </categories>
   </entry>
   <entry>
-    <title>使用cryptsetup加密硬盘</title>
-    <url>/2019/12/09/%E4%BD%BF%E7%94%A8cryptsetup%E5%8A%A0%E5%AF%86%E7%A1%AC%E7%9B%98/</url>
-    <content><![CDATA[<p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
-<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
-<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
-<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
-<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
-<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
-<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
-<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
-<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
-<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
-<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
-<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
-<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
-<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
-<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
-<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
-<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
-<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
-<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
-<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
-<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
-<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
-<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
-<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
-<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
-<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
+    <title>Spring Security CSRF防御</title>
+    <url>/2019/09/08/Spring-Security%E7%9A%84%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<p>最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;input type=&quot;hidden&quot; name=&quot;$&#123;_csrf.parameterName&#125;&quot; value=&quot;$&#123;_csrf.token&#125;&quot;/&gt;</span><br></pre></td></tr></table></figure></p>
+<p>详情可以在官方文档中看到，<a href="https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html" target="_blank" rel="noopener">https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html</a></p>
+<h3 id="什么是CSRF攻击"><a href="#什么是CSRF攻击" class="headerlink" title="什么是CSRF攻击"></a>什么是CSRF攻击</h3><p>看了一下官方文档才了解到这CSRF到底是什么，就像文档所说的，假如银行网站向用户提供转账功能，转账请求的代码是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">POST /transfer HTTP/1.1</span><br><span class="line">Host: bank.example.com</span><br><span class="line">Cookie: JSESSIONID=randomid; Domain=bank.example.com; Secure; HttpOnly</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line"></span><br><span class="line">amount=100.00&amp;routingNumber=1234&amp;account=9876</span><br></pre></td></tr></table></figure>
+<p>但是假如你登录到了银行网站，然后在还没注销的情况下又访问了一个恶意网站，这时你看到恶意网站上有个【领取奖品】按钮，你美滋滋地点击了这个按钮，却不知道这个按钮会提交这样的表单信息：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;form action=&quot;https://bank.example.com/transfer&quot; method=&quot;post&quot;&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;amount&quot;</span><br><span class="line">      value=&quot;100.00&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;routingNumber&quot;</span><br><span class="line">      value=&quot;evilsRoutingNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;account&quot;</span><br><span class="line">      value=&quot;evilsAccountNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;submit&quot;</span><br><span class="line">      value=&quot;Win Money!&quot;/&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
+<p>最后你会收到一条信息，您向银行卡号XXX转账100元……当场流下悔恨的泪水，大喊三声“为什么”？！<br>因为恶意网站虽然没办法获取你的cookie信息，但是它向银行后端请求的时候，浏览器还是会将cookie信息一起发送的，银行当然不知道这个请求是恶意网站向它发送的，它只知道cookie是你的！</p>
+<p><strong>像这种伪装成当前已登录认证用户去请求正在访问的网站后端的攻击方式，就被称为CSRF。</strong></p>
+<p>所以解决办法就是增加一些表单信息，而这些信息是恶意网站所无法获取的！例如图片验证码什么的。但是除了登录注册的时候使用验证码外，其它时候也使用验证码的话，用户岂不是会觉得很烦，所以Spring Sercurity通过在WEB应用中增加前端过滤器，验证请求是否包含CSRF的token信息，不包含的自然就是非法请求咯，因为攻击网站是无法获取到token信息的，只要是跨域提交的信息，都是无法通过这个过滤器的校验的。</p>
+<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><p>下面是CsrfFilter中的doFilterInternal源码。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Override</span><br><span class="line">	protected void doFilterInternal(HttpServletRequest request,</span><br><span class="line">			HttpServletResponse response, FilterChain filterChain)</span><br><span class="line">					throws ServletException, IOException &#123;</span><br><span class="line">		request.setAttribute(HttpServletResponse.class.getName(), response);</span><br><span class="line">		// 先从tokenRepository中加载token</span><br><span class="line">		CsrfToken csrfToken = this.tokenRepository.loadToken(request);</span><br><span class="line">		final boolean missingToken = csrfToken == null;</span><br><span class="line">		  // 如果为空，则tokenRepository生成新的token，并保存到tokenRepository中</span><br><span class="line">		if (missingToken) &#123;</span><br><span class="line">			csrfToken = this.tokenRepository.generateToken(request);</span><br><span class="line">			this.tokenRepository.saveToken(csrfToken, request, response);</span><br><span class="line">		&#125;</span><br><span class="line">        // 将token写入request的attribute中，方便页面上使用</span><br><span class="line">		request.setAttribute(CsrfToken.class.getName(), csrfToken);</span><br><span class="line">		request.setAttribute(csrfToken.getParameterName(), csrfToken);</span><br><span class="line">		//这个macher就是我们在Spring配置文件中自定义的过滤器，也就是GET，HEAD, TRACE, OPTIONS和我们的rest都不处理</span><br><span class="line"> </span><br><span class="line">        // 这个macher就是我们在Spring配置文件中自定义的过滤器，</span><br><span class="line">		//如果不需要csrf验证的请求，则直接下传请求（requireCsrfProtectionMatcher是默认的对象，对符合^(GET|HEAD|TRACE|OPTIONS)$的请求和我们自定义的请求不验证）</span><br><span class="line">		if (!this.requireCsrfProtectionMatcher.matches(request)) &#123;</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">        // 从用户请求中获取token信息</span><br><span class="line">		String actualToken = request.getHeader(csrfToken.getHeaderName());</span><br><span class="line">		if (actualToken == null) &#123;</span><br><span class="line">			actualToken = request.getParameter(csrfToken.getParameterName());</span><br><span class="line">		&#125;</span><br><span class="line">        // 验证，如果相同，则下传请求，如果不同，则抛出异常</span><br><span class="line">		if (!csrfToken.getToken().equals(actualToken)) &#123;</span><br><span class="line">			if (this.logger.isDebugEnabled()) &#123;</span><br><span class="line">				this.logger.debug(&quot;Invalid CSRF token found for &quot;</span><br><span class="line">						+ UrlUtils.buildFullRequestUrl(request));</span><br><span class="line">			&#125;</span><br><span class="line">			if (missingToken) &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new MissingCsrfTokenException(actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			else &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new InvalidCsrfTokenException(csrfToken, actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		filterChain.doFilter(request, response);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>唉，有空还是得多到Spring官网看看文档了解了解框架啊，不然一个简单的问题就得搞半天！</p>
 ]]></content>
       <categories>
-        <category>树莓派</category>
+        <category>工作中遇到的问题</category>
       </categories>
   </entry>
   <entry>
-    <title>二维数组的查找</title>
-    <url>/2019/06/19/%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84%E7%9A%84%E6%9F%A5%E6%89%BE/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    bool Find(int target, vector&lt;vector&lt;int&gt; &gt; array) &#123;</span><br><span class="line">        int rowTotal = array.size(), columnTotal = array[0].size();</span><br><span class="line">        bool hasTarget = false;</span><br><span class="line">		</span><br><span class="line">        if ((rowTotal == 0) || (columnTotal == 0))&#123;</span><br><span class="line">            return false;  //空数组直接返回false</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for (int i = 0, j = columnTotal - 1; (i &lt;= rowTotal - 1) &amp;&amp;(j &gt;= 0);)&#123;</span><br><span class="line">            if (array[i][j] == target)&#123;</span><br><span class="line">                hasTarget = true;</span><br><span class="line">                break;</span><br><span class="line">            &#125;else if (array[i][j] &lt; target)&#123;</span><br><span class="line">                ++i;</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                --j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return hasTarget;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>删除链表中重复的结点</title>
-    <url>/2019/06/21/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E7%BB%93%E7%82%B9/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5 处理后为 1-&gt;2-&gt;5</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这道题做了比较久……感觉有一点点难写。</p>
-<p>主要看下面这幅图理解</p>
-<p><img src="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png" alt="思路图"></p>
-<p>先建一个头结点，返回的时候返回这个头结点。<br>再建两个临时结点p、q，p用来作存储结点，q用来跳过重复结点。如图中第二个q的位置，先判断p的下一个结点位置是否与q一样，不一样的话先把q的下一个结点位置存到p的下一个结点，这样就先跳过了前面的重复结点。如果p的下一个结点是一样的，那就是图中第二个p的位置那里，这个时候证明了当前的q结点是不重复的，此时p直接存储q结点。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/*</span><br><span class="line">struct ListNode &#123;</span><br><span class="line">    int val;</span><br><span class="line">    struct ListNode *next;</span><br><span class="line">    ListNode(int x) :</span><br><span class="line">        val(x), next(NULL) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    ListNode* deleteDuplication(ListNode* pHead)</span><br><span class="line">    &#123;</span><br><span class="line">        if (pHead == NULL || pHead-&gt;next == NULL) &#123;</span><br><span class="line">            return pHead;</span><br><span class="line">        &#125;</span><br><span class="line">        int first = -1;</span><br><span class="line">        if (pHead-&gt;val == first) &#123;</span><br><span class="line">            first = -2;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        ListNode *head = new ListNode(first);</span><br><span class="line">        head-&gt;next = pHead;</span><br><span class="line">        </span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        ListNode *q = head-&gt;next;</span><br><span class="line">        </span><br><span class="line">        while (q != NULL) &#123;</span><br><span class="line">            while ((q-&gt;next != NULL) &amp;&amp; (q-&gt;val == q-&gt;next-&gt;val)) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (p-&gt;next != q) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">                p-&gt;next = q;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                p = q;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return head-&gt;next;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+    <title>装饰者模式</title>
+    <url>/2019/06/21/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
+    <content><![CDATA[<h2 id="设计模式之装饰者模式"><a href="#设计模式之装饰者模式" class="headerlink" title="设计模式之装饰者模式"></a>设计模式之装饰者模式</h2><p>最近在买奶茶的时候突发奇想，假如我要设计一个奶茶订单系统，这个奶茶价格计算要怎样设计才算方便呢？毕竟奶茶种类那么多，而且能加的配料也很多，并且奶茶店可能随时还会增加奶茶的种类及可选的配料，想要满足这些经常改变或增加的需求，怎么设计代码才是易维护、易扩展的呢？在了解了装饰者模式之后，我终于知道该怎么做了！</p>
+<p><img src="https://i.loli.net/2019/06/21/5d0cf8c3a00af59704.png" alt="奶茶奶茶奶茶"></p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>装饰者模式(Decorator Pattern)动态地将责任附加在对象上。若要扩展功能，装饰者提供了比继承更有弹性的替代方案。</p>
+<p>装饰者模式包含以下角色：</p>
+<ol>
+<li>抽象构件</li>
+<li>具体构件</li>
+<li>抽象装饰类</li>
+<li>具体装饰类</li>
+</ol>
+<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p> 按照大白话来讲，抽象构件就是奶茶，具体构件是珍珠奶茶、波霸奶茶、红豆奶茶这些具体的奶茶。而抽象装饰类和具体装饰类是装饰者模式的设计核心了，利用它们我们可以动态地给奶茶加上配料。</p>
+<h3 id="2-1-抽象奶茶类"><a href="#2-1-抽象奶茶类" class="headerlink" title="2.1 抽象奶茶类"></a>2.1 抽象奶茶类</h3> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class MilkTea &#123;</span><br><span class="line">    public abstract String getDescription();</span><br><span class="line">    public abstract int cost();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-具体奶茶类"><a href="#2-2-具体奶茶类" class="headerlink" title="2.2 具体奶茶类"></a>2.2 具体奶茶类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 波霸奶茶，一杯15块钱</span><br><span class="line">public class BoBaMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;波霸奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 15;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 红豆奶茶，一杯12块钱</span><br><span class="line">public class HongDouMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;红豆奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 12;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-抽象配料类"><a href="#2-3-抽象配料类" class="headerlink" title="2.3 抽象配料类"></a>2.3 抽象配料类</h3><p>由于我们是让配料来扩展奶茶，因此需要继承抽象奶茶类并且实现里面的抽象方法。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Decorator extends MilkTea&#123;</span><br><span class="line">    private MilkTea milkTea;</span><br><span class="line"></span><br><span class="line">    public Decorator(MilkTea milkTea)&#123;</span><br><span class="line">        this.milkTea = milkTea;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return milkTea.getDescription();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return milkTea.cost();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-具体配料类"><a href="#2-4-具体配料类" class="headerlink" title="2.4 具体配料类"></a>2.4 具体配料类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 加奇异果要3块钱！</span><br><span class="line">public class QiYiGuoDecorator extends Decorator &#123;</span><br><span class="line">    public QiYiGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加奇异果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 加椰果才要2块钱！</span><br><span class="line">public class YeGuoDecorator extends Decorator &#123;</span><br><span class="line">    public YeGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加椰果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String args[])&#123;</span><br><span class="line">        //先来一杯红豆奶茶，加椰果，加奇异果！</span><br><span class="line">        MilkTea hongDouMilkTea = new HongDouMilkTea();</span><br><span class="line">        hongDouMilkTea = new YeGuoDecorator(hongDouMilkTea);</span><br><span class="line">        hongDouMilkTea = new QiYiGuoDecorator(hongDouMilkTea);</span><br><span class="line">        System.out.println(hongDouMilkTea.getDescription() + &quot;，价格：&quot; + hongDouMilkTea.cost() + &quot;元&quot;);</span><br><span class="line"></span><br><span class="line">        //再来一杯波霸奶茶，再加双倍椰果，别问我为什么！我爱椰果！</span><br><span class="line">        MilkTea boBaMilkTea = new BoBaMilkTea();</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        System.out.println(boBaMilkTea.getDescription() + &quot;，价格：&quot; + boBaMilkTea.cost() + &quot;元&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/06/22/5d0d03ced660424319.png" alt="测试结果"></p>
+<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.装饰模式与继承关系的目的都是要扩展对象的功能，但是装饰模式可以提供比继承更多的灵活性。<br>2.通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合。可以使用多个具体装饰类来装饰同一对象，得到功能更为强大的对象。<br>3.具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，在使用时再对其进行组合，原有代码无须改变，符合“开闭原则”</p>
+<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>1.使用装饰模式进行系统设计时将产生很多小对象，这些对象的区别在于它们之间相互连接的方式有所不同，而不是它们的类或者属性值有所不同，同时还将产生很多具体装饰类。这些装饰类和小对象的产生将增加系统的复杂度。<br>2.这种比继承更加灵活机动的特性，也同时意味着装饰模式比继承更加易于出错，排错也很困难，对于多次装饰的对象，调试时寻找错误可能需要逐级排查，较为烦琐。</p>
+<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.当不能采用继承的方式对系统进行扩充或者采用继承不利于系统扩展和维护时。不能采用继承的情况主要有两类：第一类是系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类数目呈爆炸性增长；第二类是因为类定义不能继承（如final类）.<br>2.在不影响其他对象的情况下，以动态、透明的方式给单个对象添加职责。</p>
 ]]></content>
       <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
+        <category>设计模式</category>
       </categories>
   </entry>
   <entry>
@@ -842,6 +886,40 @@
         <category>算法题</category>
         <category>剑指offer算法题</category>
       </categories>
+  </entry>
+  <entry>
+    <title>记一次简单的服务启动GC优化</title>
+    <url>/2021/01/31/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%8A%A8GC%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。</p>
+<h1 id="症状"><a href="#症状" class="headerlink" title="症状"></a>症状</h1><p>项目启动</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>gc.txt<br><img src="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png" alt="GC记录"><br>好家伙，一启动就来9次 Young GC ，2次 Full GC。</p>
+<p>现在先用jinfo看看配置参数<br><img src="https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png" alt="查看JVM参数"><br>注意几个重要参数：<br><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">-XX:InitialHeapSize=<span class="number">62914560</span>		<span class="comment">//堆初始值</span></span><br><span class="line">-XX:MaxHeapSize=<span class="number">1073741824</span>	<span class="comment">//堆最大值</span></span><br><span class="line">-MaxDirectMemorySize=<span class="number">536870912</span>	<span class="comment">//虚拟机外最大内存</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="Full-GC"><a href="#Full-GC" class="headerlink" title="Full GC"></a>Full GC</h2><p>先来分析这两次Full GC以及它们前面的Young GC</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">2.536</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">19883</span>K-&gt;<span class="number">3584</span>K(<span class="number">128512</span>K)] <span class="number">27143</span>K-&gt;<span class="number">12014</span>K(<span class="number">169472</span>K), <span class="number">0.0158155</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line"><span class="number">2.552</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">3584</span>K-&gt;<span class="number">0</span>K(<span class="number">128512</span>K)] [ParOldGen: <span class="number">8430</span>K-&gt;<span class="number">8782</span>K(<span class="number">32256</span>K)] <span class="number">12014</span>K-&gt;<span class="number">8782</span>K(<span class="number">160768</span>K), [Metaspace: <span class="number">20409</span>K-&gt;<span class="number">20409</span>K(<span class="number">1069056</span>K)], <span class="number">0.0844666</span> secs] [Times: user=<span class="number">0.16</span> sys=<span class="number">0.00</span>, real=<span class="number">0.09</span> secs]</span><br><span class="line"><span class="number">4.965</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">109848</span>K-&gt;<span class="number">8697</span>K(<span class="number">247296</span>K)] <span class="number">119422</span>K-&gt;<span class="number">19608</span>K(<span class="number">279552</span>K), <span class="number">0.0278398</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.01</span>, real=<span class="number">0.03</span> secs]</span><br><span class="line"><span class="number">4.993</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">8697</span>K-&gt;<span class="number">0</span>K(<span class="number">247296</span>K)] [ParOldGen: <span class="number">10910</span>K-&gt;<span class="number">14513</span>K(<span class="number">47104</span>K)] <span class="number">19608</span>K-&gt;<span class="number">14513</span>K(<span class="number">294400</span>K), [Metaspace: <span class="number">33512</span>K-&gt;<span class="number">33512</span>K(<span class="number">1081344</span>K)], <span class="number">0.1136122</span> secs] [Times: user=<span class="number">0.20</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</span><br></pre></td></tr></table></figure>
+<p>可以看到两次Full GC都是由于Metadata GC Threshold造成的。我这里用的是JDK8，参数里没有明确指定metaspace的初始值和上限，这个时候初始值应该是默认的 21M 。问题不大，那我就把它的初始值和上限调大一点吧，调到64M。</p>
+<p>措施：<br><strong>追加元空间初始值</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>这个时候再查看gc.txt<br><img src="https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png" alt="gc.txt"><br>可以看到已经没有Full GC了，不过还是有8次Young GC。</p>
+<h2 id="Young-GC"><a href="#Young-GC" class="headerlink" title="Young GC"></a>Young GC</h2><p>其实从我的启动参数里面就可以看到，<strong>堆的容量我只指定了最大值(-Xmx1024m)</strong>，并没有指定初始值。所以可以在配置参数里面看到 -XX:InitialHeapSize=62082048，即<strong>堆的初始容量只有60m左右。</strong></p>
+<p>而JVM默认的新生代和老年代空间占比为 <strong>1 : 3</strong>，所以新生代在一开始的时候只有15m的内存空间，因此JVM一开始在15m的时候就发生了Young GC。</p>
+<p>所以现在要追加新生代和堆的初始值，新生代、老年代的空间占比我就不调了，使用默认的 1 : 3 即可，而堆的初始值调成1024m，这样新生代的初始值就是256m了。</p>
+<p>措施：<br><strong>追加堆的初始值</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xms1024m -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
+<p>现在再来看看gc.txt<br><img src="https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png" alt="gc.txt"><br>可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……</p>
+<p><strong>好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png" alt="过分"></p>
+<p>好吧，公司穷，只能买得起4G的服务器。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png" alt="哭了"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这只是一次很简单的JVM启动参数优化，平时启动应用的时候还是得多注意注意堆的初始值和最大值配置，元空间这部分也不能忽略了。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>JVM优化</tag>
+      </tags>
   </entry>
   <entry>
     <title>观察者模式</title>
@@ -878,12 +956,12 @@
       </categories>
   </entry>
   <entry>
-    <title>替换空格</title>
-    <url>/2019/06/19/%E6%9B%BF%E6%8D%A2%E7%A9%BA%E6%A0%BC/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>先从前到后遍历一次，计算有多少个空格，然后再从后到前逐个替换。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void replaceSpace(char *str,int length) &#123;</span><br><span class="line">        int count=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(*(str+i)==&apos; &apos;)</span><br><span class="line">                count++;</span><br><span class="line">			cout &lt;&lt; *(str+i);</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">        for (int i = length - 1; i &gt;= 0; i--)&#123;</span><br><span class="line">            if (*(str+i) != &apos; &apos;)&#123;</span><br><span class="line">                *(str+i+count*2) = *(str+i);</span><br><span class="line">            &#125;else&#123;</span><br><span class="line">                count--;</span><br><span class="line">                *(str+i+(count)*2) = &apos;%&apos;;</span><br><span class="line">                *(str+i+(count)*2+1) = &apos;2&apos;;</span><br><span class="line">                *(str+i+(count)*2+2) = &apos;0&apos;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public String replaceSpace(StringBuffer str) &#123;</span><br><span class="line">        char ch[] = str.toString().toCharArray();</span><br><span class="line">        int count = 0;</span><br><span class="line">        for (int i = 0; i &lt; ch.length; i++) &#123;</span><br><span class="line">            if (ch[i] == &apos; &apos;) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        char tmp[] = new char[ch.length + 2 * count];</span><br><span class="line"></span><br><span class="line">        for (int i = ch.length-1; i &gt;= 0; i--) &#123;</span><br><span class="line">            if (ch[i] != &apos; &apos;) &#123;</span><br><span class="line">                tmp[i + 2 * count] = ch[i];</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                tmp[i + 2 * count] = &apos;0&apos;;</span><br><span class="line">                tmp[i + 2 * count - 1] = &apos;2&apos;;</span><br><span class="line">                tmp[i + 2 * count - 2] = &apos;%&apos;;</span><br><span class="line">                count--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return String.valueOf(tmp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    <title>跳台阶</title>
+    <url>/2019/06/20/%E8%B7%B3%E5%8F%B0%E9%98%B6/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>一只青蛙一次可以跳上1级台阶，也可以跳上2级。求该青蛙跳上一个n级的台阶总共有多少种跳法（先后次序不同算不同的结果）。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>f(n) = f(n-1) + f(n-2)</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="递归"><a href="#递归" class="headerlink" title="递归"></a>递归</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int jumpFloor(int number) &#123;</span><br><span class="line">        if (number &lt; 1)&#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125; else if (number == 1) &#123;</span><br><span class="line">            return 1;</span><br><span class="line">        &#125; else if (number ==2) &#123;</span><br><span class="line">            return 2;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return jumpFloor(number - 1) + jumpFloor(number - 2);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="非递归"><a href="#非递归" class="headerlink" title="非递归"></a>非递归</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int jumpFloor(int number) &#123;</span><br><span class="line">        if (number &lt; 1)&#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        if ((number == 1) || (number == 2))&#123;</span><br><span class="line">            return number;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        int first = 2, second = 1, sum = 0;</span><br><span class="line">        </span><br><span class="line">        for (int i = 3; i &lt;= number; i++) &#123;</span><br><span class="line">            sum = first + second;</span><br><span class="line">            second = first;</span><br><span class="line">            first = sum;</span><br><span class="line">        &#125;</span><br><span class="line">        return sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>算法题</category>
@@ -915,40 +993,6 @@
       <categories>
         <category>设计模式</category>
       </categories>
-  </entry>
-  <entry>
-    <title>记一次简单的服务启动GC优化</title>
-    <url>/2021/01/31/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%8A%A8GC%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。</p>
-<h1 id="症状"><a href="#症状" class="headerlink" title="症状"></a>症状</h1><p>项目启动</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>gc.txt<br><img src="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png" alt="GC记录"><br>好家伙，一启动就来9次 Young GC ，2次 Full GC。</p>
-<p>现在先用jinfo看看配置参数<br><img src="https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png" alt="查看JVM参数"><br>注意几个重要参数：<br><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">-XX:InitialHeapSize=<span class="number">62914560</span>		<span class="comment">//堆初始值</span></span><br><span class="line">-XX:MaxHeapSize=<span class="number">1073741824</span>	<span class="comment">//堆最大值</span></span><br><span class="line">-MaxDirectMemorySize=<span class="number">536870912</span>	<span class="comment">//虚拟机外最大内存</span></span><br></pre></td></tr></table></figure></p>
-<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="Full-GC"><a href="#Full-GC" class="headerlink" title="Full GC"></a>Full GC</h2><p>先来分析这两次Full GC以及它们前面的Young GC</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">2.536</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">19883</span>K-&gt;<span class="number">3584</span>K(<span class="number">128512</span>K)] <span class="number">27143</span>K-&gt;<span class="number">12014</span>K(<span class="number">169472</span>K), <span class="number">0.0158155</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line"><span class="number">2.552</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">3584</span>K-&gt;<span class="number">0</span>K(<span class="number">128512</span>K)] [ParOldGen: <span class="number">8430</span>K-&gt;<span class="number">8782</span>K(<span class="number">32256</span>K)] <span class="number">12014</span>K-&gt;<span class="number">8782</span>K(<span class="number">160768</span>K), [Metaspace: <span class="number">20409</span>K-&gt;<span class="number">20409</span>K(<span class="number">1069056</span>K)], <span class="number">0.0844666</span> secs] [Times: user=<span class="number">0.16</span> sys=<span class="number">0.00</span>, real=<span class="number">0.09</span> secs]</span><br><span class="line"><span class="number">4.965</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">109848</span>K-&gt;<span class="number">8697</span>K(<span class="number">247296</span>K)] <span class="number">119422</span>K-&gt;<span class="number">19608</span>K(<span class="number">279552</span>K), <span class="number">0.0278398</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.01</span>, real=<span class="number">0.03</span> secs]</span><br><span class="line"><span class="number">4.993</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">8697</span>K-&gt;<span class="number">0</span>K(<span class="number">247296</span>K)] [ParOldGen: <span class="number">10910</span>K-&gt;<span class="number">14513</span>K(<span class="number">47104</span>K)] <span class="number">19608</span>K-&gt;<span class="number">14513</span>K(<span class="number">294400</span>K), [Metaspace: <span class="number">33512</span>K-&gt;<span class="number">33512</span>K(<span class="number">1081344</span>K)], <span class="number">0.1136122</span> secs] [Times: user=<span class="number">0.20</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</span><br></pre></td></tr></table></figure>
-<p>可以看到两次Full GC都是由于Metadata GC Threshold造成的。我这里用的是JDK8，参数里没有明确指定metaspace的初始值和上限，这个时候初始值应该是默认的 21M 。问题不大，那我就把它的初始值和上限调大一点吧，调到64M。</p>
-<p>措施：<br><strong>追加元空间初始值</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>这个时候再查看gc.txt<br><img src="https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png" alt="gc.txt"><br>可以看到已经没有Full GC了，不过还是有8次Young GC。</p>
-<h2 id="Young-GC"><a href="#Young-GC" class="headerlink" title="Young GC"></a>Young GC</h2><p>其实从我的启动参数里面就可以看到，<strong>堆的容量我只指定了最大值(-Xmx1024m)</strong>，并没有指定初始值。所以可以在配置参数里面看到 -XX:InitialHeapSize=62082048，即<strong>堆的初始容量只有60m左右。</strong></p>
-<p>而JVM默认的新生代和老年代空间占比为 <strong>1 : 3</strong>，所以新生代在一开始的时候只有15m的内存空间，因此JVM一开始在15m的时候就发生了Young GC。</p>
-<p>所以现在要追加新生代和堆的初始值，新生代、老年代的空间占比我就不调了，使用默认的 1 : 3 即可，而堆的初始值调成1024m，这样新生代的初始值就是256m了。</p>
-<p>措施：<br><strong>追加堆的初始值</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">java -server -Xms1024m -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>现在再来看看gc.txt<br><img src="https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png" alt="gc.txt"><br>可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……</p>
-<p><strong>好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。</strong></p>
-<p><img src="https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png" alt="过分"></p>
-<p>好吧，公司穷，只能买得起4G的服务器。</p>
-<p><img src="https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png" alt="哭了"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这只是一次很简单的JVM启动参数优化，平时启动应用的时候还是得多注意注意堆的初始值和最大值配置，元空间这部分也不能忽略了。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>JVM</category>
-      </categories>
-      <tags>
-        <tag>JVM优化</tag>
-      </tags>
   </entry>
   <entry>
     <title>除了 Websocket ，服务端还有什么办法能向浏览器主动推送信息？</title>
@@ -1003,48 +1047,5 @@
         <tag>websocket</tag>
         <tag>Server-Sent Events</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>装饰者模式</title>
-    <url>/2019/06/21/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
-    <content><![CDATA[<h2 id="设计模式之装饰者模式"><a href="#设计模式之装饰者模式" class="headerlink" title="设计模式之装饰者模式"></a>设计模式之装饰者模式</h2><p>最近在买奶茶的时候突发奇想，假如我要设计一个奶茶订单系统，这个奶茶价格计算要怎样设计才算方便呢？毕竟奶茶种类那么多，而且能加的配料也很多，并且奶茶店可能随时还会增加奶茶的种类及可选的配料，想要满足这些经常改变或增加的需求，怎么设计代码才是易维护、易扩展的呢？在了解了装饰者模式之后，我终于知道该怎么做了！</p>
-<p><img src="https://i.loli.net/2019/06/21/5d0cf8c3a00af59704.png" alt="奶茶奶茶奶茶"></p>
-<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>装饰者模式(Decorator Pattern)动态地将责任附加在对象上。若要扩展功能，装饰者提供了比继承更有弹性的替代方案。</p>
-<p>装饰者模式包含以下角色：</p>
-<ol>
-<li>抽象构件</li>
-<li>具体构件</li>
-<li>抽象装饰类</li>
-<li>具体装饰类</li>
-</ol>
-<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p> 按照大白话来讲，抽象构件就是奶茶，具体构件是珍珠奶茶、波霸奶茶、红豆奶茶这些具体的奶茶。而抽象装饰类和具体装饰类是装饰者模式的设计核心了，利用它们我们可以动态地给奶茶加上配料。</p>
-<h3 id="2-1-抽象奶茶类"><a href="#2-1-抽象奶茶类" class="headerlink" title="2.1 抽象奶茶类"></a>2.1 抽象奶茶类</h3> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class MilkTea &#123;</span><br><span class="line">    public abstract String getDescription();</span><br><span class="line">    public abstract int cost();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-2-具体奶茶类"><a href="#2-2-具体奶茶类" class="headerlink" title="2.2 具体奶茶类"></a>2.2 具体奶茶类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 波霸奶茶，一杯15块钱</span><br><span class="line">public class BoBaMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;波霸奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 15;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 红豆奶茶，一杯12块钱</span><br><span class="line">public class HongDouMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;红豆奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 12;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-3-抽象配料类"><a href="#2-3-抽象配料类" class="headerlink" title="2.3 抽象配料类"></a>2.3 抽象配料类</h3><p>由于我们是让配料来扩展奶茶，因此需要继承抽象奶茶类并且实现里面的抽象方法。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Decorator extends MilkTea&#123;</span><br><span class="line">    private MilkTea milkTea;</span><br><span class="line"></span><br><span class="line">    public Decorator(MilkTea milkTea)&#123;</span><br><span class="line">        this.milkTea = milkTea;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return milkTea.getDescription();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return milkTea.cost();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-4-具体配料类"><a href="#2-4-具体配料类" class="headerlink" title="2.4 具体配料类"></a>2.4 具体配料类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 加奇异果要3块钱！</span><br><span class="line">public class QiYiGuoDecorator extends Decorator &#123;</span><br><span class="line">    public QiYiGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加奇异果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 加椰果才要2块钱！</span><br><span class="line">public class YeGuoDecorator extends Decorator &#123;</span><br><span class="line">    public YeGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加椰果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String args[])&#123;</span><br><span class="line">        //先来一杯红豆奶茶，加椰果，加奇异果！</span><br><span class="line">        MilkTea hongDouMilkTea = new HongDouMilkTea();</span><br><span class="line">        hongDouMilkTea = new YeGuoDecorator(hongDouMilkTea);</span><br><span class="line">        hongDouMilkTea = new QiYiGuoDecorator(hongDouMilkTea);</span><br><span class="line">        System.out.println(hongDouMilkTea.getDescription() + &quot;，价格：&quot; + hongDouMilkTea.cost() + &quot;元&quot;);</span><br><span class="line"></span><br><span class="line">        //再来一杯波霸奶茶，再加双倍椰果，别问我为什么！我爱椰果！</span><br><span class="line">        MilkTea boBaMilkTea = new BoBaMilkTea();</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        System.out.println(boBaMilkTea.getDescription() + &quot;，价格：&quot; + boBaMilkTea.cost() + &quot;元&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2019/06/22/5d0d03ced660424319.png" alt="测试结果"></p>
-<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.装饰模式与继承关系的目的都是要扩展对象的功能，但是装饰模式可以提供比继承更多的灵活性。<br>2.通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合。可以使用多个具体装饰类来装饰同一对象，得到功能更为强大的对象。<br>3.具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，在使用时再对其进行组合，原有代码无须改变，符合“开闭原则”</p>
-<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>1.使用装饰模式进行系统设计时将产生很多小对象，这些对象的区别在于它们之间相互连接的方式有所不同，而不是它们的类或者属性值有所不同，同时还将产生很多具体装饰类。这些装饰类和小对象的产生将增加系统的复杂度。<br>2.这种比继承更加灵活机动的特性，也同时意味着装饰模式比继承更加易于出错，排错也很困难，对于多次装饰的对象，调试时寻找错误可能需要逐级排查，较为烦琐。</p>
-<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.当不能采用继承的方式对系统进行扩充或者采用继承不利于系统扩展和维护时。不能采用继承的情况主要有两类：第一类是系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类数目呈爆炸性增长；第二类是因为类定义不能继承（如final类）.<br>2.在不影响其他对象的情况下，以动态、透明的方式给单个对象添加职责。</p>
-]]></content>
-      <categories>
-        <category>设计模式</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>跳台阶</title>
-    <url>/2019/06/20/%E8%B7%B3%E5%8F%B0%E9%98%B6/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>一只青蛙一次可以跳上1级台阶，也可以跳上2级。求该青蛙跳上一个n级的台阶总共有多少种跳法（先后次序不同算不同的结果）。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>f(n) = f(n-1) + f(n-2)</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="递归"><a href="#递归" class="headerlink" title="递归"></a>递归</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int jumpFloor(int number) &#123;</span><br><span class="line">        if (number &lt; 1)&#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125; else if (number == 1) &#123;</span><br><span class="line">            return 1;</span><br><span class="line">        &#125; else if (number ==2) &#123;</span><br><span class="line">            return 2;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return jumpFloor(number - 1) + jumpFloor(number - 2);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="非递归"><a href="#非递归" class="headerlink" title="非递归"></a>非递归</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int jumpFloor(int number) &#123;</span><br><span class="line">        if (number &lt; 1)&#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        if ((number == 1) || (number == 2))&#123;</span><br><span class="line">            return number;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        int first = 2, second = 1, sum = 0;</span><br><span class="line">        </span><br><span class="line">        for (int i = 3; i &lt;= number; i++) &#123;</span><br><span class="line">            sum = first + second;</span><br><span class="line">            second = first;</span><br><span class="line">            first = sum;</span><br><span class="line">        &#125;</span><br><span class="line">        return sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
   </entry>
 </search>

@@ -55,3 +55,30 @@ git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473
 ```
 
 ![image.png](https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png)
+
+## Stash
+前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了
+![image.png](https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png)
+
+但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 https://git-scm.com/docs/git-stash/zh_HANS-CN
+![image.png](https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png)
+
+用 git stash list 看看暂存的修改
+```
+git stash list
+```
+![image.png](https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png)
+
+
+用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了
+```
+git stash pop
+```
+![image.png](https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png)
+
+## Index
+前几步步骤仍然和上面一样，但是txt文件直接就有flag了……
+突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。
+
+# 总结
+碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！

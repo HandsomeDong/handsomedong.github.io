@@ -7,6 +7,7 @@ tags:
     - Writeup
     - 信息泄露
     - Git泄露
+    - ctfhub
 categories:
     - CTF
     - Web

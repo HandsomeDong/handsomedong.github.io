@@ -11,7 +11,6 @@ categories:
     - CTF
     - Web
     - Writeup
-    - web
     - sqli-labs
 ---
 # 前言

@@ -12,7 +12,6 @@ categories:
     - CTF
     - Web
     - Writeup
-    - web
 ---
 
 # 前言

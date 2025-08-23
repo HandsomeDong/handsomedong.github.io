@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/08/Spring-Security的问题/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/17/Spring-Autowire注入Map和List/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/09/08/Spring-Security的问题/" itemprop="url">Spring Security CSRF防御</a></h1>
+                <a class="post-title-link" href="/2019/10/17/Spring-Autowire注入Map和List/" itemprop="url">Spring @Autowire注入Map和List</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-08T22:02:57+08:00">
-                2019-09-08
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-17T22:55:23+08:00">
+                2019-10-17
               </time>
             
 
@@ -336,8 +336,30 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/工作中遇到的问题/" itemprop="url" rel="index">
-                    <span itemprop="name">工作中遇到的问题</span>
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/框架/" itemprop="url" rel="index">
+                    <span itemprop="name">框架</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/框架/Spring/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring</span>
                   </a>
                 </span>
 
@@ -375,17 +397,17 @@
       
         
           
-            <p>最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;input type=&quot;hidden&quot; name=&quot;$&#123;_csrf.parameterName&#125;&quot; value=&quot;$&#123;_csrf.token&#125;&quot;/&gt;</span><br></pre></td></tr></table></figure></p>
-<p>详情可以在官方文档中看到，<a href="https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html" target="_blank" rel="noopener">https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html</a></p>
-<h3 id="什么是CSRF攻击"><a href="#什么是CSRF攻击" class="headerlink" title="什么是CSRF攻击"></a>什么是CSRF攻击</h3><p>看了一下官方文档才了解到这CSRF到底是什么，就像文档所说的，假如银行网站向用户提供转账功能，转账请求的代码是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">POST /transfer HTTP/1.1</span><br><span class="line">Host: bank.example.com</span><br><span class="line">Cookie: JSESSIONID=randomid; Domain=bank.example.com; Secure; HttpOnly</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line"></span><br><span class="line">amount=100.00&amp;routingNumber=1234&amp;account=9876</span><br></pre></td></tr></table></figure>
-<p>但是假如你登录到了银行网站，然后在还没注销的情况下又访问了一个恶意网站，这时你看到恶意网站上有个【领取奖品】按钮，你美滋滋地点击了这个按钮，却不知道这个按钮会提交这样的表单信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;form action=&quot;https://bank.example.com/transfer&quot; method=&quot;post&quot;&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;amount&quot;</span><br><span class="line">      value=&quot;100.00&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;routingNumber&quot;</span><br><span class="line">      value=&quot;evilsRoutingNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;account&quot;</span><br><span class="line">      value=&quot;evilsAccountNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;submit&quot;</span><br><span class="line">      value=&quot;Win Money!&quot;/&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
-<p>最后你会收到一条信息，您向银行卡号XXX转账100元……当场流下悔恨的泪水，大喊三声“为什么”？！<br>因为恶意网站虽然没办法获取你的cookie信息，但是它向银行后端请求的时候，浏览器还是会将cookie信息一起发送的，银行当然不知道这个请求是恶意网站向它发送的，它只知道cookie是你的！</p>
-<p><strong>像这种伪装成当前已登录认证用户去请求正在访问的网站后端的攻击方式，就被称为CSRF。</strong></p>
-<p>所以解决办法就是增加一些表单信息，而这些信息是恶意网站所无法获取的！例如图片验证码什么的。但是除了登录注册的时候使用验证码外，其它时候也使用验证码的话，用户岂不是会觉得很烦，所以Spring Sercurity通过在WEB应用中增加前端过滤器，验证请求是否包含CSRF的token信息，不包含的自然就是非法请求咯，因为攻击网站是无法获取到token信息的，只要是跨域提交的信息，都是无法通过这个过滤器的校验的。</p>
-<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><p>下面是CsrfFilter中的doFilterInternal源码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">	protected void doFilterInternal(HttpServletRequest request,</span><br><span class="line">			HttpServletResponse response, FilterChain filterChain)</span><br><span class="line">					throws ServletException, IOException &#123;</span><br><span class="line">		request.setAttribute(HttpServletResponse.class.getName(), response);</span><br><span class="line">		// 先从tokenRepository中加载token</span><br><span class="line">		CsrfToken csrfToken = this.tokenRepository.loadToken(request);</span><br><span class="line">		final boolean missingToken = csrfToken == null;</span><br><span class="line">		  // 如果为空，则tokenRepository生成新的token，并保存到tokenRepository中</span><br><span class="line">		if (missingToken) &#123;</span><br><span class="line">			csrfToken = this.tokenRepository.generateToken(request);</span><br><span class="line">			this.tokenRepository.saveToken(csrfToken, request, response);</span><br><span class="line">		&#125;</span><br><span class="line">        // 将token写入request的attribute中，方便页面上使用</span><br><span class="line">		request.setAttribute(CsrfToken.class.getName(), csrfToken);</span><br><span class="line">		request.setAttribute(csrfToken.getParameterName(), csrfToken);</span><br><span class="line">		//这个macher就是我们在Spring配置文件中自定义的过滤器，也就是GET，HEAD, TRACE, OPTIONS和我们的rest都不处理</span><br><span class="line"> </span><br><span class="line">        // 这个macher就是我们在Spring配置文件中自定义的过滤器，</span><br><span class="line">		//如果不需要csrf验证的请求，则直接下传请求（requireCsrfProtectionMatcher是默认的对象，对符合^(GET|HEAD|TRACE|OPTIONS)$的请求和我们自定义的请求不验证）</span><br><span class="line">		if (!this.requireCsrfProtectionMatcher.matches(request)) &#123;</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">        // 从用户请求中获取token信息</span><br><span class="line">		String actualToken = request.getHeader(csrfToken.getHeaderName());</span><br><span class="line">		if (actualToken == null) &#123;</span><br><span class="line">			actualToken = request.getParameter(csrfToken.getParameterName());</span><br><span class="line">		&#125;</span><br><span class="line">        // 验证，如果相同，则下传请求，如果不同，则抛出异常</span><br><span class="line">		if (!csrfToken.getToken().equals(actualToken)) &#123;</span><br><span class="line">			if (this.logger.isDebugEnabled()) &#123;</span><br><span class="line">				this.logger.debug(&quot;Invalid CSRF token found for &quot;</span><br><span class="line">						+ UrlUtils.buildFullRequestUrl(request));</span><br><span class="line">			&#125;</span><br><span class="line">			if (missingToken) &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new MissingCsrfTokenException(actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			else &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new InvalidCsrfTokenException(csrfToken, actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		filterChain.doFilter(request, response);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
-<p>唉，有空还是得多到Spring官网看看文档了解了解框架啊，不然一个简单的问题就得搞半天！</p>
+            <p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
+<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
+<p>那么就不多BB了，直接上代码。</p>
+<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
+<p>下面是运行结果。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
 
           
         
@@ -425,7 +447,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/13/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><span class="page-number current">14</span><a class="page-number" href="/page/15/">15</a><span class="space">&hellip;</span><a class="page-number" href="/page/27/">27</a><a class="extend next" rel="next" href="/page/15/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/13/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><span class="page-number current">14</span><a class="page-number" href="/page/15/">15</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/15/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -473,7 +495,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -484,7 +506,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -495,7 +517,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

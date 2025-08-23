@@ -40,6 +40,33 @@
       </tags>
   </entry>
   <entry>
+    <title>Golang大坑之循环goroutine闭包调用</title>
+    <url>/2022/12/29/Golang%E5%A4%A7%E5%9D%91%E4%B9%8B%E5%BE%AA%E7%8E%AFgoroutine%E9%97%AD%E5%8C%85%E8%B0%83%E7%94%A8/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>回顾整个2022，突然发现我一篇博客都没写，趁着还没2022还没过去，赶紧<del>水一篇博客</del> 分享一下我最近学习到的一些东西，这次的主题是“Golang大坑之循环goroutine闭包调用”，大家就当小故事来看吧。<br><img src="https://s2.loli.net/2023/07/18/LvX3ADzcOTSGIVE.jpg" alt="躺好，听我讲故事"></p>
+<h1 id="小美又写了bug"><a href="#小美又写了bug" class="headerlink" title="小美又写了bug"></a>小美又写了bug</h1><p>仔细看，这个女孩叫小美，她最近刚入职某Go大厂，从Java转了Go，小美入职仅仅花了半天就学完了Go语法，然后三天写了5个bug，隔三差五就被leader小帅叫到会议室臭骂。<br><img src="https://s2.loli.net/2023/07/18/jbJHKo89QlLeGDF.gif" alt="小美"><br>这不，正当小美写bug写得起劲，小帅又过来拍了拍小美肩膀：“小美，来下会议室”。<br><img src="https://s2.loli.net/2023/07/18/9MyjaQRfYD4btHi.png" alt="小美来下会议室"><br>一来到会议室，小帅直接把笔记本拍到小美脸上：“看看你干的好事。”<br>笔记本上面是小美的提交记录，上面有这么一段代码。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>小美看完表示很委屈：“这有什么毛病吗？这里一共开了十个协程，每个协程打印的编号都不一样，这里的输出应该是下面这样啊？出什么问题了吗？”<br>小美预期的结果：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">打工人9号</span><br><span class="line">打工人2号</span><br><span class="line">打工人3号</span><br><span class="line">打工人0号</span><br><span class="line">打工人1号</span><br><span class="line">打工人5号</span><br><span class="line">打工人7号</span><br><span class="line">打工人8号</span><br><span class="line">打工人4号</span><br><span class="line">打工人6号</span><br></pre></td></tr></table></figure></p>
+<p>小帅一巴掌甩小美脸上：“要不你看看运行结果？”<br><img src="https://s2.loli.net/2023/07/18/ki8THV2BS59mp3j.png" alt="一巴掌"><br>小美运行了一下，结果让她大吃一斤翔。<br><img src="https://s2.loli.net/2023/07/18/uH72A3kwbyYTBpG.png" alt="运行结果"><br>面对这个结果，坚强的小美也落下了泪，她实在不明白为什么会这样。<br><img src="https://s2.loli.net/2023/07/18/PUwFegCSKybEuOp.jpg" alt="落泪的小美"></p>
+<h1 id="小翔看出问题所在"><a href="#小翔看出问题所在" class="headerlink" title="小翔看出问题所在"></a>小翔看出问题所在</h1><p>谁也没有注意到，此时坐在会议室角落旁的小翔缓缓站了起来：“真相只有一个！”<br><img src="https://s2.loli.net/2023/07/18/9peBGu6UAgKX3tM.png" alt="小翔登场"><br>小翔继续说：“这是Golang新手及其容易犯的一个错误！<strong>你这里的goroutine执行了闭包内的程序，而闭包内直接引用了num变量，这个值并没有被保存到goroutine栈中，这样写会导致for循环结束后才执行goroutine多线程操作，所以你看，很多个协程打印的编号都是9，即for循环结束后协程才运行，这个时候num值其实指向了最后一个元素。当然，有个别协程打印的不是9，因为它们运行得比较早。</strong> 这样写及其容易窜数据，产生严重bug！”</p>
+<p><strong>小帅一巴掌甩小翔脸上：“还TM装逼？快给我修bug。”</strong><br><img src="https://s2.loli.net/2023/07/18/7QXlSIWFbunADCv.jpg" alt="逼都让你装完了"></p>
+<h1 id="小翔的解决方案"><a href="#小翔的解决方案" class="headerlink" title="小翔的解决方案"></a>小翔的解决方案</h1><p>小翔不愧是小翔，是见过各种大场面的男人，只见他不慌不忙给出了几种解决方案。</p>
+<h2 id="正确写法1：不使用闭包"><a href="#正确写法1：不使用闭包" class="headerlink" title="正确写法1：不使用闭包"></a>正确写法1：不使用闭包</h2><p>既然闭包有问题，那我们不使用闭包不就行了？多大点事啊？<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="built_in">print</span>(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="正确写法2：循环内定义新变量"><a href="#正确写法2：循环内定义新变量" class="headerlink" title="正确写法2：循环内定义新变量"></a>正确写法2：循环内定义新变量</h2><p>由于循环内定义的变量在循环遍历过程中是不共享的，所以我们可以在循环内再定义新变量。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		num := num</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="正确写法3：闭包传参（优雅，推荐）"><a href="#正确写法3：闭包传参（优雅，推荐）" class="headerlink" title="正确写法3：闭包传参（优雅，推荐）"></a>正确写法3：闭包传参（优雅，推荐）</h2><p>使用闭包时，我们还是尽量使用闭包传参，避免直接在闭包内使用外部的变量，比较容易出错。我个人认为这样写起来会比较优雅，推荐这种写法。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><p>上面3种写法都会得到正确的结果<br><img src="https://s2.loli.net/2023/07/18/Rhwtgy1VmQq65sp.png" alt="运行结果"></p>
+<h1 id="小翔的静态扫描工具"><a href="#小翔的静态扫描工具" class="headerlink" title="小翔的静态扫描工具"></a>小翔的静态扫描工具</h1><h2 id="怎么从根源上避免这个问题"><a href="#怎么从根源上避免这个问题" class="headerlink" title="怎么从根源上避免这个问题"></a>怎么从根源上避免这个问题</h2><p>解决完了这个bug之后，leader小帅的脸色也有所好转，然后问了问小翔：“既然新手都比较容易犯这个错误，那我们有没有什么办法或手段来尽量让后面入职的同学少犯甚至不犯这个错误呢？换句话说，<strong>怎么从根源上避免出现这个问题</strong>？”<br><img src="https://s2.loli.net/2023/07/18/MfEN1ryj9IKbJC4.png" alt="怎么从根源上避免这个问题"><br>小翔推了推眼镜，冷静回答：“这个简单，回头我出个《Golang大坑》系列文档，让入职转Golang的新同学都看一下这个文档，他们就不会犯这个错误了！”<br><img src="https://s2.loli.net/2023/07/19/JxfvHYz5siP8hkA.jpg" alt="小帅推眼镜"><br>小帅直接就是一巴掌：“其实，我对你是有点失望的。你这个职级，不是把事情做完就可以的。你需要有体系化思考的能力。你做的事情，他的价值点在哪里？你是否作出了壁垒，形成了核心竞争力？你做的事情，和公司内其他团队的差异化在哪里？你的事情，是否沉淀了一套可复用的物理资料和方法论？为什么是你来做，其他人不能做吗？你需要有自己的判断力，而不是我说什么你就做什么…………（省略一千字）<strong>你确定你写个文档大家就会去看，就能遵守这一套约定？</strong>”<br><img src="https://s2.loli.net/2023/07/19/fQA2MdKrhJmBYgn.jpg" alt="小帅装逼"></p>
+<h2 id="静态扫描工具"><a href="#静态扫描工具" class="headerlink" title="静态扫描工具"></a>静态扫描工具</h2><p>小翔这次终于是忍不住了，直接甩出了他的终极大招 – 静态扫描工具，缓缓说道：<strong>“这个是我写的Golang静态扫描工具，名叫 </strong>xianggolint<strong>，我刚刚加上了一个新规则：loopgoroutinecheck，它能扫描出循环内goroutine闭包直接引用循环index、value、key的代码，这种代码都是有问题的，Github 链接点<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">这里</a>，具体的使用方法可以看 readme 文档，以下是测试的扫描结果，可以看到扫描结果显示某个文件的第 12 行代码是有问题的，提示信息非常清晰。如果我们的CI/CD做得比较完善的话，我们还能将这种静态扫描工具接入到上面，在MR的时候进行扫描，扫出问题时就block进程，并提示该问题，这样我们就能在代码合入的阶段防止问题代码合入主分支啦！</strong>”<br><img src="https://s2.loli.net/2023/07/19/n8RsUdqv19WIZ7P.png" alt="代码"><br><img src="https://s2.loli.net/2023/07/19/6wmpHsRQBC1Z4ug.png" alt="代码"><br>小翔此时心里默默说：“今天这个装逼王，我当定了！”<br><img src="https://s2.loli.net/2023/07/19/jkBn7hNmvOAC4ZV.png" alt="小翔装逼王"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>循环goroutine闭包不能直接使用循环的index、key、value，因为这些变量没有被保存到goroutine栈中，比如以下代码，三个循环内的goroutine都不会得到我们所预期的结果。</strong><br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> index, value := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"slice index: %d\n"</span>, index)</span><br><span class="line">			fmt.Printf(<span class="string">"slice value: %d\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"1"</span>: <span class="string">"1"</span>, <span class="string">"2"</span>: <span class="string">"2"</span>, <span class="string">"3"</span>: <span class="string">"3"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> m &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"map key: %s\n"</span>, key)</span><br><span class="line">			fmt.Printf(<span class="string">"map value: %s\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"range i: %d\n"</span>, i)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>我写了个静态扫描工具，针对这种代码写了相应的规则，能扫描出问题，欢迎使用，Github地址：<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">https://github.com/HandsomeDong/xianggolint</a></strong></p>
+]]></content>
+      <categories>
+        <category>Golang</category>
+      </categories>
+      <tags>
+        <tag>高并发编程</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>JDK7HashMap多线程扩容导致的死循环问题</title>
     <url>/2020/11/14/JDK7HashMap%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%89%A9%E5%AE%B9%E5%AF%BC%E8%87%B4%E7%9A%84%E6%AD%BB%E5%BE%AA%E7%8E%AF%E9%97%AE%E9%A2%98/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><font color="#999AAA">JDK8以前的HashMap，多线程扩容的时候可能会出现死循环，这个问题在JDK8得到了修复。本翔看了大半天JDK7HashMap扩容源码找这个问题，所以写篇博客记录记录。</font></p>
@@ -73,6 +100,49 @@
       </categories>
       <tags>
         <tag>HashMap</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring Security CSRF防御</title>
+    <url>/2019/09/08/Spring-Security%E7%9A%84%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<p>最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;input type=&quot;hidden&quot; name=&quot;$&#123;_csrf.parameterName&#125;&quot; value=&quot;$&#123;_csrf.token&#125;&quot;/&gt;</span><br></pre></td></tr></table></figure></p>
+<p>详情可以在官方文档中看到，<a href="https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html" target="_blank" rel="noopener">https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html</a></p>
+<h3 id="什么是CSRF攻击"><a href="#什么是CSRF攻击" class="headerlink" title="什么是CSRF攻击"></a>什么是CSRF攻击</h3><p>看了一下官方文档才了解到这CSRF到底是什么，就像文档所说的，假如银行网站向用户提供转账功能，转账请求的代码是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">POST /transfer HTTP/1.1</span><br><span class="line">Host: bank.example.com</span><br><span class="line">Cookie: JSESSIONID=randomid; Domain=bank.example.com; Secure; HttpOnly</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line"></span><br><span class="line">amount=100.00&amp;routingNumber=1234&amp;account=9876</span><br></pre></td></tr></table></figure>
+<p>但是假如你登录到了银行网站，然后在还没注销的情况下又访问了一个恶意网站，这时你看到恶意网站上有个【领取奖品】按钮，你美滋滋地点击了这个按钮，却不知道这个按钮会提交这样的表单信息：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;form action=&quot;https://bank.example.com/transfer&quot; method=&quot;post&quot;&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;amount&quot;</span><br><span class="line">      value=&quot;100.00&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;routingNumber&quot;</span><br><span class="line">      value=&quot;evilsRoutingNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;account&quot;</span><br><span class="line">      value=&quot;evilsAccountNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;submit&quot;</span><br><span class="line">      value=&quot;Win Money!&quot;/&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
+<p>最后你会收到一条信息，您向银行卡号XXX转账100元……当场流下悔恨的泪水，大喊三声“为什么”？！<br>因为恶意网站虽然没办法获取你的cookie信息，但是它向银行后端请求的时候，浏览器还是会将cookie信息一起发送的，银行当然不知道这个请求是恶意网站向它发送的，它只知道cookie是你的！</p>
+<p><strong>像这种伪装成当前已登录认证用户去请求正在访问的网站后端的攻击方式，就被称为CSRF。</strong></p>
+<p>所以解决办法就是增加一些表单信息，而这些信息是恶意网站所无法获取的！例如图片验证码什么的。但是除了登录注册的时候使用验证码外，其它时候也使用验证码的话，用户岂不是会觉得很烦，所以Spring Sercurity通过在WEB应用中增加前端过滤器，验证请求是否包含CSRF的token信息，不包含的自然就是非法请求咯，因为攻击网站是无法获取到token信息的，只要是跨域提交的信息，都是无法通过这个过滤器的校验的。</p>
+<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><p>下面是CsrfFilter中的doFilterInternal源码。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Override</span><br><span class="line">	protected void doFilterInternal(HttpServletRequest request,</span><br><span class="line">			HttpServletResponse response, FilterChain filterChain)</span><br><span class="line">					throws ServletException, IOException &#123;</span><br><span class="line">		request.setAttribute(HttpServletResponse.class.getName(), response);</span><br><span class="line">		// 先从tokenRepository中加载token</span><br><span class="line">		CsrfToken csrfToken = this.tokenRepository.loadToken(request);</span><br><span class="line">		final boolean missingToken = csrfToken == null;</span><br><span class="line">		  // 如果为空，则tokenRepository生成新的token，并保存到tokenRepository中</span><br><span class="line">		if (missingToken) &#123;</span><br><span class="line">			csrfToken = this.tokenRepository.generateToken(request);</span><br><span class="line">			this.tokenRepository.saveToken(csrfToken, request, response);</span><br><span class="line">		&#125;</span><br><span class="line">        // 将token写入request的attribute中，方便页面上使用</span><br><span class="line">		request.setAttribute(CsrfToken.class.getName(), csrfToken);</span><br><span class="line">		request.setAttribute(csrfToken.getParameterName(), csrfToken);</span><br><span class="line">		//这个macher就是我们在Spring配置文件中自定义的过滤器，也就是GET，HEAD, TRACE, OPTIONS和我们的rest都不处理</span><br><span class="line"> </span><br><span class="line">        // 这个macher就是我们在Spring配置文件中自定义的过滤器，</span><br><span class="line">		//如果不需要csrf验证的请求，则直接下传请求（requireCsrfProtectionMatcher是默认的对象，对符合^(GET|HEAD|TRACE|OPTIONS)$的请求和我们自定义的请求不验证）</span><br><span class="line">		if (!this.requireCsrfProtectionMatcher.matches(request)) &#123;</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">        // 从用户请求中获取token信息</span><br><span class="line">		String actualToken = request.getHeader(csrfToken.getHeaderName());</span><br><span class="line">		if (actualToken == null) &#123;</span><br><span class="line">			actualToken = request.getParameter(csrfToken.getParameterName());</span><br><span class="line">		&#125;</span><br><span class="line">        // 验证，如果相同，则下传请求，如果不同，则抛出异常</span><br><span class="line">		if (!csrfToken.getToken().equals(actualToken)) &#123;</span><br><span class="line">			if (this.logger.isDebugEnabled()) &#123;</span><br><span class="line">				this.logger.debug(&quot;Invalid CSRF token found for &quot;</span><br><span class="line">						+ UrlUtils.buildFullRequestUrl(request));</span><br><span class="line">			&#125;</span><br><span class="line">			if (missingToken) &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new MissingCsrfTokenException(actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			else &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new InvalidCsrfTokenException(csrfToken, actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		filterChain.doFilter(request, response);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>唉，有空还是得多到Spring官网看看文档了解了解框架啊，不然一个简单的问题就得搞半天！</p>
+]]></content>
+      <categories>
+        <category>工作中遇到的问题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Spring @Autowire注入Map和List</title>
+    <url>/2019/10/17/Spring-Autowire%E6%B3%A8%E5%85%A5Map%E5%92%8CList/</url>
+    <content><![CDATA[<p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
+<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
+<p>那么就不多BB了，直接上代码。</p>
+<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
+<p>下面是运行结果。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>框架</category>
+        <category>Spring</category>
+      </categories>
+      <tags>
+        <tag>Spring</tag>
       </tags>
   </entry>
   <entry>
@@ -128,30 +198,183 @@
       </tags>
   </entry>
   <entry>
-    <title>Golang大坑之循环goroutine闭包调用</title>
-    <url>/2022/12/29/Golang%E5%A4%A7%E5%9D%91%E4%B9%8B%E5%BE%AA%E7%8E%AFgoroutine%E9%97%AD%E5%8C%85%E8%B0%83%E7%94%A8/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>回顾整个2022，突然发现我一篇博客都没写，趁着还没2022还没过去，赶紧<del>水一篇博客</del> 分享一下我最近学习到的一些东西，这次的主题是“Golang大坑之循环goroutine闭包调用”，大家就当小故事来看吧。<br><img src="https://s2.loli.net/2023/07/18/LvX3ADzcOTSGIVE.jpg" alt="躺好，听我讲故事"></p>
-<h1 id="小美又写了bug"><a href="#小美又写了bug" class="headerlink" title="小美又写了bug"></a>小美又写了bug</h1><p>仔细看，这个女孩叫小美，她最近刚入职某Go大厂，从Java转了Go，小美入职仅仅花了半天就学完了Go语法，然后三天写了5个bug，隔三差五就被leader小帅叫到会议室臭骂。<br><img src="https://s2.loli.net/2023/07/18/jbJHKo89QlLeGDF.gif" alt="小美"><br>这不，正当小美写bug写得起劲，小帅又过来拍了拍小美肩膀：“小美，来下会议室”。<br><img src="https://s2.loli.net/2023/07/18/9MyjaQRfYD4btHi.png" alt="小美来下会议室"><br>一来到会议室，小帅直接把笔记本拍到小美脸上：“看看你干的好事。”<br>笔记本上面是小美的提交记录，上面有这么一段代码。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>小美看完表示很委屈：“这有什么毛病吗？这里一共开了十个协程，每个协程打印的编号都不一样，这里的输出应该是下面这样啊？出什么问题了吗？”<br>小美预期的结果：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">打工人9号</span><br><span class="line">打工人2号</span><br><span class="line">打工人3号</span><br><span class="line">打工人0号</span><br><span class="line">打工人1号</span><br><span class="line">打工人5号</span><br><span class="line">打工人7号</span><br><span class="line">打工人8号</span><br><span class="line">打工人4号</span><br><span class="line">打工人6号</span><br></pre></td></tr></table></figure></p>
-<p>小帅一巴掌甩小美脸上：“要不你看看运行结果？”<br><img src="https://s2.loli.net/2023/07/18/ki8THV2BS59mp3j.png" alt="一巴掌"><br>小美运行了一下，结果让她大吃一斤翔。<br><img src="https://s2.loli.net/2023/07/18/uH72A3kwbyYTBpG.png" alt="运行结果"><br>面对这个结果，坚强的小美也落下了泪，她实在不明白为什么会这样。<br><img src="https://s2.loli.net/2023/07/18/PUwFegCSKybEuOp.jpg" alt="落泪的小美"></p>
-<h1 id="小翔看出问题所在"><a href="#小翔看出问题所在" class="headerlink" title="小翔看出问题所在"></a>小翔看出问题所在</h1><p>谁也没有注意到，此时坐在会议室角落旁的小翔缓缓站了起来：“真相只有一个！”<br><img src="https://s2.loli.net/2023/07/18/9peBGu6UAgKX3tM.png" alt="小翔登场"><br>小翔继续说：“这是Golang新手及其容易犯的一个错误！<strong>你这里的goroutine执行了闭包内的程序，而闭包内直接引用了num变量，这个值并没有被保存到goroutine栈中，这样写会导致for循环结束后才执行goroutine多线程操作，所以你看，很多个协程打印的编号都是9，即for循环结束后协程才运行，这个时候num值其实指向了最后一个元素。当然，有个别协程打印的不是9，因为它们运行得比较早。</strong> 这样写及其容易窜数据，产生严重bug！”</p>
-<p><strong>小帅一巴掌甩小翔脸上：“还TM装逼？快给我修bug。”</strong><br><img src="https://s2.loli.net/2023/07/18/7QXlSIWFbunADCv.jpg" alt="逼都让你装完了"></p>
-<h1 id="小翔的解决方案"><a href="#小翔的解决方案" class="headerlink" title="小翔的解决方案"></a>小翔的解决方案</h1><p>小翔不愧是小翔，是见过各种大场面的男人，只见他不慌不忙给出了几种解决方案。</p>
-<h2 id="正确写法1：不使用闭包"><a href="#正确写法1：不使用闭包" class="headerlink" title="正确写法1：不使用闭包"></a>正确写法1：不使用闭包</h2><p>既然闭包有问题，那我们不使用闭包不就行了？多大点事啊？<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="built_in">print</span>(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法2：循环内定义新变量"><a href="#正确写法2：循环内定义新变量" class="headerlink" title="正确写法2：循环内定义新变量"></a>正确写法2：循环内定义新变量</h2><p>由于循环内定义的变量在循环遍历过程中是不共享的，所以我们可以在循环内再定义新变量。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		num := num</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法3：闭包传参（优雅，推荐）"><a href="#正确写法3：闭包传参（优雅，推荐）" class="headerlink" title="正确写法3：闭包传参（优雅，推荐）"></a>正确写法3：闭包传参（优雅，推荐）</h2><p>使用闭包时，我们还是尽量使用闭包传参，避免直接在闭包内使用外部的变量，比较容易出错。我个人认为这样写起来会比较优雅，推荐这种写法。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><p>上面3种写法都会得到正确的结果<br><img src="https://s2.loli.net/2023/07/18/Rhwtgy1VmQq65sp.png" alt="运行结果"></p>
-<h1 id="小翔的静态扫描工具"><a href="#小翔的静态扫描工具" class="headerlink" title="小翔的静态扫描工具"></a>小翔的静态扫描工具</h1><h2 id="怎么从根源上避免这个问题"><a href="#怎么从根源上避免这个问题" class="headerlink" title="怎么从根源上避免这个问题"></a>怎么从根源上避免这个问题</h2><p>解决完了这个bug之后，leader小帅的脸色也有所好转，然后问了问小翔：“既然新手都比较容易犯这个错误，那我们有没有什么办法或手段来尽量让后面入职的同学少犯甚至不犯这个错误呢？换句话说，<strong>怎么从根源上避免出现这个问题</strong>？”<br><img src="https://s2.loli.net/2023/07/18/MfEN1ryj9IKbJC4.png" alt="怎么从根源上避免这个问题"><br>小翔推了推眼镜，冷静回答：“这个简单，回头我出个《Golang大坑》系列文档，让入职转Golang的新同学都看一下这个文档，他们就不会犯这个错误了！”<br><img src="https://s2.loli.net/2023/07/19/JxfvHYz5siP8hkA.jpg" alt="小帅推眼镜"><br>小帅直接就是一巴掌：“其实，我对你是有点失望的。你这个职级，不是把事情做完就可以的。你需要有体系化思考的能力。你做的事情，他的价值点在哪里？你是否作出了壁垒，形成了核心竞争力？你做的事情，和公司内其他团队的差异化在哪里？你的事情，是否沉淀了一套可复用的物理资料和方法论？为什么是你来做，其他人不能做吗？你需要有自己的判断力，而不是我说什么你就做什么…………（省略一千字）<strong>你确定你写个文档大家就会去看，就能遵守这一套约定？</strong>”<br><img src="https://s2.loli.net/2023/07/19/fQA2MdKrhJmBYgn.jpg" alt="小帅装逼"></p>
-<h2 id="静态扫描工具"><a href="#静态扫描工具" class="headerlink" title="静态扫描工具"></a>静态扫描工具</h2><p>小翔这次终于是忍不住了，直接甩出了他的终极大招 – 静态扫描工具，缓缓说道：<strong>“这个是我写的Golang静态扫描工具，名叫 </strong>xianggolint<strong>，我刚刚加上了一个新规则：loopgoroutinecheck，它能扫描出循环内goroutine闭包直接引用循环index、value、key的代码，这种代码都是有问题的，Github 链接点<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">这里</a>，具体的使用方法可以看 readme 文档，以下是测试的扫描结果，可以看到扫描结果显示某个文件的第 12 行代码是有问题的，提示信息非常清晰。如果我们的CI/CD做得比较完善的话，我们还能将这种静态扫描工具接入到上面，在MR的时候进行扫描，扫出问题时就block进程，并提示该问题，这样我们就能在代码合入的阶段防止问题代码合入主分支啦！</strong>”<br><img src="https://s2.loli.net/2023/07/19/n8RsUdqv19WIZ7P.png" alt="代码"><br><img src="https://s2.loli.net/2023/07/19/6wmpHsRQBC1Z4ug.png" alt="代码"><br>小翔此时心里默默说：“今天这个装逼王，我当定了！”<br><img src="https://s2.loli.net/2023/07/19/jkBn7hNmvOAC4ZV.png" alt="小翔装逼王"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>循环goroutine闭包不能直接使用循环的index、key、value，因为这些变量没有被保存到goroutine栈中，比如以下代码，三个循环内的goroutine都不会得到我们所预期的结果。</strong><br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> index, value := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"slice index: %d\n"</span>, index)</span><br><span class="line">			fmt.Printf(<span class="string">"slice value: %d\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"1"</span>: <span class="string">"1"</span>, <span class="string">"2"</span>: <span class="string">"2"</span>, <span class="string">"3"</span>: <span class="string">"3"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> m &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"map key: %s\n"</span>, key)</span><br><span class="line">			fmt.Printf(<span class="string">"map value: %s\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"range i: %d\n"</span>, i)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><strong>我写了个静态扫描工具，针对这种代码写了相应的规则，能扫描出问题，欢迎使用，Github地址：<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">https://github.com/HandsomeDong/xianggolint</a></strong></p>
+    <title>Spring 学习—第一个MVC：Hello World</title>
+    <url>/2019/04/20/Spring-%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0%E7%AC%AC%E4%B8%80%E6%AD%A5-%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84MVC/</url>
+    <content><![CDATA[<h1 id="Spring-学习—第一个MVC：Hello-World"><a href="#Spring-学习—第一个MVC：Hello-World" class="headerlink" title="Spring 学习—第一个MVC：Hello World"></a>Spring 学习—第一个MVC：Hello World</h1><p>Spring框架是Java应用最广的框架，它是开源的，是为了解决企业应用程序开发复杂性而创建的，想要做Java Web开发，怎么能不会Spring呢？想要学Spring，那第一步先学习怎么用Spring框架创建一个最简单的MVC吧！笔者用的是IDEA，所以这里就用IDEA来创建。</p>
+<h2 id="1-创建项目"><a href="#1-创建项目" class="headerlink" title="1.创建项目"></a>1.创建项目</h2><p>首先当然是在IDEA新建项目。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbc9d90cc126.png" alt="IDEA新建项目"><br>类库选择”Spring MVC”，并且在JAVA EE中选择”Web Application”。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbc9f6326dd4.png" alt="选择类库"><br>输入项目名称以及选择项目的地址，然后点击finish。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca08ee6363.png" alt="输入项目名"><br>点击finish后，IDEA会自动下载需要的类库，大概等几分钟。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca08ec5768.png" alt="下载类库"><br>下载类库完毕后，项目就建立完成了！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca1a33bcbd.png" alt="项目文件"></p>
+<hr>
+<h2 id="2-调试设置"><a href="#2-调试设置" class="headerlink" title="2.调试设置"></a>2.调试设置</h2><p>项目建立好后，可以看到右上角的run和debug按钮都是灰色的，不能运行调试，所以接下来我们要在IDEA进行运行、调试的相关设置。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca7fa00965.png" alt="灰色的运行和调试按钮"><br>在菜单栏中找到 Run-&gt;Edit Configurations，可以打开运行设置框。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca82fb4317.png" alt="运行调试配置"><br>按照下图添加本地Tomcat服务器配置。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca857a68f6.png" alt="添加服务器"><br>Name就是该配置的名称，随便取；After launch是设置你运行项目所自动打开的浏览器以及打开的URL，我喜欢用谷歌；HTTP port就是该项目的运行端口。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca873eec91.png" alt="输入相关配置"><br>然后再点击Deployment-&gt; + -&gt;Artifacy，设置好部署的url，直接填个”/“就行了，当然你也可以加点东西，比如填”/handsomedong”然后点击 OK 。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca89037029.png" alt="添加Artifacy"></p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca8abc0f47.png" alt="应用目录"><br>设置好运行调试的配置后，我们就可以在右上角看到配置名称了，同时也可以看到有个三角符号和虫子都变绿了。三角符号是运行按钮，点击后直接运行，小虫子是调试按钮，可以设置断点调试。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca9046f750.png" alt="变绿了"><br>我们先试试运行一下会怎么样吧！结果不出意料，根本没跑起来……我们在IDEA下面查看日志，可以看到报错信息</p>
+<p><font color="#FF0000"><center><em>java.lang.ClassNotFoundException: org.springframework.web.context.ContextLoaderListener</em> </center> </font><br>意思是找不到这个类！为什么呢？因为还有一些包没有jar包含进来。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbca9202eeaa.png" alt="日志报错信息"></p>
+<hr>
+<h2 id="3-导入相关类库"><a href="#3-导入相关类库" class="headerlink" title="3.导入相关类库"></a>3.导入相关类库</h2><p>点击左上角 File-&gt;Project Structure。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcac519ce36.png" alt="Project Structure"><br>点击Artifacts再点击项目后，可以看到错误的提醒，缺少了一些引用。我们可以通过点击”Fix”来查看IDEA有什么解决办法。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcac51ab62d.png" alt="Artifacts"><br>可以看到IDEA能为我们加入这些类库，那我们就点击最上面两个吧(请忽略我的QQ拼音输入法头像)！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcad4fbae7d.png" alt="添加 Spring MVC-1.3.18 RELEASE"><br>添加完这些类库后，就可以看到已经没有错误的提醒了，我们再重新运行项目看看如何吧！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcac5171a78.png" alt="重新运行"><br>这次终于运行成功了！！！运行成功后，IDEA会自动使用我们配置的浏览器，打开我们配置的URL！看看此时的运行结果，其实就是 web目录下的 index.jsp文件。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcac51642d0.png" alt="运行结果"></p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcac517e20f.png" alt="index.jsp文件"></p>
+<hr>
+<h2 id="4-添加控制器"><a href="#4-添加控制器" class="headerlink" title="4.添加控制器"></a>4.添加控制器</h2><p>既然项目能跑了，那我们就得正式开始写MVC了，我们先写一个Controller吧！<br>我们首先要添加一个新的包，报名自己取，我在src目录添加了一个名为”com.handsomedong.springmvc”的包。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcb22d90dd9.png" alt="添加新包"></p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcb22d7f475.png" alt="输入包名"><br>然后在这个包下添加一个Java Class，这个class就是控制器了，取名叫HelloController吧！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcb22d8adf5.png" alt="添加Class"></p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcb22d67bfd.png" alt="输入类名"><br>HelloController代码如下。<br>在类上面添加注解 <em>@Controller</em> 注明该类是个控制器、<em>@RequestMapping(“/hello”)</em> 注明该控制器的路由为”/hello”，在方法test()上面添加注解 <em>@RequestMapping(“world”)</em> 注明该方法的路由为”world”。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package com.handsomedong.springmvc;</span><br><span class="line"></span><br><span class="line">import org.springframework.stereotype.Controller;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line"></span><br><span class="line">@Controller</span><br><span class="line">@RequestMapping(&quot;/hello&quot;)</span><br><span class="line">public class HelloController &#123;</span><br><span class="line"></span><br><span class="line">    @RequestMapping(&quot;world&quot;)</span><br><span class="line">    public String test()</span><br><span class="line">    &#123;</span><br><span class="line">        return &quot;/WEB-INF/jsp/world.jsp&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因此我们想要访问该方法时，url应该为”/hello/world.form”，我知道你一定要问我为什么会有”.form”，那是因为默认配置就是这样！</p>
+<p>我知道你肯定又会问我能不能在配置中把”.form”去掉，当然能！我们可以在 /web/WEB-INF/dispatcher-servlet.xml 中找到这么一段代码。把其中的 *.form 改成 / 就行了</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;servlet-mapping&gt;</span><br><span class="line">    &lt;servlet-name&gt;dispatcher&lt;/servlet-name&gt;</span><br><span class="line">    &lt;url-pattern&gt;*.form&lt;/url-pattern&gt;</span><br><span class="line">&lt;/servlet-mapping&gt;</span><br></pre></td></tr></table></figure>
+<h2 id="5-添加视图"><a href="#5-添加视图" class="headerlink" title="5.添加视图"></a>5.添加视图</h2><p>其实 HelloController 的 test() 意思是返回 /WEB-INF/jsp/world.jsp 这个View，所以我们要在 WEB-INF 下新建文件夹 jsp ，并且新建一个jsp文件。world.jsp 代码如下。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; language=&quot;java&quot; %&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;title&gt;HandsomeDong&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">    Hello, world.</span><br><span class="line">&lt;body&gt;</span><br><span class="line"></span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>此时控制器和视图都建好了，我们运行一下项目，在浏览器输入 <a href="http://localhost:8080/hello/world" target="_blank" rel="noopener">http://localhost:8080/hello/world</a> 看看效果如何吧！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcb9a734bef.png" alt="被404支配的恐惧"><br>怎么样，是不是要枯了……怎么又是404！！！年轻人别太心急，想想程序跑不起来我们第一步该干什么。</p>
+<p><img src="http://tc.sinaimg.cn/maxwidth.2048/tc.service.weibo.com/p/www_apkbus_com/d4e669d65a97f2ee45af6bc42ba016ff.gif" alt="bug？一定是电脑的问题"><br>年轻人还是要戒骄戒躁啊，我们先来看看服务器这边报错好吧。</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcb9a73e678.png" alt="报错信息"><br>这里说 DispatcherServlet 没有找到响应 /hello/world 的控制器！为什么呢？我们路由配好了，输入的URL也没有错啊！<br>原因是我们还要告诉Spring去哪里找这些控制器……</p>
+<p>我们找到 /web/WEB-INF/dispatcher-servlet.xml 这个文件，在 beans 里面添加这么一行代码，意思就是你记得要去我这个包里扫描控制器！！！</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;context:component-scan base-package=&quot;com.handsomedong.springmvc&quot;/&gt;</span><br></pre></td></tr></table></figure>
+<p>此时我们再重新运行一下试试看吧！终于成功了！！！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcbb344abac.png" alt="Hello, world."></p>
+<hr>
+<h2 id="6-添加模型"><a href="#6-添加模型" class="headerlink" title="6.添加模型"></a>6.添加模型</h2><p>现在Controller和View都已经完成了，就剩一个Model了，我们写个最简单的吧，直接在Controller传入一个Model。回到HelloController，修改代码如下。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package com.handsomedong.springmvc;</span><br><span class="line"></span><br><span class="line">import org.springframework.stereotype.Controller;</span><br><span class="line">import org.springframework.ui.Model;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line"></span><br><span class="line">@Controller</span><br><span class="line">@RequestMapping(&quot;/hello&quot;)</span><br><span class="line">public class HelloController &#123;</span><br><span class="line"></span><br><span class="line">    @RequestMapping(&quot;world&quot;)</span><br><span class="line">    public String test(Model model)</span><br><span class="line">    &#123;</span><br><span class="line">        model.addAttribute(&quot;name&quot;, &quot;HandsomeDong&quot;);</span><br><span class="line">        model.addAttribute(&quot;github&quot;, &quot;https://github.com/handsomedong&quot;);</span><br><span class="line">        return &quot;/WEB-INF/jsp/world.jsp&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>再把Model的值放到页面中显示出来，现在把 world.jsp 代码修改如下。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; language=&quot;java&quot; %&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;title&gt;HandsomeDong&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">    &lt;p&gt;Hello, $&#123;name&#125;.&lt;/p&gt;</span><br><span class="line">    &lt;a href=&quot;$&#123;github&#125;&quot;&gt; GitHub &lt;/a&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure></p>
+<p>现在运行查看结果吧！</p>
+<p><img src="https://i.loli.net/2019/04/22/5cbcbe1973bcb.png" alt="运行结果"><br>至此我们就完成了Spring框架最简单的MVC项目了！</p>
 ]]></content>
       <categories>
-        <category>Golang</category>
+        <category>Java</category>
+        <category>框架</category>
+        <category>Spring</category>
       </categories>
       <tags>
-        <tag>高并发编程</tag>
+        <tag>Spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SpringBoot+Dubbo简单demo实践</title>
+    <url>/2021/07/02/SpringBoot-Dubbo%E7%AE%80%E5%8D%95demo%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="SpringBoot-Dubbo-简单-demo-实践"><a href="#SpringBoot-Dubbo-简单-demo-实践" class="headerlink" title="SpringBoot + Dubbo 简单 demo 实践"></a>SpringBoot + Dubbo 简单 demo 实践</h1><p>休息了一个月终于又要上班了，下家公司的项目用的是Dubbo+Zookeeper，由于之前只用过Spring Cloud，所以提前了解一下Dubbo的使用，搭了个简单的 demo 感受 Dubbo 和 Spring Cloud 的区别。<br>大概流程如下：</p>
+<ol>
+<li>Zookeeper搭建</li>
+<li>Dubbo可视化管理界面搭建</li>
+<li>接口层定义</li>
+<li>服务层实现</li>
+<li>消费层调用</li>
+</ol>
+<h2 id="Dubbo基本工作原理"><a href="#Dubbo基本工作原理" class="headerlink" title="Dubbo基本工作原理"></a>Dubbo基本工作原理</h2><p>Dubbo 是一款 RPC 服务框架，它最大的优势在于提供了面向接口代理的服务编程模型，对开发者屏蔽了底层的远程通信细节。同时 Dubbo 也是一款服务治理框架，它为分布式部署的微服务提供了服务发现、流量调度等服务治理解决方案。</p>
+<p>下图是 Dubbo 的基本工作原理图(在官网找的)，服务提供者与服务消费者之间通过注册中心协调地址，通过约定的协议实现数据交换。<br><img src="https://s2.loli.net/2023/07/19/RmB1wsW5jqTYAZv.png#pic_center" alt="Dubbo 基本工作原理图"><br>接下来就搭建一个 demo ，感受一下 Dubbo 的使用和 Spring Cloud 有什么区别。</p>
+<h2 id="Zookeeper搭建"><a href="#Zookeeper搭建" class="headerlink" title="Zookeeper搭建"></a>Zookeeper搭建</h2><h3 id="Zookeeper下载"><a href="#Zookeeper下载" class="headerlink" title="Zookeeper下载"></a>Zookeeper下载</h3><p>Dubbo 使用 Zookeeper 作为注册中心，提供服务注册和发现，跟Spring Cloud的 eureka 或 nacos 类似。</p>
+<p>所以第一步当然是去<a href="https://zookeeper.apache.org/" target="_blank" rel="noopener">官网</a>下载 Zookeeper 啦，我下载的版本是3.6.3。</p>
+<h3 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h3><p>下载解压后，进入 conf 文件夹可以看到有个 zoo_sample.cfg 文件，这个是配置文件示例，现在复制并更名为 zoo.cfg ，根据自己的需要对配置进行更改，我改了一下数据路径。<br>Zookeeper 的端口号默认是2181，可以根据自己的需要对 clientPort 的值进行更改。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dataDir=E:/zookeeper/data</span><br><span class="line">clientPort=2181</span><br></pre></td></tr></table></figure>
+<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>进入bin文件夹可以看到里面有很多脚本，zkServer.cmd 和 zkServer.sh 就是启动脚本，我的电脑系统是 windows ，所以直接双击 zkServer.cmd 即可启动。</p>
+<p><img src="https://s2.loli.net/2023/07/19/SnKa5EN2pIZO9RL.png#pic_center" alt="启动Zookeeper"></p>
+<h2 id="Dubbo-可视化管理界面搭建"><a href="#Dubbo-可视化管理界面搭建" class="headerlink" title="Dubbo 可视化管理界面搭建"></a>Dubbo 可视化管理界面搭建</h2><p>Zookeeper 启动完成之后，我们需要一个可视化界面方便对服务进行观察和管理。</p>
+<h3 id="下载项目"><a href="#下载项目" class="headerlink" title="下载项目"></a>下载项目</h3><p>Dubbo-admin的Github地址是 <a href="https://github.com/apache/dubbo-admin" target="_blank" rel="noopener">https://github.com/apache/dubbo-admin</a> ，直接 git clone 下来。项目里有 readme.md 介绍启动流程，参考 readme.md 启动项目。</p>
+<h3 id="修改配置-1"><a href="#修改配置-1" class="headerlink" title="修改配置"></a>修改配置</h3><p>打开 dubbo-admin\dubbo-admin-server\src\main\resources\application.properties 可以修改配置，指定 Zookeeper 地址，我的 Zookeeper 是默认配置，所以不用修改。</p>
+<h3 id="编译、打包项目"><a href="#编译、打包项目" class="headerlink" title="编译、打包项目"></a>编译、打包项目</h3><p>进入到项目里编译并打包项目。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mvn clean package -Dmaven.test.skip=true</span><br></pre></td></tr></table></figure>
+<h3 id="启动项目"><a href="#启动项目" class="headerlink" title="启动项目"></a>启动项目</h3><p>可以直接在项目根目录运行 mvn –projects dubbo-admin-server spring-boot:run 启动项目，也可以进入 dubbo-admin-distribution\target 运行里面的jar包。</p>
+<p><img src="https://s2.loli.net/2023/07/19/SVJFBcPLXlzGxmb.png#pic_center" alt="启动 dubbo-admin"></p>
+<p><strong> 启动失败 </strong><br>我刚开始启动失败了，这个 dubbo-admin 的启动端口是 8080，但是我发现 8080 端口已经被占用了，最后发现是 Zookeeper 占用的，原来是 Zookeeper 内嵌了一个管理控制台，通过 jetty 启动，这个 jetty 的端口就是 8080，于是我去改了以下 Zookeeper 的 zoo.cfg ，新增了一行配置把 Zookeeper 的管理控制台端口改为 8081。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">admin.serverPort=8081</span><br></pre></td></tr></table></figure>
+<h3 id="进入管理界面"><a href="#进入管理界面" class="headerlink" title="进入管理界面"></a>进入管理界面</h3><p>启动成功后就可以访问 <a href="http://127.0.0.1:8080" target="_blank" rel="noopener">http://127.0.0.1:8080</a> 了，默认的账号密码都是root。<br><img src="https://s2.loli.net/2023/07/19/fv5lIzuOY4d6RWZ.png#pic_center" alt="登录"></p>
+<p><img src="https://s2.loli.net/2023/07/19/kWJmSxy5gLArGPE.png#pic_center" alt="Dubbo Admin"></p>
+<h2 id="工程创建"><a href="#工程创建" class="headerlink" title="工程创建"></a>工程创建</h2><p>接下来就要创建工程了，先创建个 maven 多模块工程，里面需要包含三个模块，一个是 api 模块，一个是服务提供者模块，一个是服务消费者模块。</p>
+<h3 id="api模块"><a href="#api模块" class="headerlink" title="api模块"></a>api模块</h3><p>假设我这个服务是一个用户查询的服务，那我就需要先创建一个 dto 和一个接口。<br><img src="https://s2.loli.net/2023/07/19/N2jn3OCBtpPaT4r.png" alt="api 模块"></p>
+<h4 id="创建-UserInfo-类"><a href="#创建-UserInfo-类" class="headerlink" title="创建 UserInfo 类"></a>创建 UserInfo 类</h4><p>创建一个用户信息类，需要注意的是，dto 要实现 Serializable 接口进行序列化。当然，也可以使用其它的序列化方式，hessian2、json等。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class UserInfo implements Serializable &#123;</span><br><span class="line">    private static final long serialVersionUID = 2908612893636115165L;</span><br><span class="line"></span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    private Long userId;</span><br><span class="line"></span><br><span class="line">    public static long getSerialVersionUID() &#123;</span><br><span class="line">        return serialVersionUID;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getUserName() &#123;</span><br><span class="line">        return userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserName(String userName) &#123;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Long getUserId() &#123;</span><br><span class="line">        return userId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserId(Long userId) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="定义用户服务接口"><a href="#定义用户服务接口" class="headerlink" title="定义用户服务接口"></a>定义用户服务接口</h4><p>简单定义一个接口。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface UserService &#123;</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="服务提供者模块"><a href="#服务提供者模块" class="headerlink" title="服务提供者模块"></a>服务提供者模块</h3><p>现在创建一个服务提供者模块。</p>
+<h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><p>这个模块需要 Dubbo 和 Zookeeper 相关依赖，再加上这个模块是要实现 UserService 接口，所以也需要刚才创建的 api 模块依赖。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>配置文件主要需要以下配置：<br><img src="https://s2.loli.net/2023/07/19/d3WH21YxENk7fZ6.png" alt="配置文件"></p>
+<p>根据上图的配置，修改 application.yml，我的配置如下：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 9000</span><br><span class="line"></span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-provider</span><br><span class="line">  registry:</span><br><span class="line">    address: 127.0.0.1:2181</span><br><span class="line">    protocol: zookeeper</span><br><span class="line">  protocol:</span><br><span class="line">    name: dubbo</span><br><span class="line">    port: 19000</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registry</span><br></pre></td></tr></table></figure></p>
+<h4 id="用户服务类具体实现"><a href="#用户服务类具体实现" class="headerlink" title="用户服务类具体实现"></a>用户服务类具体实现</h4><p>实现用户服务接口，注意这里的 @Service 注解，不是 Spring 的注解，而是 Dubbo 的注解！包的全路径是 org.apache.dubbo.config.annotation.Service。<br>并且需要注意的是，它必须要实现 UserService 接口。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Service</span><br><span class="line">@Component</span><br><span class="line">public class UserServiceImpl implements UserService &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = new ArrayList&lt;&gt;();</span><br><span class="line">        for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">            UserInfo userInfo = new UserInfo();</span><br><span class="line">            userInfo.setUserId(Integer.valueOf(i).longValue());</span><br><span class="line">            userInfo.setUserName(&quot;七里翔&quot; + i);</span><br><span class="line">            userInfoList.add(userInfo);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="SpringBoot-启动类"><a href="#SpringBoot-启动类" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>最后在启动类要加上 @EnableDubbo 注解。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserProviderApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserProviderApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="查看-Dubbo-Admin"><a href="#查看-Dubbo-Admin" class="headerlink" title="查看 Dubbo Admin"></a>查看 Dubbo Admin</h4><p>现在再去 Dubbo Admin 上面就可以看到这个服务注册成功了！点击详情也可以看到服务的具体信息。<br><img src="https://s2.loli.net/2023/07/19/aF1lCeZkbI8HYtA.png" alt="Dubbo Admin"></p>
+<p><img src="https://s2.loli.net/2023/07/19/x9IWKMvbJnLVBl4.png" alt="服务详情"></p>
+<h3 id="服务消费者模块"><a href="#服务消费者模块" class="headerlink" title="服务消费者模块"></a>服务消费者模块</h3><p>最后就是创建服务消费者模块了，在该模块下进行服务调用。</p>
+<h4 id="依赖-1"><a href="#依赖-1" class="headerlink" title="依赖"></a>依赖</h4><p>依赖基本和服务提供者相同，这个就不多BB了。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+<h4 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h4><p>application.yml</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 10000</span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-consumer</span><br><span class="line">  registry:</span><br><span class="line">    address: zookeeper://127.0.0.1:2181</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registr</span><br></pre></td></tr></table></figure>
+<h4 id="服务调用"><a href="#服务调用" class="headerlink" title="服务调用"></a>服务调用</h4><p>我这里直接创建个 Controller 来测试。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RestController</span><br><span class="line">@RequestMapping(&quot;test&quot;)</span><br><span class="line">public class TestController &#123;</span><br><span class="line">    @Reference	//dubbo</span><br><span class="line">    UserService userService;</span><br><span class="line"></span><br><span class="line">    @GetMapping(&quot;test&quot;)</span><br><span class="line">    public List&lt;UserInfo&gt; test() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = userService.getUserInfoList();</span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="SpringBoot-启动类-1"><a href="#SpringBoot-启动类-1" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>这个启动类同样要加上 @EnableDubbo 注解。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserConsumerApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserConsumerApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>启动服务消费者后，断点调试、用 postman 测试一下。</p>
+<p><img src="https://s2.loli.net/2023/07/19/UGLvxHwCRNcMsqI.png" alt="断点调试"></p>
+<p><img src="https://s2.loli.net/2023/07/19/rXKsIJBAYU1Hlpk.png" alt="postman"></p>
+<p>可以看到已经大功告成了！！！</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="Dubbo-和-Spring-Cloud-区别"><a href="#Dubbo-和-Spring-Cloud-区别" class="headerlink" title="Dubbo 和 Spring Cloud 区别"></a>Dubbo 和 Spring Cloud 区别</h3><ol>
+<li>Dubbo 耦合较高，有一定约束。这是我使用中感受到的最大的区别，Dubbo 需要我们定义个抽象接口，然后提供方实现这个接口，消费方再通过这个接口进行调用。提供方和消费方都依赖于这个接口的模块，所以整个项目是有一定的耦合的。而Spring Cloud 我们使用 Feign 就比较自由，比较轻量化，通过 REST 调用，更灵活。这不能单纯地说是优点或者是缺点吧，毕竟接口定义过轻也很容易多版本的情况下导致接口文档与实际所展现功能不一致导致服务集成时的问题，或许对版本控制比较严格有时候反而会更加稳定。</li>
+<li>Dubbo底层是使用Netty这样的NIO框架，是基于TCP协议传输的；而 Spring Cloud 是基于 Http 协议+ REST 接口调用远程过程的通信。在传输协议和序列化方式上，Dubbo 的性能要比 Spring Cloud 更高。因为 Dubbo 是长连接并且用二进制传输，占用带宽更少。而 Spring Cloud 使用的是短连接并且使用 JSON 序列化，消耗更大。</li>
+<li>Dubbo 只是一个 RPC 框架，而 Spring Cloud 是一整套微服务的解决方案，因此它们的领域是不一样的。</li>
+<li>社区方面，Spring Cloud 要比 Dubbo 活跃很多很多很多很多……Dubbo 好久没更新了，而 Spring Cloud 目前还一直在更新，很活跃！</li>
+</ol>
+<p><img src="https://s2.loli.net/2023/07/19/Qt4rfk8dsqL1Ugb.png" alt="Dubbo 流泪"></p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>框架</category>
+        <category>Dubbo</category>
+      </categories>
+      <tags>
+        <tag>Dubbo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Write-up: CTFHUB web之Git泄露</title>
+    <url>/2025/08/18/Write-up-CTFHUB-web%E4%B9%8BGit%E6%B3%84%E9%9C%B2/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>git应该是最主流的版本控制工具了，但是如果配置不当，可能会不小心把 .git 文件夹直接部署到生产环境。当然，这都2025了，不太可能会有开发出现这种错误了……</p>
+<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="Githack"><a href="#Githack" class="headerlink" title="Githack"></a>Githack</h2><p>项目地址：<a href="https://github.com/lijiejie/GitHack" target="_blank" rel="noopener">https://github.com/lijiejie/GitHack</a><br>这是一个.git泄露利用脚本，可以通过.git文件夹下的文件，重建还原工程源代码。</p>
+<p>下载后，用python2就可以运行该脚本<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python GitHack.py http://www.openssl.org/.git/</span><br></pre></td></tr></table></figure></p>
+<h1 id="Log"><a href="#Log" class="headerlink" title="Log"></a>Log</h1><p>ctfhub 的 git 泄露一共有3道，先来做第一道：Log</p>
+<p><img src="https://s2.loli.net/2025/08/18/Pg46BCWhMVmY3al.png" alt="image.png"></p>
+<p>打开后就一个页面，显示“Where is flag?”<br><img src="https://s2.loli.net/2025/08/18/cktFWeN5zHpI1jQ.png" alt="image.png"></p>
+<p>直接用脚本下载并重建工程<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python2 GitHack.py http://challenge-4b71d7d837e22605.sandbox.ctfhub.com:10800/.git</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/dKW8nlYpC6hax9S.png" alt="image.png"></p>
+<p>全局搜索 “ctfhub” 或者 “flag”，在源代码中搜不到，但是在git log相关文件中能看到提交记录有端倪，应该是添加了 flag 后又删掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/18/5QATtId8aDZfn6o.png" alt="image.png"></p>
+<p>用 git reset 回滚到 “add flag” 那一次提交后再全局搜索 “ctfhub” 或者 “flag”，可以在一个 txt 文件里找到 flag 了</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png" alt="image.png"></p>
+<h2 id="Stash"><a href="#Stash" class="headerlink" title="Stash"></a>Stash</h2><p>前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了<br><img src="https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png" alt="image.png"></p>
+<p>但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 <a href="https://git-scm.com/docs/git-stash/zh_HANS-CN" target="_blank" rel="noopener">https://git-scm.com/docs/git-stash/zh_HANS-CN</a><br><img src="https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png" alt="image.png"></p>
+<p>用 git stash list 看看暂存的修改<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png" alt="image.png"></p>
+<p>用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png" alt="image.png"></p>
+<h2 id="Index"><a href="#Index" class="headerlink" title="Index"></a>Index</h2><p>前几步步骤仍然和上面一样，但是txt文件直接就有flag了……<br>突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！</p>
+]]></content>
+      <categories>
+        <category>CTF</category>
+        <category>Web</category>
+        <category>Writeup</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>Web安全</tag>
+        <tag>Writeup</tag>
+        <tag>信息泄露</tag>
+        <tag>Git泄露</tag>
+        <tag>ctfhub</tag>
       </tags>
   </entry>
   <entry>
@@ -317,96 +540,13 @@
       </categories>
   </entry>
   <entry>
-    <title>Spring @Autowire注入Map和List</title>
-    <url>/2019/10/17/Spring-Autowire%E6%B3%A8%E5%85%A5Map%E5%92%8CList/</url>
-    <content><![CDATA[<p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
-<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
-<p>那么就不多BB了，直接上代码。</p>
-<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
-<p>下面是运行结果。</p>
-<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>框架</category>
-        <category>Spring</category>
-      </categories>
-      <tags>
-        <tag>Spring</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Spring Security CSRF防御</title>
-    <url>/2019/09/08/Spring-Security%E7%9A%84%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<p>最近在公司开发一个用Spring Boot框架的项目，用POST上传文件的时候死活上传不了，一直都是返回403，忙活了一个上午才发现是因为Spring Sercurity开启了CSRF防御，所以在POST请求中必须还要包含增加一个字段及数据才能请求成功，不然的话都会被Spring Sercurity给拦截掉并且认为是非法请求，比如我要提交表单数据，必须要增加一个隐藏的字段：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;input type=&quot;hidden&quot; name=&quot;$&#123;_csrf.parameterName&#125;&quot; value=&quot;$&#123;_csrf.token&#125;&quot;/&gt;</span><br></pre></td></tr></table></figure></p>
-<p>详情可以在官方文档中看到，<a href="https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html" target="_blank" rel="noopener">https://docs.spring.io/autorepo/docs/spring-security/3.2.0.CI-SNAPSHOT/reference/html/csrf.html</a></p>
-<h3 id="什么是CSRF攻击"><a href="#什么是CSRF攻击" class="headerlink" title="什么是CSRF攻击"></a>什么是CSRF攻击</h3><p>看了一下官方文档才了解到这CSRF到底是什么，就像文档所说的，假如银行网站向用户提供转账功能，转账请求的代码是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">POST /transfer HTTP/1.1</span><br><span class="line">Host: bank.example.com</span><br><span class="line">Cookie: JSESSIONID=randomid; Domain=bank.example.com; Secure; HttpOnly</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line"></span><br><span class="line">amount=100.00&amp;routingNumber=1234&amp;account=9876</span><br></pre></td></tr></table></figure>
-<p>但是假如你登录到了银行网站，然后在还没注销的情况下又访问了一个恶意网站，这时你看到恶意网站上有个【领取奖品】按钮，你美滋滋地点击了这个按钮，却不知道这个按钮会提交这样的表单信息：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;form action=&quot;https://bank.example.com/transfer&quot; method=&quot;post&quot;&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;amount&quot;</span><br><span class="line">      value=&quot;100.00&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;routingNumber&quot;</span><br><span class="line">      value=&quot;evilsRoutingNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;hidden&quot;</span><br><span class="line">      name=&quot;account&quot;</span><br><span class="line">      value=&quot;evilsAccountNumber&quot;/&gt;</span><br><span class="line">  &lt;input type=&quot;submit&quot;</span><br><span class="line">      value=&quot;Win Money!&quot;/&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
-<p>最后你会收到一条信息，您向银行卡号XXX转账100元……当场流下悔恨的泪水，大喊三声“为什么”？！<br>因为恶意网站虽然没办法获取你的cookie信息，但是它向银行后端请求的时候，浏览器还是会将cookie信息一起发送的，银行当然不知道这个请求是恶意网站向它发送的，它只知道cookie是你的！</p>
-<p><strong>像这种伪装成当前已登录认证用户去请求正在访问的网站后端的攻击方式，就被称为CSRF。</strong></p>
-<p>所以解决办法就是增加一些表单信息，而这些信息是恶意网站所无法获取的！例如图片验证码什么的。但是除了登录注册的时候使用验证码外，其它时候也使用验证码的话，用户岂不是会觉得很烦，所以Spring Sercurity通过在WEB应用中增加前端过滤器，验证请求是否包含CSRF的token信息，不包含的自然就是非法请求咯，因为攻击网站是无法获取到token信息的，只要是跨域提交的信息，都是无法通过这个过滤器的校验的。</p>
-<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><p>下面是CsrfFilter中的doFilterInternal源码。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Override</span><br><span class="line">	protected void doFilterInternal(HttpServletRequest request,</span><br><span class="line">			HttpServletResponse response, FilterChain filterChain)</span><br><span class="line">					throws ServletException, IOException &#123;</span><br><span class="line">		request.setAttribute(HttpServletResponse.class.getName(), response);</span><br><span class="line">		// 先从tokenRepository中加载token</span><br><span class="line">		CsrfToken csrfToken = this.tokenRepository.loadToken(request);</span><br><span class="line">		final boolean missingToken = csrfToken == null;</span><br><span class="line">		  // 如果为空，则tokenRepository生成新的token，并保存到tokenRepository中</span><br><span class="line">		if (missingToken) &#123;</span><br><span class="line">			csrfToken = this.tokenRepository.generateToken(request);</span><br><span class="line">			this.tokenRepository.saveToken(csrfToken, request, response);</span><br><span class="line">		&#125;</span><br><span class="line">        // 将token写入request的attribute中，方便页面上使用</span><br><span class="line">		request.setAttribute(CsrfToken.class.getName(), csrfToken);</span><br><span class="line">		request.setAttribute(csrfToken.getParameterName(), csrfToken);</span><br><span class="line">		//这个macher就是我们在Spring配置文件中自定义的过滤器，也就是GET，HEAD, TRACE, OPTIONS和我们的rest都不处理</span><br><span class="line"> </span><br><span class="line">        // 这个macher就是我们在Spring配置文件中自定义的过滤器，</span><br><span class="line">		//如果不需要csrf验证的请求，则直接下传请求（requireCsrfProtectionMatcher是默认的对象，对符合^(GET|HEAD|TRACE|OPTIONS)$的请求和我们自定义的请求不验证）</span><br><span class="line">		if (!this.requireCsrfProtectionMatcher.matches(request)) &#123;</span><br><span class="line">			filterChain.doFilter(request, response);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">        // 从用户请求中获取token信息</span><br><span class="line">		String actualToken = request.getHeader(csrfToken.getHeaderName());</span><br><span class="line">		if (actualToken == null) &#123;</span><br><span class="line">			actualToken = request.getParameter(csrfToken.getParameterName());</span><br><span class="line">		&#125;</span><br><span class="line">        // 验证，如果相同，则下传请求，如果不同，则抛出异常</span><br><span class="line">		if (!csrfToken.getToken().equals(actualToken)) &#123;</span><br><span class="line">			if (this.logger.isDebugEnabled()) &#123;</span><br><span class="line">				this.logger.debug(&quot;Invalid CSRF token found for &quot;</span><br><span class="line">						+ UrlUtils.buildFullRequestUrl(request));</span><br><span class="line">			&#125;</span><br><span class="line">			if (missingToken) &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new MissingCsrfTokenException(actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			else &#123;</span><br><span class="line">				this.accessDeniedHandler.handle(request, response,</span><br><span class="line">						new InvalidCsrfTokenException(csrfToken, actualToken));</span><br><span class="line">			&#125;</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		filterChain.doFilter(request, response);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
-<p>唉，有空还是得多到Spring官网看看文档了解了解框架啊，不然一个简单的问题就得搞半天！</p>
-]]></content>
-      <categories>
-        <category>工作中遇到的问题</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Write-up: CTFHUB web之Git泄露</title>
-    <url>/2025/08/18/Write-up-CTFHUB-web%E4%B9%8BGit%E6%B3%84%E9%9C%B2/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>git应该是最主流的版本控制工具了，但是如果配置不当，可能会不小心把 .git 文件夹直接部署到生产环境。当然，这都2025了，不太可能会有开发出现这种错误了……</p>
-<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="Githack"><a href="#Githack" class="headerlink" title="Githack"></a>Githack</h2><p>项目地址：<a href="https://github.com/lijiejie/GitHack" target="_blank" rel="noopener">https://github.com/lijiejie/GitHack</a><br>这是一个.git泄露利用脚本，可以通过.git文件夹下的文件，重建还原工程源代码。</p>
-<p>下载后，用python2就可以运行该脚本<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python GitHack.py http://www.openssl.org/.git/</span><br></pre></td></tr></table></figure></p>
-<h1 id="Log"><a href="#Log" class="headerlink" title="Log"></a>Log</h1><p>ctfhub 的 git 泄露一共有3道，先来做第一道：Log</p>
-<p><img src="https://s2.loli.net/2025/08/18/Pg46BCWhMVmY3al.png" alt="image.png"></p>
-<p>打开后就一个页面，显示“Where is flag?”<br><img src="https://s2.loli.net/2025/08/18/cktFWeN5zHpI1jQ.png" alt="image.png"></p>
-<p>直接用脚本下载并重建工程<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">python2 GitHack.py http://challenge-4b71d7d837e22605.sandbox.ctfhub.com:10800/.git</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/dKW8nlYpC6hax9S.png" alt="image.png"></p>
-<p>全局搜索 “ctfhub” 或者 “flag”，在源代码中搜不到，但是在git log相关文件中能看到提交记录有端倪，应该是添加了 flag 后又删掉了。</p>
-<p><img src="https://s2.loli.net/2025/08/18/5QATtId8aDZfn6o.png" alt="image.png"></p>
-<p>用 git reset 回滚到 “add flag” 那一次提交后再全局搜索 “ctfhub” 或者 “flag”，可以在一个 txt 文件里找到 flag 了</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png" alt="image.png"></p>
-<h2 id="Stash"><a href="#Stash" class="headerlink" title="Stash"></a>Stash</h2><p>前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了<br><img src="https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png" alt="image.png"></p>
-<p>但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 <a href="https://git-scm.com/docs/git-stash/zh_HANS-CN" target="_blank" rel="noopener">https://git-scm.com/docs/git-stash/zh_HANS-CN</a><br><img src="https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png" alt="image.png"></p>
-<p>用 git stash list 看看暂存的修改<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png" alt="image.png"></p>
-<p>用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png" alt="image.png"></p>
-<h2 id="Index"><a href="#Index" class="headerlink" title="Index"></a>Index</h2><p>前几步步骤仍然和上面一样，但是txt文件直接就有flag了……<br>突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！</p>
-]]></content>
-      <categories>
-        <category>CTF</category>
-        <category>Web</category>
-        <category>Writeup</category>
-        <category>web</category>
-      </categories>
-      <tags>
-        <tag>CTF</tag>
-        <tag>Web安全</tag>
-        <tag>Writeup</tag>
-        <tag>信息泄露</tag>
-        <tag>Git泄露</tag>
-        <tag>ctfhub</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Write-up-CTFHUB-web之SVN泄露、HG泄露</title>
     <url>/2025/08/19/Write-up-CTFHUB-web%E4%B9%8BSVN%E6%B3%84%E9%9C%B2%E3%80%81HG%E6%B3%84%E9%9C%B2/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，这工具我也很少用，以前在第一家公司时倒是用过，但是我用得比较少，主要是游戏研发部门的项目用到。</p>
-<p>Mercurial 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的可执行文件名为 hg，是化学元素“汞”（Hydrargyrum）的缩写，也是对最初开发者 Matt Mackall 的致敬（hg 是他用户名的缩写），这个软件我也没有使用过。</p>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。</p>
+<p>Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的可执行文件名为 hg，是化学元素“汞”（Hydrargyrum）的缩写，也是对最初开发者 Matt Mackall 的致敬（hg 是他用户名的缩写），这个软件我也没有使用过。</p>
 <h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="dirsearch"><a href="#dirsearch" class="headerlink" title="dirsearch"></a>dirsearch</h2><p>项目地址：<a href="https://github.com/maurosoria/dirsearch" target="_blank" rel="noopener">https://github.com/maurosoria/dirsearch</a></p>
 <p>dirsearch 是一款基于 python3 的扫描工具，常用于暴力扫描页面结构，包括网页中的目录和文件</p>
-<h2 id="dvcs-ripper"><a href="#dvcs-ripper" class="headerlink" title="dvcs-ripper"></a>dvcs-ripper</h2><p>dvcs-ripper 是一款基于 perl 的版本控制软件信息泄露利用工具，支持 SVN, GIT, Mercurial/hg, bzr 等</p>
+<h2 id="dvcs-ripper"><a href="#dvcs-ripper" class="headerlink" title="dvcs-ripper"></a>dvcs-ripper</h2><p>项目地址：<a href="https://github.com/kost/dvcs-ripper" target="_blank" rel="noopener">https://github.com/kost/dvcs-ripper</a><br>dvcs-ripper 是一款基于 perl 的版本控制软件信息泄露利用工具，支持 SVN, GIT, Mercurial/hg, bzr 等</p>
 <h1 id="SVN"><a href="#SVN" class="headerlink" title="SVN"></a>SVN</h1><p>打开页面是这样的，提示我们 flag 在源代码里<br><img src="https://s2.loli.net/2025/08/20/FqeovAQhsWcg8Pl.png" alt="0.png"></p>
 <p>使用 dirsearch 工具扫描这个页面，得到扫描结果后，搜索 200 看看请求成功的文件</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dirsearch -u http://challenge-776f8dc47b983ee8.sandbox.ctfhub.com:10800/</span><br></pre></td></tr></table></figure>
@@ -424,7 +564,9 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">perl /home/kali/tools/dvcs-ripper/rip-hg.pl -u http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/.hg</span><br></pre></td></tr></table></figure>
 <p>全局搜索 flag 和 ctfhub</p>
 <p><img src="https://s2.loli.net/2025/08/20/z3Bik4Tycv7whn6.png" alt="3.png"></p>
+<blockquote>
 <p>.hg/store/fncache 存的文件索引数据，通过 fncache 可以快速定位到某个文件的位置，hg 会在路径前加 data/，并在结尾加 .i 表示这是一个索引，所以这里的 “data/flag_2180410243.txt.i”对应的路径就是 “flag_2180410243.txt”</p>
+</blockquote>
 <p>直接请求该文件，拿到flag</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">curl http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/flag_2180410243.txt</span><br></pre></td></tr></table></figure>
 <p><img src="https://s2.loli.net/2025/08/20/lSRr1C6oadwDNA3.png" alt="4.png"></p>
@@ -434,7 +576,6 @@
         <category>CTF</category>
         <category>Web</category>
         <category>Writeup</category>
-        <category>web</category>
       </categories>
       <tags>
         <tag>CTF</tag>
@@ -445,120 +586,6 @@
         <tag>SVN泄露</tag>
         <tag>HG泄露</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Spring 学习—第一个MVC：Hello World</title>
-    <url>/2019/04/20/Spring-%E6%A1%86%E6%9E%B6%E5%AD%A6%E4%B9%A0%E7%AC%AC%E4%B8%80%E6%AD%A5-%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84MVC/</url>
-    <content><![CDATA[<h1 id="Spring-学习—第一个MVC：Hello-World"><a href="#Spring-学习—第一个MVC：Hello-World" class="headerlink" title="Spring 学习—第一个MVC：Hello World"></a>Spring 学习—第一个MVC：Hello World</h1><p>Spring框架是Java应用最广的框架，它是开源的，是为了解决企业应用程序开发复杂性而创建的，想要做Java Web开发，怎么能不会Spring呢？想要学Spring，那第一步先学习怎么用Spring框架创建一个最简单的MVC吧！笔者用的是IDEA，所以这里就用IDEA来创建。</p>
-<h2 id="1-创建项目"><a href="#1-创建项目" class="headerlink" title="1.创建项目"></a>1.创建项目</h2><p>首先当然是在IDEA新建项目。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbc9d90cc126.png" alt="IDEA新建项目"><br>类库选择”Spring MVC”，并且在JAVA EE中选择”Web Application”。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbc9f6326dd4.png" alt="选择类库"><br>输入项目名称以及选择项目的地址，然后点击finish。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca08ee6363.png" alt="输入项目名"><br>点击finish后，IDEA会自动下载需要的类库，大概等几分钟。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca08ec5768.png" alt="下载类库"><br>下载类库完毕后，项目就建立完成了！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca1a33bcbd.png" alt="项目文件"></p>
-<hr>
-<h2 id="2-调试设置"><a href="#2-调试设置" class="headerlink" title="2.调试设置"></a>2.调试设置</h2><p>项目建立好后，可以看到右上角的run和debug按钮都是灰色的，不能运行调试，所以接下来我们要在IDEA进行运行、调试的相关设置。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca7fa00965.png" alt="灰色的运行和调试按钮"><br>在菜单栏中找到 Run-&gt;Edit Configurations，可以打开运行设置框。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca82fb4317.png" alt="运行调试配置"><br>按照下图添加本地Tomcat服务器配置。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca857a68f6.png" alt="添加服务器"><br>Name就是该配置的名称，随便取；After launch是设置你运行项目所自动打开的浏览器以及打开的URL，我喜欢用谷歌；HTTP port就是该项目的运行端口。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca873eec91.png" alt="输入相关配置"><br>然后再点击Deployment-&gt; + -&gt;Artifacy，设置好部署的url，直接填个”/“就行了，当然你也可以加点东西，比如填”/handsomedong”然后点击 OK 。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca89037029.png" alt="添加Artifacy"></p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca8abc0f47.png" alt="应用目录"><br>设置好运行调试的配置后，我们就可以在右上角看到配置名称了，同时也可以看到有个三角符号和虫子都变绿了。三角符号是运行按钮，点击后直接运行，小虫子是调试按钮，可以设置断点调试。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca9046f750.png" alt="变绿了"><br>我们先试试运行一下会怎么样吧！结果不出意料，根本没跑起来……我们在IDEA下面查看日志，可以看到报错信息</p>
-<p><font color="#FF0000"><center><em>java.lang.ClassNotFoundException: org.springframework.web.context.ContextLoaderListener</em> </center> </font><br>意思是找不到这个类！为什么呢？因为还有一些包没有jar包含进来。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbca9202eeaa.png" alt="日志报错信息"></p>
-<hr>
-<h2 id="3-导入相关类库"><a href="#3-导入相关类库" class="headerlink" title="3.导入相关类库"></a>3.导入相关类库</h2><p>点击左上角 File-&gt;Project Structure。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcac519ce36.png" alt="Project Structure"><br>点击Artifacts再点击项目后，可以看到错误的提醒，缺少了一些引用。我们可以通过点击”Fix”来查看IDEA有什么解决办法。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcac51ab62d.png" alt="Artifacts"><br>可以看到IDEA能为我们加入这些类库，那我们就点击最上面两个吧(请忽略我的QQ拼音输入法头像)！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcad4fbae7d.png" alt="添加 Spring MVC-1.3.18 RELEASE"><br>添加完这些类库后，就可以看到已经没有错误的提醒了，我们再重新运行项目看看如何吧！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcac5171a78.png" alt="重新运行"><br>这次终于运行成功了！！！运行成功后，IDEA会自动使用我们配置的浏览器，打开我们配置的URL！看看此时的运行结果，其实就是 web目录下的 index.jsp文件。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcac51642d0.png" alt="运行结果"></p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcac517e20f.png" alt="index.jsp文件"></p>
-<hr>
-<h2 id="4-添加控制器"><a href="#4-添加控制器" class="headerlink" title="4.添加控制器"></a>4.添加控制器</h2><p>既然项目能跑了，那我们就得正式开始写MVC了，我们先写一个Controller吧！<br>我们首先要添加一个新的包，报名自己取，我在src目录添加了一个名为”com.handsomedong.springmvc”的包。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcb22d90dd9.png" alt="添加新包"></p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcb22d7f475.png" alt="输入包名"><br>然后在这个包下添加一个Java Class，这个class就是控制器了，取名叫HelloController吧！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcb22d8adf5.png" alt="添加Class"></p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcb22d67bfd.png" alt="输入类名"><br>HelloController代码如下。<br>在类上面添加注解 <em>@Controller</em> 注明该类是个控制器、<em>@RequestMapping(“/hello”)</em> 注明该控制器的路由为”/hello”，在方法test()上面添加注解 <em>@RequestMapping(“world”)</em> 注明该方法的路由为”world”。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package com.handsomedong.springmvc;</span><br><span class="line"></span><br><span class="line">import org.springframework.stereotype.Controller;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line"></span><br><span class="line">@Controller</span><br><span class="line">@RequestMapping(&quot;/hello&quot;)</span><br><span class="line">public class HelloController &#123;</span><br><span class="line"></span><br><span class="line">    @RequestMapping(&quot;world&quot;)</span><br><span class="line">    public String test()</span><br><span class="line">    &#123;</span><br><span class="line">        return &quot;/WEB-INF/jsp/world.jsp&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>因此我们想要访问该方法时，url应该为”/hello/world.form”，我知道你一定要问我为什么会有”.form”，那是因为默认配置就是这样！</p>
-<p>我知道你肯定又会问我能不能在配置中把”.form”去掉，当然能！我们可以在 /web/WEB-INF/dispatcher-servlet.xml 中找到这么一段代码。把其中的 *.form 改成 / 就行了</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;servlet-mapping&gt;</span><br><span class="line">    &lt;servlet-name&gt;dispatcher&lt;/servlet-name&gt;</span><br><span class="line">    &lt;url-pattern&gt;*.form&lt;/url-pattern&gt;</span><br><span class="line">&lt;/servlet-mapping&gt;</span><br></pre></td></tr></table></figure>
-<h2 id="5-添加视图"><a href="#5-添加视图" class="headerlink" title="5.添加视图"></a>5.添加视图</h2><p>其实 HelloController 的 test() 意思是返回 /WEB-INF/jsp/world.jsp 这个View，所以我们要在 WEB-INF 下新建文件夹 jsp ，并且新建一个jsp文件。world.jsp 代码如下。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; language=&quot;java&quot; %&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;title&gt;HandsomeDong&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">    Hello, world.</span><br><span class="line">&lt;body&gt;</span><br><span class="line"></span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
-<p>此时控制器和视图都建好了，我们运行一下项目，在浏览器输入 <a href="http://localhost:8080/hello/world" target="_blank" rel="noopener">http://localhost:8080/hello/world</a> 看看效果如何吧！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcb9a734bef.png" alt="被404支配的恐惧"><br>怎么样，是不是要枯了……怎么又是404！！！年轻人别太心急，想想程序跑不起来我们第一步该干什么。</p>
-<p><img src="http://tc.sinaimg.cn/maxwidth.2048/tc.service.weibo.com/p/www_apkbus_com/d4e669d65a97f2ee45af6bc42ba016ff.gif" alt="bug？一定是电脑的问题"><br>年轻人还是要戒骄戒躁啊，我们先来看看服务器这边报错好吧。</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcb9a73e678.png" alt="报错信息"><br>这里说 DispatcherServlet 没有找到响应 /hello/world 的控制器！为什么呢？我们路由配好了，输入的URL也没有错啊！<br>原因是我们还要告诉Spring去哪里找这些控制器……</p>
-<p>我们找到 /web/WEB-INF/dispatcher-servlet.xml 这个文件，在 beans 里面添加这么一行代码，意思就是你记得要去我这个包里扫描控制器！！！</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;context:component-scan base-package=&quot;com.handsomedong.springmvc&quot;/&gt;</span><br></pre></td></tr></table></figure>
-<p>此时我们再重新运行一下试试看吧！终于成功了！！！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcbb344abac.png" alt="Hello, world."></p>
-<hr>
-<h2 id="6-添加模型"><a href="#6-添加模型" class="headerlink" title="6.添加模型"></a>6.添加模型</h2><p>现在Controller和View都已经完成了，就剩一个Model了，我们写个最简单的吧，直接在Controller传入一个Model。回到HelloController，修改代码如下。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package com.handsomedong.springmvc;</span><br><span class="line"></span><br><span class="line">import org.springframework.stereotype.Controller;</span><br><span class="line">import org.springframework.ui.Model;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line"></span><br><span class="line">@Controller</span><br><span class="line">@RequestMapping(&quot;/hello&quot;)</span><br><span class="line">public class HelloController &#123;</span><br><span class="line"></span><br><span class="line">    @RequestMapping(&quot;world&quot;)</span><br><span class="line">    public String test(Model model)</span><br><span class="line">    &#123;</span><br><span class="line">        model.addAttribute(&quot;name&quot;, &quot;HandsomeDong&quot;);</span><br><span class="line">        model.addAttribute(&quot;github&quot;, &quot;https://github.com/handsomedong&quot;);</span><br><span class="line">        return &quot;/WEB-INF/jsp/world.jsp&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>再把Model的值放到页面中显示出来，现在把 world.jsp 代码修改如下。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; language=&quot;java&quot; %&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;title&gt;HandsomeDong&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">    &lt;p&gt;Hello, $&#123;name&#125;.&lt;/p&gt;</span><br><span class="line">    &lt;a href=&quot;$&#123;github&#125;&quot;&gt; GitHub &lt;/a&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure></p>
-<p>现在运行查看结果吧！</p>
-<p><img src="https://i.loli.net/2019/04/22/5cbcbe1973bcb.png" alt="运行结果"><br>至此我们就完成了Spring框架最简单的MVC项目了！</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>框架</category>
-        <category>Spring</category>
-      </categories>
-      <tags>
-        <tag>Spring</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>删除链表中重复的结点</title>
-    <url>/2019/06/21/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E7%BB%93%E7%82%B9/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5 处理后为 1-&gt;2-&gt;5</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这道题做了比较久……感觉有一点点难写。</p>
-<p>主要看下面这幅图理解</p>
-<p><img src="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png" alt="思路图"></p>
-<p>先建一个头结点，返回的时候返回这个头结点。<br>再建两个临时结点p、q，p用来作存储结点，q用来跳过重复结点。如图中第二个q的位置，先判断p的下一个结点位置是否与q一样，不一样的话先把q的下一个结点位置存到p的下一个结点，这样就先跳过了前面的重复结点。如果p的下一个结点是一样的，那就是图中第二个p的位置那里，这个时候证明了当前的q结点是不重复的，此时p直接存储q结点。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/*</span><br><span class="line">struct ListNode &#123;</span><br><span class="line">    int val;</span><br><span class="line">    struct ListNode *next;</span><br><span class="line">    ListNode(int x) :</span><br><span class="line">        val(x), next(NULL) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    ListNode* deleteDuplication(ListNode* pHead)</span><br><span class="line">    &#123;</span><br><span class="line">        if (pHead == NULL || pHead-&gt;next == NULL) &#123;</span><br><span class="line">            return pHead;</span><br><span class="line">        &#125;</span><br><span class="line">        int first = -1;</span><br><span class="line">        if (pHead-&gt;val == first) &#123;</span><br><span class="line">            first = -2;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        ListNode *head = new ListNode(first);</span><br><span class="line">        head-&gt;next = pHead;</span><br><span class="line">        </span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        ListNode *q = head-&gt;next;</span><br><span class="line">        </span><br><span class="line">        while (q != NULL) &#123;</span><br><span class="line">            while ((q-&gt;next != NULL) &amp;&amp; (q-&gt;val == q-&gt;next-&gt;val)) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (p-&gt;next != q) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">                p-&gt;next = q;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                p = q;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return head-&gt;next;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>使用cryptsetup加密硬盘</title>
-    <url>/2019/12/09/%E4%BD%BF%E7%94%A8cryptsetup%E5%8A%A0%E5%AF%86%E7%A1%AC%E7%9B%98/</url>
-    <content><![CDATA[<p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
-<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
-<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
-<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
-<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
-<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
-<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
-<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
-<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
-<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
-<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
-<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
-<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
-<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
-<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
-<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
-<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
-<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
-<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
-<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
-<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
-<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
-<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
-<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
-<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
-<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
-]]></content>
-      <categories>
-        <category>树莓派</category>
-      </categories>
   </entry>
   <entry>
     <title>Triton入门初体验</title>
@@ -611,80 +638,104 @@
       </tags>
   </entry>
   <entry>
-    <title>SpringBoot+Dubbo简单demo实践</title>
-    <url>/2021/07/02/SpringBoot-Dubbo%E7%AE%80%E5%8D%95demo%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="SpringBoot-Dubbo-简单-demo-实践"><a href="#SpringBoot-Dubbo-简单-demo-实践" class="headerlink" title="SpringBoot + Dubbo 简单 demo 实践"></a>SpringBoot + Dubbo 简单 demo 实践</h1><p>休息了一个月终于又要上班了，下家公司的项目用的是Dubbo+Zookeeper，由于之前只用过Spring Cloud，所以提前了解一下Dubbo的使用，搭了个简单的 demo 感受 Dubbo 和 Spring Cloud 的区别。<br>大概流程如下：</p>
-<ol>
-<li>Zookeeper搭建</li>
-<li>Dubbo可视化管理界面搭建</li>
-<li>接口层定义</li>
-<li>服务层实现</li>
-<li>消费层调用</li>
+    <title>XSS攻击练习</title>
+    <url>/2025/08/24/XSS%E6%94%BB%E5%87%BB%E7%BB%83%E4%B9%A0/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天学习 xss 攻击，在一个 xss 练习平台上玩了一下，感觉还是挺有收获的。<br>地址：<a href="http://test.ctf8.com/" target="_blank" rel="noopener">http://test.ctf8.com/</a></p>
+<p><img src="https://s2.loli.net/2025/08/24/9nJImVvXUBE8i45.png" alt="image.png"></p>
+<h1 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h1><h2 id="level-1"><a href="#level-1" class="headerlink" title="level 1"></a>level 1</h2><p>猜想这里直接回显 GET 参数里的 name</p>
+<p><img src="https://s2.loli.net/2025/08/24/oc6lbDGvTWnRyuf.png" alt="image.png"></p>
+<p>构造 payload 为 ?name=&lt;script&gt;alert(1)&lt;/script&gt;，通过！</p>
+<h2 id="level-2"><a href="#level-2" class="headerlink" title="level 2"></a>level 2</h2><p>这题看起来和上一题也差不多</p>
+<p><img src="https://s2.loli.net/2025/08/24/FxDPb4yGmYrzuOl.png" alt="image.png"></p>
+<p>输入 &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; ，结果发现不行，看了看 HTML 源码，显示的部分明显是使用了 htmlspecialchars() 转换了特殊字符。</p>
+<p><img src="https://s2.loli.net/2025/08/24/QBbsPdwt5Si4e2A.png" alt="image.png"></p>
+<p>虽然 h2 标签里展示部分的特殊字符被转换了，但是 input 标签里回显的内容却没有被转换，所以注入点便是 input 里面了。</p>
+<p>这里先用 &quot;&gt; 闭合 input 标签，再注入 &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; 。输入 &quot;&gt; &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; ，通过！</p>
+<h2 id="level-3"><a href="#level-3" class="headerlink" title="level 3"></a>level 3</h2><p><img src="https://s2.loli.net/2025/08/24/7WTuFfkcE2mbDAZ.png" alt="image.png"></p>
+<p>这题连 input 里的 value 也转换了，不过这里的 value 使用了单引号，并且输入单引号发现没有被转换。</p>
+<p><img src="https://s2.loli.net/2025/08/24/iUD5XjNuhMfKl61.png" alt="image.png"></p>
+<p>使用单引号闭合 value ，再通过事件触发来注入，最后用 / 结束标签（/&#x27;&gt; 在属性型 XSS payload 中是合法写法）。输入 &#x27; onmouseover=alert(1) /，通过！</p>
+<h2 id="level-4"><a href="#level-4" class="headerlink" title="level 4"></a>level 4</h2><p><img src="https://s2.loli.net/2025/08/24/81RCEnKuzhlIZi7.png" alt="image.png"></p>
+<p>输入 &quot;&gt; &lt;script&gt;alert(1)&lt;/script&gt; ，发现 &lt; &gt; 都被替换掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/tbzBuiZNnS76QeC.png" alt="image.png"></p>
+<p>那就用事件触发吧，输入 &quot; onmouseover=alert(1) / ，通过！</p>
+<h2 id="level-5"><a href="#level-5" class="headerlink" title="level 5"></a>level 5</h2><p><img src="https://s2.loli.net/2025/08/24/JZAlkfyTO3iWrgV.png" alt="image.png"></p>
+<p>这下 on 被替换成 o_n 了，试了下 script 等标签，也被替换成了 scr_ipt。<br><img src="https://s2.loli.net/2025/08/24/WvsZtck4ExmFqC6.png" alt="image.png"></p>
+<p>尝试用用大小写绕过，输入 “ OnMouseover=alert(1) / ， 发现全部都会被转成小写再替换。</p>
+<p>尝试闭合这个标签，再另外构造一个 a 标签，输入 &quot;&gt; &lt;a href=&quot;javascript:alert(1)&quot;&gt;click me &lt;/a&gt; 。</p>
+<p>最后的结果为 &lt;input name=keyword  value=&quot;&quot;&gt; &lt;a href=&quot;javascript:alert(1)&quot;&gt;click me &lt;/a&gt;&quot;&gt; ，点击 click me 后通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/xLpXRINPsCHOa8G.png" alt="image.png"></p>
+<h2 id="level-6"><a href="#level-6" class="headerlink" title="level 6"></a>level 6</h2><p><img src="https://s2.loli.net/2025/08/24/ULI4jXD7PAYN9Gi.png" alt="image.png"></p>
+<p>用上一题的 payload，结果是 href 也被替换成了 hr_ef。</p>
+<p><img src="https://s2.loli.net/2025/08/24/D9I2bsSMcUxwkie.png" alt="image.png"></p>
+<p>尝试用一下大小写混淆，结果为 &lt;input name=keyword  value=&quot;&quot;&gt; &lt;a Href=&quot;javascript: alert(1)&quot;/&gt;&quot;&gt; 。通过！</p>
+<h2 id="level-7"><a href="#level-7" class="headerlink" title="level 7"></a>level 7</h2><p><img src="https://s2.loli.net/2025/08/24/ZDz6j3N4ewUxu5f.png" alt="image.png"></p>
+<p>尝试用上一题的 payload，即 &quot;&gt; &lt;a Href=&quot;javascript: alert(1)&quot;/&gt; ， 发现大小写混淆也无用，并且 href 和 script 都被直接替换掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/MyUci8vCaunVo3A.png" alt="image.png"></p>
+<p>尝试双写 href 和 script，输入 &quot;&gt; &lt;a hrHrefef=&quot;javascrscriptipt: alert(1)&quot;/&gt; 。通过！</p>
+<h2 id="level-8"><a href="#level-8" class="headerlink" title="level 8"></a>level 8</h2><p>这一题稍微有点不一样了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/e1kJHf5F9jalQ4P.png" alt="image.png"></p>
+<p>输入 123321 看一下源码，可以看到这个友情链接 a 标签的 href 就是输入的内容。<br><img src="https://s2.loli.net/2025/08/24/8EoX1nkRq4iZzJP.png" alt="image.png"></p>
+<p>输入 javascript: alert(1) ，发现 javascript 被替换成了 javasc_ript 。</p>
+<p><img src="https://s2.loli.net/2025/08/24/xob9p82UmVN6i1A.png" alt="image.png"></p>
+<p>尝试闭合 href ，再使用事件触发，输入 &quot; onclick=alert(1) / ，可以看到双引号被转换成 HTML 实体，onclick 也被替换成 o_nclick 。</p>
+<p><img src="https://s2.loli.net/2025/08/24/EFerRLIK81mbUiC.png" alt="image.png"></p>
+<p>这意味着无法使用双引号闭合 href，也无法使用协议绕过（javascript:alert(1)）了吗？难道……难道真的止步于此了吗？</p>
+<p>只好上网搜了搜别人的 write up，发现还能使用 HTML 字符实体来替换一些字符，HTML 字符实体转换：<a href="https://www.qqxiuzi.cn/bianma/zifushiti.php。" target="_blank" rel="noopener">https://www.qqxiuzi.cn/bianma/zifushiti.php。</a><br>这里随便把 javascript 里的 c 字符替换成 &#x26;&#x23;&#x78;&#x36;&#x33;&#x3B; ，输入 javas&amp;#x63;ript:alert(1) 。通过！（感觉这个操作有点骚啊！）</p>
+<p><img src="https://s2.loli.net/2025/08/24/urvGneBg8mFw94Y.png" alt="image.png"></p>
+<h2 id="level-9"><a href="#level-9" class="headerlink" title="level 9"></a>level 9</h2><p><img src="https://s2.loli.net/2025/08/24/VpqrLtg7juBDh1S.png" alt="image.png"></p>
+<p>这一关会先校验输入是否是一个合理的链接地址，如果不是，则直接把 href 里的内容替换成”您的链接不合法？有没有！”</p>
+<p><img src="https://s2.loli.net/2025/08/24/kH1zJISifqpBRZs.png" alt="image.png"></p>
+<p>尝试在上一题的 payload 基础上，加上注释一个链接，输入 javas&#x63;ript:alert(1) //<a href="http://www.baidu.com" target="_blank" rel="noopener">http://www.baidu.com</a> ，通过！看来这个校验，只校验是否包含链接，而不是校验整个输入是否是一个合理的链接！</p>
+<p><img src="https://s2.loli.net/2025/08/24/5ish93YQovaJKTA.png" alt="image.png"></p>
+<h2 id="level-10"><a href="#level-10" class="headerlink" title="level 10"></a>level 10</h2><p>这关没有输入框，查看源码发现有隐藏的表单。</p>
+<p><img src="https://s2.loli.net/2025/08/24/mIs6wKgQrYZqeXD.png" alt="image.png"></p>
+<p>尝试手动构造表单内容，请求 <a href="http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=3" target="_blank" rel="noopener">http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=3</a> 发现 t_sort 内容会回显到输入框。</p>
+<p><img src="https://s2.loli.net/2025/08/24/6y5UBb89lj71rPN.png" alt="image.png"></p>
+<p>构造 payload 到 t_sort 里，输入 <a href="http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=%22%20%20onmouseover=%22alert(1)%22%20type=%22text" target="_blank" rel="noopener">http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=%22%20%20onmouseover=%22alert(1)%22%20type=%22text</a> 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/oeJLwR3BuXhYNUW.png" alt="image.png"></p>
+<h2 id="level-11"><a href="#level-11" class="headerlink" title="level 11"></a>level 11</h2><p>一进入这一关，就看到隐藏的表单输入框里回显了一个链接，这个不正是我上一关的链接吗？所以猜测这里是回显了 http header Referer 的信息，所以这里可能得用到 BurpSuite 了！</p>
+<p><img src="https://s2.loli.net/2025/08/24/LUnrNaOqxMuDvdo.png" alt="image.png"></p>
+<p>刷新一下页面，构造一下 header 里的 Referer 为 “ onclick=alert(1) type=”text 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/bPHLXuNFnUMZavq.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/24/1hsRIlaBmFbpnVg.png" alt="2.png"></p>
+<h2 id="level-12"><a href="#level-12" class="headerlink" title="level 12"></a>level 12</h2><p>这一关和上一关大同小异，只是把 Referer 换成了 User-Agent ，一样的套路，不过多赘述。</p>
+<p><img src="https://s2.loli.net/2025/08/24/KcNtziXhMvR7JQ1.png" alt="image.png"></p>
+<h2 id="level-13"><a href="#level-13" class="headerlink" title="level 13"></a>level 13</h2><p>一样，只不过这次是 Cookie ，不过多赘述。</p>
+<p><img src="https://s2.loli.net/2025/08/24/82MXupxhZwYeiH3.png" alt="image.png"></p>
+<h2 id="level-14"><a href="#level-14" class="headerlink" title="level 14"></a>level 14</h2><p>这题是真不会了，等后续有时间再上网找一些大神的 write up 观摩一下。</p>
+<p><img src="https://s2.loli.net/2025/08/24/iAM1LEQuKc3Dn9Z.png" alt="image.png"></p>
+<h2 id="level-15"><a href="#level-15" class="headerlink" title="level 15"></a>level 15</h2><p><img src="https://s2.loli.net/2025/08/24/XvMyznHGVRaep8k.png" alt="image.png"></p>
+<p>这一关直接看源码，可以看到里面这个 span 的 class 有用到 src 参数，查了查 ng-include ，这是 AngularJS 的指令，有点类似于文件包含。<a href="https://www.runoob.com/angularjs/ng-ng-include.html" target="_blank" rel="noopener">https://www.runoob.com/angularjs/ng-ng-include.html</a></p>
+<p><img src="https://s2.loli.net/2025/08/24/NDFsG5KZYfHPwOr.png" alt="image.png"></p>
+<p>由于这个包含的文件需要与当前域名一致，所以可以考虑考虑用前面关卡的文件，再把 payload 注入到前面的文件链接中。所以我这里构造的 payload 是 &#x27;level1.php?name=&lt;img src=x onerror=alert(1)&gt;&#x27; 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/tahcjSzP9Jb5YGk.png" alt="image.png"></p>
+<h2 id="level-16"><a href="#level-16" class="headerlink" title="level 16"></a>level 16</h2><p><img src="https://s2.loli.net/2025/08/24/ZFrkQVTiIs2B5ow.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/24/zL5ytjE8267HVsa.png" alt="image.png"></p>
+<p>尝试直接注入，?keyword=&lt;script&gt;alert(1)&lt;/script&gt; ，script 和 / 都被替换成了 &amp;nbsp; ，大小写混淆也失败。</p>
+<p><img src="https://s2.loli.net/2025/08/24/rt4QgPW62Ue75K8.png" alt="image.png"></p>
+<p>那就尝试用 img + error 事件触发，?keyword=&lt;img src=x onerror=&quot;alert(1)&quot;&gt; ，发现空格也被替换了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/tbjnfxSL1IF9Qwv.png" alt="image.png"></p>
+<p>尝试用 %0d 代替空格来绕过检查，?keyword=&lt;img%0dsrc=x%0donerror=&quot;alert(1)&quot;&gt; 。通过！</p>
+<h2 id="level-……"><a href="#level-……" class="headerlink" title="level ……"></a>level ……</h2><p>后面几关好像都没法显示，貌似是 flash 的，后续有时间再做吧，现在暂时不了解 flash xss。</p>
+<p><img src="https://s2.loli.net/2025/08/24/dpOB1J8QSqbKT2W.png" alt="image.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>先确认注入点，再开始尝试注入</li>
+<li>常见的注入方式有：&lt;script&gt; 直接执行、利用 HTML 标签自带的事件（如 img + onerror、 iframe + onload、 input + onclick 或 onmouseover 等）、meta 标签刷新跳转等（不过这个练习中没有这种题）</li>
+<li>XSS 绕过常用方法有：大小写绕过、编码绕过、闭合标签绕过、注释绕过、其它符号绕过、双字符绕过、事件绕过等等</li>
 </ol>
-<h2 id="Dubbo基本工作原理"><a href="#Dubbo基本工作原理" class="headerlink" title="Dubbo基本工作原理"></a>Dubbo基本工作原理</h2><p>Dubbo 是一款 RPC 服务框架，它最大的优势在于提供了面向接口代理的服务编程模型，对开发者屏蔽了底层的远程通信细节。同时 Dubbo 也是一款服务治理框架，它为分布式部署的微服务提供了服务发现、流量调度等服务治理解决方案。</p>
-<p>下图是 Dubbo 的基本工作原理图(在官网找的)，服务提供者与服务消费者之间通过注册中心协调地址，通过约定的协议实现数据交换。<br><img src="https://s2.loli.net/2023/07/19/RmB1wsW5jqTYAZv.png#pic_center" alt="Dubbo 基本工作原理图"><br>接下来就搭建一个 demo ，感受一下 Dubbo 的使用和 Spring Cloud 有什么区别。</p>
-<h2 id="Zookeeper搭建"><a href="#Zookeeper搭建" class="headerlink" title="Zookeeper搭建"></a>Zookeeper搭建</h2><h3 id="Zookeeper下载"><a href="#Zookeeper下载" class="headerlink" title="Zookeeper下载"></a>Zookeeper下载</h3><p>Dubbo 使用 Zookeeper 作为注册中心，提供服务注册和发现，跟Spring Cloud的 eureka 或 nacos 类似。</p>
-<p>所以第一步当然是去<a href="https://zookeeper.apache.org/" target="_blank" rel="noopener">官网</a>下载 Zookeeper 啦，我下载的版本是3.6.3。</p>
-<h3 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h3><p>下载解压后，进入 conf 文件夹可以看到有个 zoo_sample.cfg 文件，这个是配置文件示例，现在复制并更名为 zoo.cfg ，根据自己的需要对配置进行更改，我改了一下数据路径。<br>Zookeeper 的端口号默认是2181，可以根据自己的需要对 clientPort 的值进行更改。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dataDir=E:/zookeeper/data</span><br><span class="line">clientPort=2181</span><br></pre></td></tr></table></figure>
-<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>进入bin文件夹可以看到里面有很多脚本，zkServer.cmd 和 zkServer.sh 就是启动脚本，我的电脑系统是 windows ，所以直接双击 zkServer.cmd 即可启动。</p>
-<p><img src="https://s2.loli.net/2023/07/19/SnKa5EN2pIZO9RL.png#pic_center" alt="启动Zookeeper"></p>
-<h2 id="Dubbo-可视化管理界面搭建"><a href="#Dubbo-可视化管理界面搭建" class="headerlink" title="Dubbo 可视化管理界面搭建"></a>Dubbo 可视化管理界面搭建</h2><p>Zookeeper 启动完成之后，我们需要一个可视化界面方便对服务进行观察和管理。</p>
-<h3 id="下载项目"><a href="#下载项目" class="headerlink" title="下载项目"></a>下载项目</h3><p>Dubbo-admin的Github地址是 <a href="https://github.com/apache/dubbo-admin" target="_blank" rel="noopener">https://github.com/apache/dubbo-admin</a> ，直接 git clone 下来。项目里有 readme.md 介绍启动流程，参考 readme.md 启动项目。</p>
-<h3 id="修改配置-1"><a href="#修改配置-1" class="headerlink" title="修改配置"></a>修改配置</h3><p>打开 dubbo-admin\dubbo-admin-server\src\main\resources\application.properties 可以修改配置，指定 Zookeeper 地址，我的 Zookeeper 是默认配置，所以不用修改。</p>
-<h3 id="编译、打包项目"><a href="#编译、打包项目" class="headerlink" title="编译、打包项目"></a>编译、打包项目</h3><p>进入到项目里编译并打包项目。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mvn clean package -Dmaven.test.skip=true</span><br></pre></td></tr></table></figure>
-<h3 id="启动项目"><a href="#启动项目" class="headerlink" title="启动项目"></a>启动项目</h3><p>可以直接在项目根目录运行 mvn –projects dubbo-admin-server spring-boot:run 启动项目，也可以进入 dubbo-admin-distribution\target 运行里面的jar包。</p>
-<p><img src="https://s2.loli.net/2023/07/19/SVJFBcPLXlzGxmb.png#pic_center" alt="启动 dubbo-admin"></p>
-<p><strong> 启动失败 </strong><br>我刚开始启动失败了，这个 dubbo-admin 的启动端口是 8080，但是我发现 8080 端口已经被占用了，最后发现是 Zookeeper 占用的，原来是 Zookeeper 内嵌了一个管理控制台，通过 jetty 启动，这个 jetty 的端口就是 8080，于是我去改了以下 Zookeeper 的 zoo.cfg ，新增了一行配置把 Zookeeper 的管理控制台端口改为 8081。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">admin.serverPort=8081</span><br></pre></td></tr></table></figure>
-<h3 id="进入管理界面"><a href="#进入管理界面" class="headerlink" title="进入管理界面"></a>进入管理界面</h3><p>启动成功后就可以访问 <a href="http://127.0.0.1:8080" target="_blank" rel="noopener">http://127.0.0.1:8080</a> 了，默认的账号密码都是root。<br><img src="https://s2.loli.net/2023/07/19/fv5lIzuOY4d6RWZ.png#pic_center" alt="登录"></p>
-<p><img src="https://s2.loli.net/2023/07/19/kWJmSxy5gLArGPE.png#pic_center" alt="Dubbo Admin"></p>
-<h2 id="工程创建"><a href="#工程创建" class="headerlink" title="工程创建"></a>工程创建</h2><p>接下来就要创建工程了，先创建个 maven 多模块工程，里面需要包含三个模块，一个是 api 模块，一个是服务提供者模块，一个是服务消费者模块。</p>
-<h3 id="api模块"><a href="#api模块" class="headerlink" title="api模块"></a>api模块</h3><p>假设我这个服务是一个用户查询的服务，那我就需要先创建一个 dto 和一个接口。<br><img src="https://s2.loli.net/2023/07/19/N2jn3OCBtpPaT4r.png" alt="api 模块"></p>
-<h4 id="创建-UserInfo-类"><a href="#创建-UserInfo-类" class="headerlink" title="创建 UserInfo 类"></a>创建 UserInfo 类</h4><p>创建一个用户信息类，需要注意的是，dto 要实现 Serializable 接口进行序列化。当然，也可以使用其它的序列化方式，hessian2、json等。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class UserInfo implements Serializable &#123;</span><br><span class="line">    private static final long serialVersionUID = 2908612893636115165L;</span><br><span class="line"></span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    private Long userId;</span><br><span class="line"></span><br><span class="line">    public static long getSerialVersionUID() &#123;</span><br><span class="line">        return serialVersionUID;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getUserName() &#123;</span><br><span class="line">        return userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserName(String userName) &#123;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Long getUserId() &#123;</span><br><span class="line">        return userId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserId(Long userId) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="定义用户服务接口"><a href="#定义用户服务接口" class="headerlink" title="定义用户服务接口"></a>定义用户服务接口</h4><p>简单定义一个接口。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface UserService &#123;</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="服务提供者模块"><a href="#服务提供者模块" class="headerlink" title="服务提供者模块"></a>服务提供者模块</h3><p>现在创建一个服务提供者模块。</p>
-<h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><p>这个模块需要 Dubbo 和 Zookeeper 相关依赖，再加上这个模块是要实现 UserService 接口，所以也需要刚才创建的 api 模块依赖。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>配置文件主要需要以下配置：<br><img src="https://s2.loli.net/2023/07/19/d3WH21YxENk7fZ6.png" alt="配置文件"></p>
-<p>根据上图的配置，修改 application.yml，我的配置如下：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 9000</span><br><span class="line"></span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-provider</span><br><span class="line">  registry:</span><br><span class="line">    address: 127.0.0.1:2181</span><br><span class="line">    protocol: zookeeper</span><br><span class="line">  protocol:</span><br><span class="line">    name: dubbo</span><br><span class="line">    port: 19000</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registry</span><br></pre></td></tr></table></figure></p>
-<h4 id="用户服务类具体实现"><a href="#用户服务类具体实现" class="headerlink" title="用户服务类具体实现"></a>用户服务类具体实现</h4><p>实现用户服务接口，注意这里的 @Service 注解，不是 Spring 的注解，而是 Dubbo 的注解！包的全路径是 org.apache.dubbo.config.annotation.Service。<br>并且需要注意的是，它必须要实现 UserService 接口。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Service</span><br><span class="line">@Component</span><br><span class="line">public class UserServiceImpl implements UserService &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = new ArrayList&lt;&gt;();</span><br><span class="line">        for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">            UserInfo userInfo = new UserInfo();</span><br><span class="line">            userInfo.setUserId(Integer.valueOf(i).longValue());</span><br><span class="line">            userInfo.setUserName(&quot;七里翔&quot; + i);</span><br><span class="line">            userInfoList.add(userInfo);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="SpringBoot-启动类"><a href="#SpringBoot-启动类" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>最后在启动类要加上 @EnableDubbo 注解。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserProviderApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserProviderApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="查看-Dubbo-Admin"><a href="#查看-Dubbo-Admin" class="headerlink" title="查看 Dubbo Admin"></a>查看 Dubbo Admin</h4><p>现在再去 Dubbo Admin 上面就可以看到这个服务注册成功了！点击详情也可以看到服务的具体信息。<br><img src="https://s2.loli.net/2023/07/19/aF1lCeZkbI8HYtA.png" alt="Dubbo Admin"></p>
-<p><img src="https://s2.loli.net/2023/07/19/x9IWKMvbJnLVBl4.png" alt="服务详情"></p>
-<h3 id="服务消费者模块"><a href="#服务消费者模块" class="headerlink" title="服务消费者模块"></a>服务消费者模块</h3><p>最后就是创建服务消费者模块了，在该模块下进行服务调用。</p>
-<h4 id="依赖-1"><a href="#依赖-1" class="headerlink" title="依赖"></a>依赖</h4><p>依赖基本和服务提供者相同，这个就不多BB了。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-<h4 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h4><p>application.yml</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 10000</span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-consumer</span><br><span class="line">  registry:</span><br><span class="line">    address: zookeeper://127.0.0.1:2181</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registr</span><br></pre></td></tr></table></figure>
-<h4 id="服务调用"><a href="#服务调用" class="headerlink" title="服务调用"></a>服务调用</h4><p>我这里直接创建个 Controller 来测试。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@RestController</span><br><span class="line">@RequestMapping(&quot;test&quot;)</span><br><span class="line">public class TestController &#123;</span><br><span class="line">    @Reference	//dubbo</span><br><span class="line">    UserService userService;</span><br><span class="line"></span><br><span class="line">    @GetMapping(&quot;test&quot;)</span><br><span class="line">    public List&lt;UserInfo&gt; test() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = userService.getUserInfoList();</span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="SpringBoot-启动类-1"><a href="#SpringBoot-启动类-1" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>这个启动类同样要加上 @EnableDubbo 注解。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserConsumerApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserConsumerApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>启动服务消费者后，断点调试、用 postman 测试一下。</p>
-<p><img src="https://s2.loli.net/2023/07/19/UGLvxHwCRNcMsqI.png" alt="断点调试"></p>
-<p><img src="https://s2.loli.net/2023/07/19/rXKsIJBAYU1Hlpk.png" alt="postman"></p>
-<p>可以看到已经大功告成了！！！</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="Dubbo-和-Spring-Cloud-区别"><a href="#Dubbo-和-Spring-Cloud-区别" class="headerlink" title="Dubbo 和 Spring Cloud 区别"></a>Dubbo 和 Spring Cloud 区别</h3><ol>
-<li>Dubbo 耦合较高，有一定约束。这是我使用中感受到的最大的区别，Dubbo 需要我们定义个抽象接口，然后提供方实现这个接口，消费方再通过这个接口进行调用。提供方和消费方都依赖于这个接口的模块，所以整个项目是有一定的耦合的。而Spring Cloud 我们使用 Feign 就比较自由，比较轻量化，通过 REST 调用，更灵活。这不能单纯地说是优点或者是缺点吧，毕竟接口定义过轻也很容易多版本的情况下导致接口文档与实际所展现功能不一致导致服务集成时的问题，或许对版本控制比较严格有时候反而会更加稳定。</li>
-<li>Dubbo底层是使用Netty这样的NIO框架，是基于TCP协议传输的；而 Spring Cloud 是基于 Http 协议+ REST 接口调用远程过程的通信。在传输协议和序列化方式上，Dubbo 的性能要比 Spring Cloud 更高。因为 Dubbo 是长连接并且用二进制传输，占用带宽更少。而 Spring Cloud 使用的是短连接并且使用 JSON 序列化，消耗更大。</li>
-<li>Dubbo 只是一个 RPC 框架，而 Spring Cloud 是一整套微服务的解决方案，因此它们的领域是不一样的。</li>
-<li>社区方面，Spring Cloud 要比 Dubbo 活跃很多很多很多很多……Dubbo 好久没更新了，而 Spring Cloud 目前还一直在更新，很活跃！</li>
-</ol>
-<p><img src="https://s2.loli.net/2023/07/19/Qt4rfk8dsqL1Ugb.png" alt="Dubbo 流泪"></p>
 ]]></content>
       <categories>
-        <category>Java</category>
-        <category>框架</category>
-        <category>Dubbo</category>
+        <category>CTF</category>
+        <category>Web</category>
+        <category>Writeup</category>
       </categories>
       <tags>
-        <tag>Dubbo</tag>
+        <tag>CTF</tag>
+        <tag>Web安全</tag>
+        <tag>Writeup</tag>
+        <tag>ctfhub</tag>
+        <tag>XSS</tag>
       </tags>
   </entry>
   <entry>
@@ -703,13 +754,11 @@
       </categories>
   </entry>
   <entry>
-    <title>替换空格</title>
-    <url>/2019/06/19/%E6%9B%BF%E6%8D%A2%E7%A9%BA%E6%A0%BC/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>先从前到后遍历一次，计算有多少个空格，然后再从后到前逐个替换。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void replaceSpace(char *str,int length) &#123;</span><br><span class="line">        int count=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(*(str+i)==&apos; &apos;)</span><br><span class="line">                count++;</span><br><span class="line">			cout &lt;&lt; *(str+i);</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">        for (int i = length - 1; i &gt;= 0; i--)&#123;</span><br><span class="line">            if (*(str+i) != &apos; &apos;)&#123;</span><br><span class="line">                *(str+i+count*2) = *(str+i);</span><br><span class="line">            &#125;else&#123;</span><br><span class="line">                count--;</span><br><span class="line">                *(str+i+(count)*2) = &apos;%&apos;;</span><br><span class="line">                *(str+i+(count)*2+1) = &apos;2&apos;;</span><br><span class="line">                *(str+i+(count)*2+2) = &apos;0&apos;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public String replaceSpace(StringBuffer str) &#123;</span><br><span class="line">        char ch[] = str.toString().toCharArray();</span><br><span class="line">        int count = 0;</span><br><span class="line">        for (int i = 0; i &lt; ch.length; i++) &#123;</span><br><span class="line">            if (ch[i] == &apos; &apos;) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        char tmp[] = new char[ch.length + 2 * count];</span><br><span class="line"></span><br><span class="line">        for (int i = ch.length-1; i &gt;= 0; i--) &#123;</span><br><span class="line">            if (ch[i] != &apos; &apos;) &#123;</span><br><span class="line">                tmp[i + 2 * count] = ch[i];</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                tmp[i + 2 * count] = &apos;0&apos;;</span><br><span class="line">                tmp[i + 2 * count - 1] = &apos;2&apos;;</span><br><span class="line">                tmp[i + 2 * count - 2] = &apos;%&apos;;</span><br><span class="line">                count--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return String.valueOf(tmp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
+    <title>二维数组的查找</title>
+    <url>/2019/06/19/%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84%E7%9A%84%E6%9F%A5%E6%89%BE/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    bool Find(int target, vector&lt;vector&lt;int&gt; &gt; array) &#123;</span><br><span class="line">        int rowTotal = array.size(), columnTotal = array[0].size();</span><br><span class="line">        bool hasTarget = false;</span><br><span class="line">		</span><br><span class="line">        if ((rowTotal == 0) || (columnTotal == 0))&#123;</span><br><span class="line">            return false;  //空数组直接返回false</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for (int i = 0, j = columnTotal - 1; (i &lt;= rowTotal - 1) &amp;&amp;(j &gt;= 0);)&#123;</span><br><span class="line">            if (array[i][j] == target)&#123;</span><br><span class="line">                hasTarget = true;</span><br><span class="line">                break;</span><br><span class="line">            &#125;else if (array[i][j] &lt; target)&#123;</span><br><span class="line">                ++i;</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                --j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return hasTarget;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
       <categories>
         <category>算法题</category>
         <category>剑指offer算法题</category>
@@ -790,7 +839,6 @@
         <category>CTF</category>
         <category>Web</category>
         <category>Writeup</category>
-        <category>web</category>
         <category>sqli-labs</category>
       </categories>
       <tags>
@@ -800,6 +848,80 @@
         <tag>sqli-labs</tag>
         <tag>sql注入</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>替换空格</title>
+    <url>/2019/06/19/%E6%9B%BF%E6%8D%A2%E7%A9%BA%E6%A0%BC/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>先从前到后遍历一次，计算有多少个空格，然后再从后到前逐个替换。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void replaceSpace(char *str,int length) &#123;</span><br><span class="line">        int count=0;</span><br><span class="line">        for(int i=0;i&lt;length;i++)&#123;</span><br><span class="line">            if(*(str+i)==&apos; &apos;)</span><br><span class="line">                count++;</span><br><span class="line">			cout &lt;&lt; *(str+i);</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">        for (int i = length - 1; i &gt;= 0; i--)&#123;</span><br><span class="line">            if (*(str+i) != &apos; &apos;)&#123;</span><br><span class="line">                *(str+i+count*2) = *(str+i);</span><br><span class="line">            &#125;else&#123;</span><br><span class="line">                count--;</span><br><span class="line">                *(str+i+(count)*2) = &apos;%&apos;;</span><br><span class="line">                *(str+i+(count)*2+1) = &apos;2&apos;;</span><br><span class="line">                *(str+i+(count)*2+2) = &apos;0&apos;;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Solution &#123;</span><br><span class="line">    public String replaceSpace(StringBuffer str) &#123;</span><br><span class="line">        char ch[] = str.toString().toCharArray();</span><br><span class="line">        int count = 0;</span><br><span class="line">        for (int i = 0; i &lt; ch.length; i++) &#123;</span><br><span class="line">            if (ch[i] == &apos; &apos;) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        char tmp[] = new char[ch.length + 2 * count];</span><br><span class="line"></span><br><span class="line">        for (int i = ch.length-1; i &gt;= 0; i--) &#123;</span><br><span class="line">            if (ch[i] != &apos; &apos;) &#123;</span><br><span class="line">                tmp[i + 2 * count] = ch[i];</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                tmp[i + 2 * count] = &apos;0&apos;;</span><br><span class="line">                tmp[i + 2 * count - 1] = &apos;2&apos;;</span><br><span class="line">                tmp[i + 2 * count - 2] = &apos;%&apos;;</span><br><span class="line">                count--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return String.valueOf(tmp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>删除链表中重复的结点</title>
+    <url>/2019/06/21/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E7%BB%93%E7%82%B9/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5 处理后为 1-&gt;2-&gt;5</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这道题做了比较久……感觉有一点点难写。</p>
+<p>主要看下面这幅图理解</p>
+<p><img src="https://i.loli.net/2019/06/21/5d0cdbe594eda16090.png" alt="思路图"></p>
+<p>先建一个头结点，返回的时候返回这个头结点。<br>再建两个临时结点p、q，p用来作存储结点，q用来跳过重复结点。如图中第二个q的位置，先判断p的下一个结点位置是否与q一样，不一样的话先把q的下一个结点位置存到p的下一个结点，这样就先跳过了前面的重复结点。如果p的下一个结点是一样的，那就是图中第二个p的位置那里，这个时候证明了当前的q结点是不重复的，此时p直接存储q结点。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/*</span><br><span class="line">struct ListNode &#123;</span><br><span class="line">    int val;</span><br><span class="line">    struct ListNode *next;</span><br><span class="line">    ListNode(int x) :</span><br><span class="line">        val(x), next(NULL) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    ListNode* deleteDuplication(ListNode* pHead)</span><br><span class="line">    &#123;</span><br><span class="line">        if (pHead == NULL || pHead-&gt;next == NULL) &#123;</span><br><span class="line">            return pHead;</span><br><span class="line">        &#125;</span><br><span class="line">        int first = -1;</span><br><span class="line">        if (pHead-&gt;val == first) &#123;</span><br><span class="line">            first = -2;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        ListNode *head = new ListNode(first);</span><br><span class="line">        head-&gt;next = pHead;</span><br><span class="line">        </span><br><span class="line">        ListNode *p = head;</span><br><span class="line">        ListNode *q = head-&gt;next;</span><br><span class="line">        </span><br><span class="line">        while (q != NULL) &#123;</span><br><span class="line">            while ((q-&gt;next != NULL) &amp;&amp; (q-&gt;val == q-&gt;next-&gt;val)) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (p-&gt;next != q) &#123;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">                p-&gt;next = q;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                p = q;</span><br><span class="line">                q = q-&gt;next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return head-&gt;next;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>求1+2+3+…...+n</title>
+    <url>/2019/07/01/%E6%B1%821-2-3-%E2%80%A6-n/</url>
+    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>求1+2+3+…+n，要求不能使用乘除法、for、while、if、else、switch、case等关键字及条件判断语句（A?B:C）。</p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>有一种很妙很简洁的解法，用 &amp;&amp; 短路，然后递归。</p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int Sum_Solution(int n) &#123;</span><br><span class="line">        n &amp;&amp; (n += Sum_Solution(n-1));</span><br><span class="line">        return n;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>算法题</category>
+        <category>剑指offer算法题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>使用cryptsetup加密硬盘</title>
+    <url>/2019/12/09/%E4%BD%BF%E7%94%A8cryptsetup%E5%8A%A0%E5%AF%86%E7%A1%AC%E7%9B%98/</url>
+    <content><![CDATA[<p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
+<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
+<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
+<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
+<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
+<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
+<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
+<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
+<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
+<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
+<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
+<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
+<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
+<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
+<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
+<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
+<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
+<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
+<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
+<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
+<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
+]]></content>
+      <categories>
+        <category>树莓派</category>
+      </categories>
   </entry>
   <entry>
     <title>单例模式</title>
@@ -826,74 +948,30 @@
       </categories>
   </entry>
   <entry>
-    <title>求1+2+3+…...+n</title>
-    <url>/2019/07/01/%E6%B1%821-2-3-%E2%80%A6-n/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>求1+2+3+…+n，要求不能使用乘除法、for、while、if、else、switch、case等关键字及条件判断语句（A?B:C）。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>有一种很妙很简洁的解法，用 &amp;&amp; 短路，然后递归。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int Sum_Solution(int n) &#123;</span><br><span class="line">        n &amp;&amp; (n += Sum_Solution(n-1));</span><br><span class="line">        return n;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>二维数组的查找</title>
-    <url>/2019/06/19/%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84%E7%9A%84%E6%9F%A5%E6%89%BE/</url>
-    <content><![CDATA[<h3 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h3><p>在一个二维数组中（每个一维数组的长度相同），每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。</p>
-<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>这是一个有序矩阵，可以从左下角或者右上角开始查找。例如从右上角开始查找，查找数字比当前数字大时，下移，反之则左移。直到边界都没找到的话，则该数组不含有该整数。</p>
-<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    bool Find(int target, vector&lt;vector&lt;int&gt; &gt; array) &#123;</span><br><span class="line">        int rowTotal = array.size(), columnTotal = array[0].size();</span><br><span class="line">        bool hasTarget = false;</span><br><span class="line">		</span><br><span class="line">        if ((rowTotal == 0) || (columnTotal == 0))&#123;</span><br><span class="line">            return false;  //空数组直接返回false</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for (int i = 0, j = columnTotal - 1; (i &lt;= rowTotal - 1) &amp;&amp;(j &gt;= 0);)&#123;</span><br><span class="line">            if (array[i][j] == target)&#123;</span><br><span class="line">                hasTarget = true;</span><br><span class="line">                break;</span><br><span class="line">            &#125;else if (array[i][j] &lt; target)&#123;</span><br><span class="line">                ++i;</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                --j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return hasTarget;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>算法题</category>
-        <category>剑指offer算法题</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>树莓派使用samba在局域网共享文件</title>
-    <url>/2019/12/15/%E6%A0%91%E8%8E%93%E6%B4%BE%E4%BD%BF%E7%94%A8samba%E5%9C%A8%E5%B1%80%E5%9F%9F%E7%BD%91%E5%85%B1%E4%BA%AB%E6%96%87%E4%BB%B6/</url>
-    <content><![CDATA[<p>新买的树莓派4终于到了！！！我的树莓派3B+光荣退休！到手第一步当然是用树莓派通过SMB共享我硬盘里的文件啦，随传随看。</p>
-<p><img src="https://s2.loli.net/2023/07/19/l72kpZNU8OXwPWy.jpg" alt="你懂的"></p>
-<h3 id="安装samba"><a href="#安装samba" class="headerlink" title="安装samba"></a>安装samba</h3><p>samba是一个能让Linux系统应用Microsoft网络通讯协议的软件，而SMB是Server Message Block的缩写，即为服务器消息块 ，SMB主要是作为Microsoft的网络通讯协议，后来samba将SMB通信协议应用到了Linux系统上，就形成了现在的samba软件。后来微软又把 SMB 改名为 CIFS（Common Internet File System），即公共 Internet 文件系统，并且加入了许多新的功能，这样一来，使得samba具有了更强大的功能。</p>
-<p>所以首先得安装samba。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">apt-get install samba samba-common-bin</span><br></pre></td></tr></table></figure></p>
-<h3 id="新建用户并与要共享的文件夹绑定"><a href="#新建用户并与要共享的文件夹绑定" class="headerlink" title="新建用户并与要共享的文件夹绑定"></a>新建用户并与要共享的文件夹绑定</h3><p>接下来先新建一个用户用于其它设备通过samba访问共享文件夹时登录访问。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">useradd share	//新建用户</span><br><span class="line">passwd share    //设置用户密码</span><br><span class="line">mkdir /home/share    //新建一个文件夹</span><br><span class="line">chown -R share /home/share    //绑定</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2023/07/19/NtuRO2EzSZHdYyU.jpg" alt="新建用户"></p>
-<h3 id="配置samba"><a href="#配置samba" class="headerlink" title="配置samba"></a>配置samba</h3><p>用户和文件夹都建好了，现在就要根据情况修改配置了。配置文件路径是 /etc/samba/smb.conf ，打开这个文件，在文件最后添加共享账户和共享文件夹的一些信息。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[HandsomeDong]	#网络中显示的文件名称</span><br><span class="line">    path = /home/share	#文件路径</span><br><span class="line">    valid users = share	#允许浏览的用户</span><br><span class="line">    browseable = yes	#允许浏览</span><br><span class="line">    public = yes		#允许共享访问</span><br><span class="line">    writable = yes		#允许写入</span><br></pre></td></tr></table></figure>
-<h3 id="设置共享密码以及重启"><a href="#设置共享密码以及重启" class="headerlink" title="设置共享密码以及重启"></a>设置共享密码以及重启</h3><p>访问共享文件时，用的是samba设置的共享密码，而不是linux用户密码，现在要设置的就是共享密码，设置好后直接重启samba服务。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">smbpasswd -a share</span><br><span class="line">service smbd restart</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2023/07/19/ukJ68IjhBtnbegr.jpg" alt="设置密码、重启samba服务"></p>
-<h3 id="访问共享文件夹"><a href="#访问共享文件夹" class="headerlink" title="访问共享文件夹"></a>访问共享文件夹</h3><h4 id="电脑访问"><a href="#电脑访问" class="headerlink" title="电脑访问"></a>电脑访问</h4><p>用windows系统访问共享文件夹，只需在资源管理器输入 \\IP 就可以直接看到共享文件夹了，输入用户名和共享密码就可以访问了。现在把我前几天买的1T硬盘挂载到这个文件夹下，我就可以肆意地往里面存片子了！！！</p>
-<p><img src="https://s2.loli.net/2023/07/19/YdNgS6hDXkcOGp3.jpg" alt="文件夹"></p>
-<p><img src="https://s2.loli.net/2023/07/19/I2ERBc931Ylautb.jpg" alt="输入用户名、密码"></p>
-<p><img src="https://s2.loli.net/2023/07/19/UNiGLEF184wXqJW.jpg" alt="片子"></p>
-<h4 id="安卓手机访问"><a href="#安卓手机访问" class="headerlink" title="安卓手机访问"></a>安卓手机访问</h4><p>安卓手机有不少APP都能使用SMB协议，我用的比较多的是 Solid Explorer 和 Kodi。Solid Explorer用来管理文件，视频、文本、音频、图片什么的浏览、管理起来都比较方便，Kodi浏览视频和图片非常好，非常强大！</p>
-<h3 id="ipad、iphone访问"><a href="#ipad、iphone访问" class="headerlink" title="ipad、iphone访问"></a>ipad、iphone访问</h3><p>App Store上有很多软件都可以，收费的体验更好！</p>
-]]></content>
-      <categories>
-        <category>树莓派</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>策略模式</title>
-    <url>/2019/06/15/%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</url>
-    <content><![CDATA[<h1 id="设计模式之策略模式"><a href="#设计模式之策略模式" class="headerlink" title="设计模式之策略模式"></a>设计模式之策略模式</h1><p>以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！</p>
-<p><img src="https://i.loli.net/2019/06/17/5d067ce888ffd96560.png" alt="我技术好菜啊"></p>
-<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>策略模式(Strategy Pattern)是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。</p>
-<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p>比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前的一个动作、状态，我们可以把这一类随时可变的动作从角色里抽离出来并封装起来。</p>
-<h3 id="2-1-动作接口"><a href="#2-1-动作接口" class="headerlink" title="2.1 动作接口"></a>2.1 动作接口</h3><p>首先定义一个动作接口，所有的具体动作都要实现这个接口。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Action &#123;</span><br><span class="line">    public void action();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-2-具体动作实现接口"><a href="#2-2-具体动作实现接口" class="headerlink" title="2.2 具体动作实现接口"></a>2.2 具体动作实现接口</h3><p>接下来就是具体动作了，授课、学习、睡觉。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 授课动作</span><br><span class="line">public class TeachAction implements Action &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在授课！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 学习动作</span><br><span class="line">public class LearnAction implements Action&#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在学习！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 睡觉动作</span><br><span class="line">public class SleepAction implements Action &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在睡大觉！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-3-Person抽象类"><a href="#2-3-Person抽象类" class="headerlink" title="2.3 Person抽象类"></a>2.3 Person抽象类</h3><p>定义抽象类 Person，在该类里加入两个实例变量，一个是字符串变量name，一个是Action接口类型action（而不是具体类实现类型）。方法doing()里调用action的action()方法。Person抽象类不用关心action的具体对象到底是什么，它只需关心该对象能有action()就行了。并且建一个setAction()来通过动态改变action的具体实现类型。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Person &#123;</span><br><span class="line">    Action action;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    public Person()&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void doing() &#123;</span><br><span class="line">        System.out.print(name);</span><br><span class="line">        action.action();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setAction(Action action)&#123;</span><br><span class="line">        this.action = action;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-4-具体角色类继承Person类"><a href="#2-4-具体角色类继承Person类" class="headerlink" title="2.4 具体角色类继承Person类"></a>2.4 具体角色类继承Person类</h3><p>Teacher类在构造时将action实例变量初始化为TeachAction的新实例，而Student类则将action实例变量初始化为LearnAction的新实例。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// Teacher类</span><br><span class="line">public class Teacher extends Person&#123;</span><br><span class="line">    public Teacher(String name) &#123;</span><br><span class="line">        this.action = new TeachAction();</span><br><span class="line">        this.name = name + &quot;老师&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Student类</span><br><span class="line">public class Student extends Person &#123;</span><br><span class="line">    public Student(String name)&#123;</span><br><span class="line">        this.action = new LearnAction();</span><br><span class="line">        this.name = name + &quot;同学&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    <title>装饰者模式</title>
+    <url>/2019/06/21/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
+    <content><![CDATA[<h2 id="设计模式之装饰者模式"><a href="#设计模式之装饰者模式" class="headerlink" title="设计模式之装饰者模式"></a>设计模式之装饰者模式</h2><p>最近在买奶茶的时候突发奇想，假如我要设计一个奶茶订单系统，这个奶茶价格计算要怎样设计才算方便呢？毕竟奶茶种类那么多，而且能加的配料也很多，并且奶茶店可能随时还会增加奶茶的种类及可选的配料，想要满足这些经常改变或增加的需求，怎么设计代码才是易维护、易扩展的呢？在了解了装饰者模式之后，我终于知道该怎么做了！</p>
+<p><img src="https://i.loli.net/2019/06/21/5d0cf8c3a00af59704.png" alt="奶茶奶茶奶茶"></p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>装饰者模式(Decorator Pattern)动态地将责任附加在对象上。若要扩展功能，装饰者提供了比继承更有弹性的替代方案。</p>
+<p>装饰者模式包含以下角色：</p>
+<ol>
+<li>抽象构件</li>
+<li>具体构件</li>
+<li>抽象装饰类</li>
+<li>具体装饰类</li>
+</ol>
+<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p> 按照大白话来讲，抽象构件就是奶茶，具体构件是珍珠奶茶、波霸奶茶、红豆奶茶这些具体的奶茶。而抽象装饰类和具体装饰类是装饰者模式的设计核心了，利用它们我们可以动态地给奶茶加上配料。</p>
+<h3 id="2-1-抽象奶茶类"><a href="#2-1-抽象奶茶类" class="headerlink" title="2.1 抽象奶茶类"></a>2.1 抽象奶茶类</h3> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class MilkTea &#123;</span><br><span class="line">    public abstract String getDescription();</span><br><span class="line">    public abstract int cost();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-具体奶茶类"><a href="#2-2-具体奶茶类" class="headerlink" title="2.2 具体奶茶类"></a>2.2 具体奶茶类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 波霸奶茶，一杯15块钱</span><br><span class="line">public class BoBaMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;波霸奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 15;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 红豆奶茶，一杯12块钱</span><br><span class="line">public class HongDouMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;红豆奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 12;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-抽象配料类"><a href="#2-3-抽象配料类" class="headerlink" title="2.3 抽象配料类"></a>2.3 抽象配料类</h3><p>由于我们是让配料来扩展奶茶，因此需要继承抽象奶茶类并且实现里面的抽象方法。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Decorator extends MilkTea&#123;</span><br><span class="line">    private MilkTea milkTea;</span><br><span class="line"></span><br><span class="line">    public Decorator(MilkTea milkTea)&#123;</span><br><span class="line">        this.milkTea = milkTea;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return milkTea.getDescription();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return milkTea.cost();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-具体配料类"><a href="#2-4-具体配料类" class="headerlink" title="2.4 具体配料类"></a>2.4 具体配料类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 加奇异果要3块钱！</span><br><span class="line">public class QiYiGuoDecorator extends Decorator &#123;</span><br><span class="line">    public QiYiGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加奇异果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 加椰果才要2块钱！</span><br><span class="line">public class YeGuoDecorator extends Decorator &#123;</span><br><span class="line">    public YeGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加椰果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static void main(String args[])&#123;</span><br><span class="line">    Person handsomeDong = new Teacher(&quot;帅比东&quot;);</span><br><span class="line">    Person xiaoQiang = new Student(&quot;小强&quot;);</span><br><span class="line"></span><br><span class="line">    handsomeDong.doing();</span><br><span class="line">    xiaoQiang.doing();</span><br><span class="line"></span><br><span class="line">    xiaoQiang.setAction(new SleepAction());</span><br><span class="line">    xiaoQiang.doing();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2019/06/16/5d0517243e28624089.png" alt="测试结果"></p>
-<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.算法可以自由切换，改策略很方便<br>2.增加一个策略，就多增加一个类实现接口就好了。</p>
-<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>每一个策略都是一个类，复用的可能性很小、类数量增多</p>
-<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.许多相关类仅仅是行为不同。<br>2.需要使用一个算法的不同实现。<br>3.算法使用了客户不应该知道的数据。策略模式可以避免暴露复杂的、与算法相关的数据结构。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String args[])&#123;</span><br><span class="line">        //先来一杯红豆奶茶，加椰果，加奇异果！</span><br><span class="line">        MilkTea hongDouMilkTea = new HongDouMilkTea();</span><br><span class="line">        hongDouMilkTea = new YeGuoDecorator(hongDouMilkTea);</span><br><span class="line">        hongDouMilkTea = new QiYiGuoDecorator(hongDouMilkTea);</span><br><span class="line">        System.out.println(hongDouMilkTea.getDescription() + &quot;，价格：&quot; + hongDouMilkTea.cost() + &quot;元&quot;);</span><br><span class="line"></span><br><span class="line">        //再来一杯波霸奶茶，再加双倍椰果，别问我为什么！我爱椰果！</span><br><span class="line">        MilkTea boBaMilkTea = new BoBaMilkTea();</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        System.out.println(boBaMilkTea.getDescription() + &quot;，价格：&quot; + boBaMilkTea.cost() + &quot;元&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/06/22/5d0d03ced660424319.png" alt="测试结果"></p>
+<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.装饰模式与继承关系的目的都是要扩展对象的功能，但是装饰模式可以提供比继承更多的灵活性。<br>2.通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合。可以使用多个具体装饰类来装饰同一对象，得到功能更为强大的对象。<br>3.具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，在使用时再对其进行组合，原有代码无须改变，符合“开闭原则”</p>
+<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>1.使用装饰模式进行系统设计时将产生很多小对象，这些对象的区别在于它们之间相互连接的方式有所不同，而不是它们的类或者属性值有所不同，同时还将产生很多具体装饰类。这些装饰类和小对象的产生将增加系统的复杂度。<br>2.这种比继承更加灵活机动的特性，也同时意味着装饰模式比继承更加易于出错，排错也很困难，对于多次装饰的对象，调试时寻找错误可能需要逐级排查，较为烦琐。</p>
+<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.当不能采用继承的方式对系统进行扩充或者采用继承不利于系统扩展和维护时。不能采用继承的情况主要有两类：第一类是系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类数目呈爆炸性增长；第二类是因为类定义不能继承（如final类）.<br>2.在不影响其他对象的情况下，以动态、透明的方式给单个对象添加职责。</p>
 ]]></content>
       <categories>
         <category>设计模式</category>
@@ -932,6 +1010,58 @@
       <tags>
         <tag>JVM优化</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>策略模式</title>
+    <url>/2019/06/15/%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</url>
+    <content><![CDATA[<h1 id="设计模式之策略模式"><a href="#设计模式之策略模式" class="headerlink" title="设计模式之策略模式"></a>设计模式之策略模式</h1><p>以前听说过设计模式，但没有了解、学习过，最近买了本《Head First设计模式》来看，感觉设计模式真是太妙了！！！想来实在惭愧，现在才开始学习设计模式！</p>
+<p><img src="https://i.loli.net/2019/06/17/5d067ce888ffd96560.png" alt="我技术好菜啊"></p>
+<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>策略模式(Strategy Pattern)是指对一系列的算法定义，并将每一个算法封装起来，而且使它们还可以相互替换。策略模式让算法独立于使用它的客户而独立变化。</p>
+<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p>比如现在就想实现很简单的功能——学生在学习，老师在授课。学习和授课都是角色当前的一个动作、状态，我们可以把这一类随时可变的动作从角色里抽离出来并封装起来。</p>
+<h3 id="2-1-动作接口"><a href="#2-1-动作接口" class="headerlink" title="2.1 动作接口"></a>2.1 动作接口</h3><p>首先定义一个动作接口，所有的具体动作都要实现这个接口。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Action &#123;</span><br><span class="line">    public void action();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-具体动作实现接口"><a href="#2-2-具体动作实现接口" class="headerlink" title="2.2 具体动作实现接口"></a>2.2 具体动作实现接口</h3><p>接下来就是具体动作了，授课、学习、睡觉。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 授课动作</span><br><span class="line">public class TeachAction implements Action &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在授课！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 学习动作</span><br><span class="line">public class LearnAction implements Action&#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在学习！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 睡觉动作</span><br><span class="line">public class SleepAction implements Action &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void action() &#123;</span><br><span class="line">        System.out.println(&quot;正在睡大觉！&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-Person抽象类"><a href="#2-3-Person抽象类" class="headerlink" title="2.3 Person抽象类"></a>2.3 Person抽象类</h3><p>定义抽象类 Person，在该类里加入两个实例变量，一个是字符串变量name，一个是Action接口类型action（而不是具体类实现类型）。方法doing()里调用action的action()方法。Person抽象类不用关心action的具体对象到底是什么，它只需关心该对象能有action()就行了。并且建一个setAction()来通过动态改变action的具体实现类型。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Person &#123;</span><br><span class="line">    Action action;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    public Person()&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void doing() &#123;</span><br><span class="line">        System.out.print(name);</span><br><span class="line">        action.action();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setAction(Action action)&#123;</span><br><span class="line">        this.action = action;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-具体角色类继承Person类"><a href="#2-4-具体角色类继承Person类" class="headerlink" title="2.4 具体角色类继承Person类"></a>2.4 具体角色类继承Person类</h3><p>Teacher类在构造时将action实例变量初始化为TeachAction的新实例，而Student类则将action实例变量初始化为LearnAction的新实例。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// Teacher类</span><br><span class="line">public class Teacher extends Person&#123;</span><br><span class="line">    public Teacher(String name) &#123;</span><br><span class="line">        this.action = new TeachAction();</span><br><span class="line">        this.name = name + &quot;老师&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Student类</span><br><span class="line">public class Student extends Person &#123;</span><br><span class="line">    public Student(String name)&#123;</span><br><span class="line">        this.action = new LearnAction();</span><br><span class="line">        this.name = name + &quot;同学&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static void main(String args[])&#123;</span><br><span class="line">    Person handsomeDong = new Teacher(&quot;帅比东&quot;);</span><br><span class="line">    Person xiaoQiang = new Student(&quot;小强&quot;);</span><br><span class="line"></span><br><span class="line">    handsomeDong.doing();</span><br><span class="line">    xiaoQiang.doing();</span><br><span class="line"></span><br><span class="line">    xiaoQiang.setAction(new SleepAction());</span><br><span class="line">    xiaoQiang.doing();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2019/06/16/5d0517243e28624089.png" alt="测试结果"></p>
+<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.算法可以自由切换，改策略很方便<br>2.增加一个策略，就多增加一个类实现接口就好了。</p>
+<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>每一个策略都是一个类，复用的可能性很小、类数量增多</p>
+<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.许多相关类仅仅是行为不同。<br>2.需要使用一个算法的不同实现。<br>3.算法使用了客户不应该知道的数据。策略模式可以避免暴露复杂的、与算法相关的数据结构。</p>
+]]></content>
+      <categories>
+        <category>设计模式</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>树莓派使用samba在局域网共享文件</title>
+    <url>/2019/12/15/%E6%A0%91%E8%8E%93%E6%B4%BE%E4%BD%BF%E7%94%A8samba%E5%9C%A8%E5%B1%80%E5%9F%9F%E7%BD%91%E5%85%B1%E4%BA%AB%E6%96%87%E4%BB%B6/</url>
+    <content><![CDATA[<p>新买的树莓派4终于到了！！！我的树莓派3B+光荣退休！到手第一步当然是用树莓派通过SMB共享我硬盘里的文件啦，随传随看。</p>
+<p><img src="https://s2.loli.net/2023/07/19/l72kpZNU8OXwPWy.jpg" alt="你懂的"></p>
+<h3 id="安装samba"><a href="#安装samba" class="headerlink" title="安装samba"></a>安装samba</h3><p>samba是一个能让Linux系统应用Microsoft网络通讯协议的软件，而SMB是Server Message Block的缩写，即为服务器消息块 ，SMB主要是作为Microsoft的网络通讯协议，后来samba将SMB通信协议应用到了Linux系统上，就形成了现在的samba软件。后来微软又把 SMB 改名为 CIFS（Common Internet File System），即公共 Internet 文件系统，并且加入了许多新的功能，这样一来，使得samba具有了更强大的功能。</p>
+<p>所以首先得安装samba。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">apt-get install samba samba-common-bin</span><br></pre></td></tr></table></figure></p>
+<h3 id="新建用户并与要共享的文件夹绑定"><a href="#新建用户并与要共享的文件夹绑定" class="headerlink" title="新建用户并与要共享的文件夹绑定"></a>新建用户并与要共享的文件夹绑定</h3><p>接下来先新建一个用户用于其它设备通过samba访问共享文件夹时登录访问。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">useradd share	//新建用户</span><br><span class="line">passwd share    //设置用户密码</span><br><span class="line">mkdir /home/share    //新建一个文件夹</span><br><span class="line">chown -R share /home/share    //绑定</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2023/07/19/NtuRO2EzSZHdYyU.jpg" alt="新建用户"></p>
+<h3 id="配置samba"><a href="#配置samba" class="headerlink" title="配置samba"></a>配置samba</h3><p>用户和文件夹都建好了，现在就要根据情况修改配置了。配置文件路径是 /etc/samba/smb.conf ，打开这个文件，在文件最后添加共享账户和共享文件夹的一些信息。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[HandsomeDong]	#网络中显示的文件名称</span><br><span class="line">    path = /home/share	#文件路径</span><br><span class="line">    valid users = share	#允许浏览的用户</span><br><span class="line">    browseable = yes	#允许浏览</span><br><span class="line">    public = yes		#允许共享访问</span><br><span class="line">    writable = yes		#允许写入</span><br></pre></td></tr></table></figure>
+<h3 id="设置共享密码以及重启"><a href="#设置共享密码以及重启" class="headerlink" title="设置共享密码以及重启"></a>设置共享密码以及重启</h3><p>访问共享文件时，用的是samba设置的共享密码，而不是linux用户密码，现在要设置的就是共享密码，设置好后直接重启samba服务。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">smbpasswd -a share</span><br><span class="line">service smbd restart</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2023/07/19/ukJ68IjhBtnbegr.jpg" alt="设置密码、重启samba服务"></p>
+<h3 id="访问共享文件夹"><a href="#访问共享文件夹" class="headerlink" title="访问共享文件夹"></a>访问共享文件夹</h3><h4 id="电脑访问"><a href="#电脑访问" class="headerlink" title="电脑访问"></a>电脑访问</h4><p>用windows系统访问共享文件夹，只需在资源管理器输入 \\IP 就可以直接看到共享文件夹了，输入用户名和共享密码就可以访问了。现在把我前几天买的1T硬盘挂载到这个文件夹下，我就可以肆意地往里面存片子了！！！</p>
+<p><img src="https://s2.loli.net/2023/07/19/YdNgS6hDXkcOGp3.jpg" alt="文件夹"></p>
+<p><img src="https://s2.loli.net/2023/07/19/I2ERBc931Ylautb.jpg" alt="输入用户名、密码"></p>
+<p><img src="https://s2.loli.net/2023/07/19/UNiGLEF184wXqJW.jpg" alt="片子"></p>
+<h4 id="安卓手机访问"><a href="#安卓手机访问" class="headerlink" title="安卓手机访问"></a>安卓手机访问</h4><p>安卓手机有不少APP都能使用SMB协议，我用的比较多的是 Solid Explorer 和 Kodi。Solid Explorer用来管理文件，视频、文本、音频、图片什么的浏览、管理起来都比较方便，Kodi浏览视频和图片非常好，非常强大！</p>
+<h3 id="ipad、iphone访问"><a href="#ipad、iphone访问" class="headerlink" title="ipad、iphone访问"></a>ipad、iphone访问</h3><p>App Store上有很多软件都可以，收费的体验更好！</p>
+]]></content>
+      <categories>
+        <category>树莓派</category>
+      </categories>
   </entry>
   <entry>
     <title>除了 Websocket ，服务端还有什么办法能向浏览器主动推送信息？</title>
@@ -986,36 +1116,6 @@
         <tag>websocket</tag>
         <tag>Server-Sent Events</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>装饰者模式</title>
-    <url>/2019/06/21/%E8%A3%85%E9%A5%B0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
-    <content><![CDATA[<h2 id="设计模式之装饰者模式"><a href="#设计模式之装饰者模式" class="headerlink" title="设计模式之装饰者模式"></a>设计模式之装饰者模式</h2><p>最近在买奶茶的时候突发奇想，假如我要设计一个奶茶订单系统，这个奶茶价格计算要怎样设计才算方便呢？毕竟奶茶种类那么多，而且能加的配料也很多，并且奶茶店可能随时还会增加奶茶的种类及可选的配料，想要满足这些经常改变或增加的需求，怎么设计代码才是易维护、易扩展的呢？在了解了装饰者模式之后，我终于知道该怎么做了！</p>
-<p><img src="https://i.loli.net/2019/06/21/5d0cf8c3a00af59704.png" alt="奶茶奶茶奶茶"></p>
-<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h2><p>装饰者模式(Decorator Pattern)动态地将责任附加在对象上。若要扩展功能，装饰者提供了比继承更有弹性的替代方案。</p>
-<p>装饰者模式包含以下角色：</p>
-<ol>
-<li>抽象构件</li>
-<li>具体构件</li>
-<li>抽象装饰类</li>
-<li>具体装饰类</li>
-</ol>
-<h2 id="2-实例说明"><a href="#2-实例说明" class="headerlink" title="2.实例说明"></a>2.实例说明</h2><p> 按照大白话来讲，抽象构件就是奶茶，具体构件是珍珠奶茶、波霸奶茶、红豆奶茶这些具体的奶茶。而抽象装饰类和具体装饰类是装饰者模式的设计核心了，利用它们我们可以动态地给奶茶加上配料。</p>
-<h3 id="2-1-抽象奶茶类"><a href="#2-1-抽象奶茶类" class="headerlink" title="2.1 抽象奶茶类"></a>2.1 抽象奶茶类</h3> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class MilkTea &#123;</span><br><span class="line">    public abstract String getDescription();</span><br><span class="line">    public abstract int cost();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-2-具体奶茶类"><a href="#2-2-具体奶茶类" class="headerlink" title="2.2 具体奶茶类"></a>2.2 具体奶茶类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 波霸奶茶，一杯15块钱</span><br><span class="line">public class BoBaMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;波霸奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 15;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 红豆奶茶，一杯12块钱</span><br><span class="line">public class HongDouMilkTea extends MilkTea &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return &quot;红豆奶茶&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return 12;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-3-抽象配料类"><a href="#2-3-抽象配料类" class="headerlink" title="2.3 抽象配料类"></a>2.3 抽象配料类</h3><p>由于我们是让配料来扩展奶茶，因此需要继承抽象奶茶类并且实现里面的抽象方法。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public abstract class Decorator extends MilkTea&#123;</span><br><span class="line">    private MilkTea milkTea;</span><br><span class="line"></span><br><span class="line">    public Decorator(MilkTea milkTea)&#123;</span><br><span class="line">        this.milkTea = milkTea;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return milkTea.getDescription();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return milkTea.cost();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-4-具体配料类"><a href="#2-4-具体配料类" class="headerlink" title="2.4 具体配料类"></a>2.4 具体配料类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 加奇异果要3块钱！</span><br><span class="line">public class QiYiGuoDecorator extends Decorator &#123;</span><br><span class="line">    public QiYiGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加奇异果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 3;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 加椰果才要2块钱！</span><br><span class="line">public class YeGuoDecorator extends Decorator &#123;</span><br><span class="line">    public YeGuoDecorator(MilkTea milkTea)&#123;</span><br><span class="line">        super(milkTea);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return super.getDescription() + &quot; 加椰果&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int cost() &#123;</span><br><span class="line">        return super.cost() + 2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="3-测试"><a href="#3-测试" class="headerlink" title="3.测试"></a>3.测试</h2><p>测试代码和测试结果如下。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String args[])&#123;</span><br><span class="line">        //先来一杯红豆奶茶，加椰果，加奇异果！</span><br><span class="line">        MilkTea hongDouMilkTea = new HongDouMilkTea();</span><br><span class="line">        hongDouMilkTea = new YeGuoDecorator(hongDouMilkTea);</span><br><span class="line">        hongDouMilkTea = new QiYiGuoDecorator(hongDouMilkTea);</span><br><span class="line">        System.out.println(hongDouMilkTea.getDescription() + &quot;，价格：&quot; + hongDouMilkTea.cost() + &quot;元&quot;);</span><br><span class="line"></span><br><span class="line">        //再来一杯波霸奶茶，再加双倍椰果，别问我为什么！我爱椰果！</span><br><span class="line">        MilkTea boBaMilkTea = new BoBaMilkTea();</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        boBaMilkTea = new YeGuoDecorator(boBaMilkTea);</span><br><span class="line">        System.out.println(boBaMilkTea.getDescription() + &quot;，价格：&quot; + boBaMilkTea.cost() + &quot;元&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://i.loli.net/2019/06/22/5d0d03ced660424319.png" alt="测试结果"></p>
-<h2 id="4-优缺点"><a href="#4-优缺点" class="headerlink" title="4.优缺点"></a>4.优缺点</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><p>1.装饰模式与继承关系的目的都是要扩展对象的功能，但是装饰模式可以提供比继承更多的灵活性。<br>2.通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合。可以使用多个具体装饰类来装饰同一对象，得到功能更为强大的对象。<br>3.具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，在使用时再对其进行组合，原有代码无须改变，符合“开闭原则”</p>
-<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><p>1.使用装饰模式进行系统设计时将产生很多小对象，这些对象的区别在于它们之间相互连接的方式有所不同，而不是它们的类或者属性值有所不同，同时还将产生很多具体装饰类。这些装饰类和小对象的产生将增加系统的复杂度。<br>2.这种比继承更加灵活机动的特性，也同时意味着装饰模式比继承更加易于出错，排错也很困难，对于多次装饰的对象，调试时寻找错误可能需要逐级排查，较为烦琐。</p>
-<h2 id="5-适用场景"><a href="#5-适用场景" class="headerlink" title="5.适用场景"></a>5.适用场景</h2><p>1.当不能采用继承的方式对系统进行扩充或者采用继承不利于系统扩展和维护时。不能采用继承的情况主要有两类：第一类是系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类数目呈爆炸性增长；第二类是因为类定义不能继承（如final类）.<br>2.在不影响其他对象的情况下，以动态、透明的方式给单个对象添加职责。</p>
-]]></content>
-      <categories>
-        <category>设计模式</category>
-      </categories>
   </entry>
   <entry>
     <title>跳台阶</title>

@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/09/使用cryptsetup加密硬盘/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/15/树莓派使用samba在局域网共享文件/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/12/09/使用cryptsetup加密硬盘/" itemprop="url">使用cryptsetup加密硬盘</a></h1>
+                <a class="post-title-link" href="/2019/12/15/树莓派使用samba在局域网共享文件/" itemprop="url">树莓派使用samba在局域网共享文件</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-09T21:54:35+08:00">
-                2019-12-09
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-15T00:18:43+08:00">
+                2019-12-15
               </time>
             
 
@@ -375,32 +375,24 @@
       
         
           
-            <p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
-<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
-<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
-<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
-<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
-<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
-<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
-<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
-<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
-<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
-<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
-<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
-<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
-<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
-<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
-<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
-<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
-<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
-<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
-<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
-<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
-<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
-<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
-<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
-<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
-<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
+            <p>新买的树莓派4终于到了！！！我的树莓派3B+光荣退休！到手第一步当然是用树莓派通过SMB共享我硬盘里的文件啦，随传随看。</p>
+<p><img src="https://s2.loli.net/2023/07/19/l72kpZNU8OXwPWy.jpg" alt="你懂的"></p>
+<h3 id="安装samba"><a href="#安装samba" class="headerlink" title="安装samba"></a>安装samba</h3><p>samba是一个能让Linux系统应用Microsoft网络通讯协议的软件，而SMB是Server Message Block的缩写，即为服务器消息块 ，SMB主要是作为Microsoft的网络通讯协议，后来samba将SMB通信协议应用到了Linux系统上，就形成了现在的samba软件。后来微软又把 SMB 改名为 CIFS（Common Internet File System），即公共 Internet 文件系统，并且加入了许多新的功能，这样一来，使得samba具有了更强大的功能。</p>
+<p>所以首先得安装samba。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install samba samba-common-bin</span><br></pre></td></tr></table></figure></p>
+<h3 id="新建用户并与要共享的文件夹绑定"><a href="#新建用户并与要共享的文件夹绑定" class="headerlink" title="新建用户并与要共享的文件夹绑定"></a>新建用户并与要共享的文件夹绑定</h3><p>接下来先新建一个用户用于其它设备通过samba访问共享文件夹时登录访问。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">useradd share	//新建用户</span><br><span class="line">passwd share    //设置用户密码</span><br><span class="line">mkdir /home/share    //新建一个文件夹</span><br><span class="line">chown -R share /home/share    //绑定</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2023/07/19/NtuRO2EzSZHdYyU.jpg" alt="新建用户"></p>
+<h3 id="配置samba"><a href="#配置samba" class="headerlink" title="配置samba"></a>配置samba</h3><p>用户和文件夹都建好了，现在就要根据情况修改配置了。配置文件路径是 /etc/samba/smb.conf ，打开这个文件，在文件最后添加共享账户和共享文件夹的一些信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[HandsomeDong]	#网络中显示的文件名称</span><br><span class="line">    path = /home/share	#文件路径</span><br><span class="line">    valid users = share	#允许浏览的用户</span><br><span class="line">    browseable = yes	#允许浏览</span><br><span class="line">    public = yes		#允许共享访问</span><br><span class="line">    writable = yes		#允许写入</span><br></pre></td></tr></table></figure>
+<h3 id="设置共享密码以及重启"><a href="#设置共享密码以及重启" class="headerlink" title="设置共享密码以及重启"></a>设置共享密码以及重启</h3><p>访问共享文件时，用的是samba设置的共享密码，而不是linux用户密码，现在要设置的就是共享密码，设置好后直接重启samba服务。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">smbpasswd -a share</span><br><span class="line">service smbd restart</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2023/07/19/ukJ68IjhBtnbegr.jpg" alt="设置密码、重启samba服务"></p>
+<h3 id="访问共享文件夹"><a href="#访问共享文件夹" class="headerlink" title="访问共享文件夹"></a>访问共享文件夹</h3><h4 id="电脑访问"><a href="#电脑访问" class="headerlink" title="电脑访问"></a>电脑访问</h4><p>用windows系统访问共享文件夹，只需在资源管理器输入 \\IP 就可以直接看到共享文件夹了，输入用户名和共享密码就可以访问了。现在把我前几天买的1T硬盘挂载到这个文件夹下，我就可以肆意地往里面存片子了！！！</p>
+<p><img src="https://s2.loli.net/2023/07/19/YdNgS6hDXkcOGp3.jpg" alt="文件夹"></p>
+<p><img src="https://s2.loli.net/2023/07/19/I2ERBc931Ylautb.jpg" alt="输入用户名、密码"></p>
+<p><img src="https://s2.loli.net/2023/07/19/UNiGLEF184wXqJW.jpg" alt="片子"></p>
+<h4 id="安卓手机访问"><a href="#安卓手机访问" class="headerlink" title="安卓手机访问"></a>安卓手机访问</h4><p>安卓手机有不少APP都能使用SMB协议，我用的比较多的是 Solid Explorer 和 Kodi。Solid Explorer用来管理文件，视频、文本、音频、图片什么的浏览、管理起来都比较方便，Kodi浏览视频和图片非常好，非常强大！</p>
+<h3 id="ipad、iphone访问"><a href="#ipad、iphone访问" class="headerlink" title="ipad、iphone访问"></a>ipad、iphone访问</h3><p>App Store上有很多软件都可以，收费的体验更好！</p>
 
           
         
@@ -440,7 +432,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/27/">27</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -488,7 +480,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -499,7 +491,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -510,7 +502,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

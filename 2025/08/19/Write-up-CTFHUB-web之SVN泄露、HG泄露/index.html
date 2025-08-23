@@ -80,13 +80,13 @@
 
 
 
-<meta name="description" content="前言SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，这工具我也很少用，以前在第一家公司时倒是用过，但是我用得比较少，主要是游戏研发部门的项目用到。 Mercurial 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其">
+<meta name="description" content="前言SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。 Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的">
 <meta name="keywords" content="CTF,Web安全,Writeup,信息泄露,ctfhub,SVN泄露,HG泄露">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Write-up-CTFHUB-web之SVN泄露、HG泄露">
 <meta property="og:url" content="http://yoursite.com/2025/08/19/Write-up-CTFHUB-web之SVN泄露、HG泄露/index.html">
 <meta property="og:site_name" content="HandsomeDong - 七里翔">
-<meta property="og:description" content="前言SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，这工具我也很少用，以前在第一家公司时倒是用过，但是我用得比较少，主要是游戏研发部门的项目用到。 Mercurial 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其">
+<meta property="og:description" content="前言SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。 Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://s2.loli.net/2025/08/20/FqeovAQhsWcg8Pl.png">
 <meta property="og:image" content="https://s2.loli.net/2025/08/20/M27dWBkuiG1RNTa.png">
@@ -96,10 +96,10 @@
 <meta property="og:image" content="https://s2.loli.net/2025/08/20/oxeEXnQvtsY5Ik4.png">
 <meta property="og:image" content="https://s2.loli.net/2025/08/20/z3Bik4Tycv7whn6.png">
 <meta property="og:image" content="https://s2.loli.net/2025/08/20/lSRr1C6oadwDNA3.png">
-<meta property="og:updated_time" content="2025-08-19T16:51:51.663Z">
+<meta property="og:updated_time" content="2025-08-23T17:13:17.394Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Write-up-CTFHUB-web之SVN泄露、HG泄露">
-<meta name="twitter:description" content="前言SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，这工具我也很少用，以前在第一家公司时倒是用过，但是我用得比较少，主要是游戏研发部门的项目用到。 Mercurial 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其">
+<meta name="twitter:description" content="前言SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。 Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的">
 <meta name="twitter:image" content="https://s2.loli.net/2025/08/20/FqeovAQhsWcg8Pl.png">
 
 
@@ -376,17 +376,6 @@
 
                 
                 
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/Web/Writeup/web/" itemprop="url" rel="index">
-                    <span itemprop="name">web</span>
-                  </a>
-                </span>
-
-                
-                
               
             </span>
           
@@ -422,11 +411,11 @@
       
 
       
-        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，这工具我也很少用，以前在第一家公司时倒是用过，但是我用得比较少，主要是游戏研发部门的项目用到。</p>
-<p>Mercurial 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的可执行文件名为 hg，是化学元素“汞”（Hydrargyrum）的缩写，也是对最初开发者 Matt Mackall 的致敬（hg 是他用户名的缩写），这个软件我也没有使用过。</p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。</p>
+<p>Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的可执行文件名为 hg，是化学元素“汞”（Hydrargyrum）的缩写，也是对最初开发者 Matt Mackall 的致敬（hg 是他用户名的缩写），这个软件我也没有使用过。</p>
 <h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="dirsearch"><a href="#dirsearch" class="headerlink" title="dirsearch"></a>dirsearch</h2><p>项目地址：<a href="https://github.com/maurosoria/dirsearch" target="_blank" rel="noopener">https://github.com/maurosoria/dirsearch</a></p>
 <p>dirsearch 是一款基于 python3 的扫描工具，常用于暴力扫描页面结构，包括网页中的目录和文件</p>
-<h2 id="dvcs-ripper"><a href="#dvcs-ripper" class="headerlink" title="dvcs-ripper"></a>dvcs-ripper</h2><p>dvcs-ripper 是一款基于 perl 的版本控制软件信息泄露利用工具，支持 SVN, GIT, Mercurial/hg, bzr 等</p>
+<h2 id="dvcs-ripper"><a href="#dvcs-ripper" class="headerlink" title="dvcs-ripper"></a>dvcs-ripper</h2><p>项目地址：<a href="https://github.com/kost/dvcs-ripper" target="_blank" rel="noopener">https://github.com/kost/dvcs-ripper</a><br>dvcs-ripper 是一款基于 perl 的版本控制软件信息泄露利用工具，支持 SVN, GIT, Mercurial/hg, bzr 等</p>
 <h1 id="SVN"><a href="#SVN" class="headerlink" title="SVN"></a>SVN</h1><p>打开页面是这样的，提示我们 flag 在源代码里<br><img src="https://s2.loli.net/2025/08/20/FqeovAQhsWcg8Pl.png" alt="0.png"></p>
 <p>使用 dirsearch 工具扫描这个页面，得到扫描结果后，搜索 200 看看请求成功的文件</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch -u http://challenge-776f8dc47b983ee8.sandbox.ctfhub.com:10800/</span><br></pre></td></tr></table></figure>
@@ -444,7 +433,9 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perl /home/kali/tools/dvcs-ripper/rip-hg.pl -u http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/.hg</span><br></pre></td></tr></table></figure>
 <p>全局搜索 flag 和 ctfhub</p>
 <p><img src="https://s2.loli.net/2025/08/20/z3Bik4Tycv7whn6.png" alt="3.png"></p>
+<blockquote>
 <p>.hg/store/fncache 存的文件索引数据，通过 fncache 可以快速定位到某个文件的位置，hg 会在路径前加 data/，并在结尾加 .i 表示这是一个索引，所以这里的 “data/flag_2180410243.txt.i”对应的路径就是 “flag_2180410243.txt”</p>
+</blockquote>
 <p>直接请求该文件，拿到flag</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/flag_2180410243.txt</span><br></pre></td></tr></table></figure>
 <p><img src="https://s2.loli.net/2025/08/20/lSRr1C6oadwDNA3.png" alt="4.png"></p>
@@ -500,6 +491,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/08/24/XSS攻击练习/" rel="prev" title="XSS攻击练习">
+                XSS攻击练习 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -578,7 +573,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -589,7 +584,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -600,7 +595,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

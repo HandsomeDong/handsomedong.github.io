@@ -69,7 +69,7 @@
 
 
 
-  <meta name="keywords" content="JVM优化,">
+  <meta name="keywords" content="CTF,Web安全,Writeup,ctfhub,XSS,">
 
 
 
@@ -80,25 +80,59 @@
 
 
 
-<meta name="description" content="前言今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。 症状项目启动 1java -server -Xmx1024m -XX:MaxDirectMemorySize=512M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar gc.txt好家伙">
-<meta name="keywords" content="JVM优化">
+<meta name="description" content="前言今天学习 xss 攻击，在一个 xss 练习平台上玩了一下，感觉还是挺有收获的。地址：http://test.ctf8.com/  练习level 1猜想这里直接回显 GET 参数里的 name  构造 payload 为 ?name=&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;，通过！ level 2这题看起来和上一题也差不多  输入 &amp;lt;script&amp;gt">
+<meta name="keywords" content="CTF,Web安全,Writeup,ctfhub,XSS">
 <meta property="og:type" content="article">
-<meta property="og:title" content="记一次简单的服务启动GC优化">
-<meta property="og:url" content="http://yoursite.com/2021/01/31/记一次简单的服务启动GC优化/index.html">
+<meta property="og:title" content="XSS攻击练习">
+<meta property="og:url" content="http://yoursite.com/2025/08/24/XSS攻击练习/index.html">
 <meta property="og:site_name" content="HandsomeDong - 七里翔">
-<meta property="og:description" content="前言今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。 症状项目启动 1java -server -Xmx1024m -XX:MaxDirectMemorySize=512M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar gc.txt好家伙">
+<meta property="og:description" content="前言今天学习 xss 攻击，在一个 xss 练习平台上玩了一下，感觉还是挺有收获的。地址：http://test.ctf8.com/  练习level 1猜想这里直接回显 GET 参数里的 name  构造 payload 为 ?name=&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;，通过！ level 2这题看起来和上一题也差不多  输入 &amp;lt;script&amp;gt">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png">
-<meta property="og:image" content="https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png">
-<meta property="og:image" content="https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png">
-<meta property="og:image" content="https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png">
-<meta property="og:image" content="https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png">
-<meta property="og:image" content="https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png">
-<meta property="og:updated_time" content="2024-04-06T15:10:45.794Z">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/9nJImVvXUBE8i45.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/oc6lbDGvTWnRyuf.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/FxDPb4yGmYrzuOl.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/QBbsPdwt5Si4e2A.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/7WTuFfkcE2mbDAZ.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/iUD5XjNuhMfKl61.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/81RCEnKuzhlIZi7.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/tbzBuiZNnS76QeC.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/JZAlkfyTO3iWrgV.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/WvsZtck4ExmFqC6.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/xLpXRINPsCHOa8G.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/ULI4jXD7PAYN9Gi.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/D9I2bsSMcUxwkie.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/ZDz6j3N4ewUxu5f.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/MyUci8vCaunVo3A.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/e1kJHf5F9jalQ4P.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/8EoX1nkRq4iZzJP.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/xob9p82UmVN6i1A.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/EFerRLIK81mbUiC.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/urvGneBg8mFw94Y.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/VpqrLtg7juBDh1S.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/kH1zJISifqpBRZs.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/5ish93YQovaJKTA.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/mIs6wKgQrYZqeXD.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/6y5UBb89lj71rPN.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/oeJLwR3BuXhYNUW.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/LUnrNaOqxMuDvdo.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/bPHLXuNFnUMZavq.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/1hsRIlaBmFbpnVg.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/KcNtziXhMvR7JQ1.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/82MXupxhZwYeiH3.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/iAM1LEQuKc3Dn9Z.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/XvMyznHGVRaep8k.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/NDFsG5KZYfHPwOr.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/tahcjSzP9Jb5YGk.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/ZFrkQVTiIs2B5ow.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/zL5ytjE8267HVsa.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/rt4QgPW62Ue75K8.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/tbjnfxSL1IF9Qwv.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/24/dpOB1J8QSqbKT2W.png">
+<meta property="og:updated_time" content="2025-08-23T19:53:59.971Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="记一次简单的服务启动GC优化">
-<meta name="twitter:description" content="前言今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。 症状项目启动 1java -server -Xmx1024m -XX:MaxDirectMemorySize=512M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar gc.txt好家伙">
-<meta name="twitter:image" content="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png">
+<meta name="twitter:title" content="XSS攻击练习">
+<meta name="twitter:description" content="前言今天学习 xss 攻击，在一个 xss 练习平台上玩了一下，感觉还是挺有收获的。地址：http://test.ctf8.com/  练习level 1猜想这里直接回显 GET 参数里的 name  构造 payload 为 ?name=&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;，通过！ level 2这题看起来和上一题也差不多  输入 &amp;lt;script&amp;gt">
+<meta name="twitter:image" content="https://s2.loli.net/2025/08/24/9nJImVvXUBE8i45.png">
 
 
 
@@ -128,13 +162,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2021/01/31/记一次简单的服务启动GC优化/">
+  <link rel="canonical" href="http://yoursite.com/2025/08/24/XSS攻击练习/">
 
 
 
 
 
-  <title>记一次简单的服务启动GC优化 | HandsomeDong - 七里翔</title>
+  <title>XSS攻击练习 | HandsomeDong - 七里翔</title>
   
 
 
@@ -293,7 +327,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/01/31/记一次简单的服务启动GC优化/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/24/XSS攻击练习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -310,7 +344,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">记一次简单的服务启动GC优化</h1>
+          <h1 class="post-title" itemprop="name headline">XSS攻击练习</h1>
         
 
         <div class="post-meta">
@@ -322,8 +356,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-01-31T23:31:36+08:00">
-                2021-01-31
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-24T01:11:57+08:00">
+                2025-08-24
               </time>
             
 
@@ -345,8 +379,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index">
-                    <span itemprop="name">Java</span>
+                  <a href="/categories/CTF/" itemprop="url" rel="index">
+                    <span itemprop="name">CTF</span>
                   </a>
                 </span>
 
@@ -356,8 +390,19 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/JVM/" itemprop="url" rel="index">
-                    <span itemprop="name">JVM</span>
+                  <a href="/categories/CTF/Web/" itemprop="url" rel="index">
+                    <span itemprop="name">Web</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/Web/Writeup/" itemprop="url" rel="index">
+                    <span itemprop="name">Writeup</span>
                   </a>
                 </span>
 
@@ -398,28 +443,90 @@
       
 
       
-        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天上线一个项目的时候在日志里发现项目启动的时候频繁GC，花了点时间分析了一下并且调整了一下JVM参数。</p>
-<h1 id="症状"><a href="#症状" class="headerlink" title="症状"></a>症状</h1><p>项目启动</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -server -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>gc.txt<br><img src="https://s2.loli.net/2023/07/19/aQRo95fxWqPhcNH.png" alt="GC记录"><br>好家伙，一启动就来9次 Young GC ，2次 Full GC。</p>
-<p>现在先用jinfo看看配置参数<br><img src="https://s2.loli.net/2023/07/19/zNqOUMf6sYXjipV.png" alt="查看JVM参数"><br>注意几个重要参数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-XX:InitialHeapSize=<span class="number">62914560</span>		<span class="comment">//堆初始值</span></span><br><span class="line">-XX:MaxHeapSize=<span class="number">1073741824</span>	<span class="comment">//堆最大值</span></span><br><span class="line">-MaxDirectMemorySize=<span class="number">536870912</span>	<span class="comment">//虚拟机外最大内存</span></span><br></pre></td></tr></table></figure></p>
-<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="Full-GC"><a href="#Full-GC" class="headerlink" title="Full GC"></a>Full GC</h2><p>先来分析这两次Full GC以及它们前面的Young GC</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2.536</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">19883</span>K-&gt;<span class="number">3584</span>K(<span class="number">128512</span>K)] <span class="number">27143</span>K-&gt;<span class="number">12014</span>K(<span class="number">169472</span>K), <span class="number">0.0158155</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line"><span class="number">2.552</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">3584</span>K-&gt;<span class="number">0</span>K(<span class="number">128512</span>K)] [ParOldGen: <span class="number">8430</span>K-&gt;<span class="number">8782</span>K(<span class="number">32256</span>K)] <span class="number">12014</span>K-&gt;<span class="number">8782</span>K(<span class="number">160768</span>K), [Metaspace: <span class="number">20409</span>K-&gt;<span class="number">20409</span>K(<span class="number">1069056</span>K)], <span class="number">0.0844666</span> secs] [Times: user=<span class="number">0.16</span> sys=<span class="number">0.00</span>, real=<span class="number">0.09</span> secs]</span><br><span class="line"><span class="number">4.965</span>: [GC (Metadata GC Threshold) [PSYoungGen: <span class="number">109848</span>K-&gt;<span class="number">8697</span>K(<span class="number">247296</span>K)] <span class="number">119422</span>K-&gt;<span class="number">19608</span>K(<span class="number">279552</span>K), <span class="number">0.0278398</span> secs] [Times: user=<span class="number">0.03</span> sys=<span class="number">0.01</span>, real=<span class="number">0.03</span> secs]</span><br><span class="line"><span class="number">4.993</span>: [Full GC (Metadata GC Threshold) [PSYoungGen: <span class="number">8697</span>K-&gt;<span class="number">0</span>K(<span class="number">247296</span>K)] [ParOldGen: <span class="number">10910</span>K-&gt;<span class="number">14513</span>K(<span class="number">47104</span>K)] <span class="number">19608</span>K-&gt;<span class="number">14513</span>K(<span class="number">294400</span>K), [Metaspace: <span class="number">33512</span>K-&gt;<span class="number">33512</span>K(<span class="number">1081344</span>K)], <span class="number">0.1136122</span> secs] [Times: user=<span class="number">0.20</span> sys=<span class="number">0.00</span>, real=<span class="number">0.11</span> secs]</span><br></pre></td></tr></table></figure>
-<p>可以看到两次Full GC都是由于Metadata GC Threshold造成的。我这里用的是JDK8，参数里没有明确指定metaspace的初始值和上限，这个时候初始值应该是默认的 21M 。问题不大，那我就把它的初始值和上限调大一点吧，调到64M。</p>
-<p>措施：<br><strong>追加元空间初始值</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -server -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>这个时候再查看gc.txt<br><img src="https://s2.loli.net/2023/07/19/2KRfYgMJQ9O7Ix3.png" alt="gc.txt"><br>可以看到已经没有Full GC了，不过还是有8次Young GC。</p>
-<h2 id="Young-GC"><a href="#Young-GC" class="headerlink" title="Young GC"></a>Young GC</h2><p>其实从我的启动参数里面就可以看到，<strong>堆的容量我只指定了最大值(-Xmx1024m)</strong>，并没有指定初始值。所以可以在配置参数里面看到 -XX:InitialHeapSize=62082048，即<strong>堆的初始容量只有60m左右。</strong></p>
-<p>而JVM默认的新生代和老年代空间占比为 <strong>1 : 3</strong>，所以新生代在一开始的时候只有15m的内存空间，因此JVM一开始在15m的时候就发生了Young GC。</p>
-<p>所以现在要追加新生代和堆的初始值，新生代、老年代的空间占比我就不调了，使用默认的 1 : 3 即可，而堆的初始值调成1024m，这样新生代的初始值就是256m了。</p>
-<p>措施：<br><strong>追加堆的初始值</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -server -Xms1024m -XX:MetaspaceSize=<span class="number">64</span>m -XX:MaxMetaspaceSize=<span class="number">64</span>m -Xmx1024m -XX:MaxDirectMemorySize=<span class="number">512</span>M  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.txt -jar xxxxxxxx.jar</span><br></pre></td></tr></table></figure>
-<p>现在再来看看gc.txt<br><img src="https://s2.loli.net/2023/07/19/fCu3ZRwygo4sKPp.png" alt="gc.txt"><br>可以看到只有两次Young GC了，这两次Young GC是在新生代对象准备超过256m的时候发生的……</p>
-<p><strong>好家伙，既然如此，那我也不讲武德了，我现在就把堆初始值和最大值都调成100G。</strong></p>
-<p><img src="https://s2.loli.net/2023/07/19/w5uLGkR37OKZDIl.png" alt="过分"></p>
-<p>好吧，公司穷，只能买得起4G的服务器。</p>
-<p><img src="https://s2.loli.net/2023/07/19/kHAfcxd9qeQhron.png" alt="哭了"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这只是一次很简单的JVM启动参数优化，平时启动应用的时候还是得多注意注意堆的初始值和最大值配置，元空间这部分也不能忽略了。</p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天学习 xss 攻击，在一个 xss 练习平台上玩了一下，感觉还是挺有收获的。<br>地址：<a href="http://test.ctf8.com/" target="_blank" rel="noopener">http://test.ctf8.com/</a></p>
+<p><img src="https://s2.loli.net/2025/08/24/9nJImVvXUBE8i45.png" alt="image.png"></p>
+<h1 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h1><h2 id="level-1"><a href="#level-1" class="headerlink" title="level 1"></a>level 1</h2><p>猜想这里直接回显 GET 参数里的 name</p>
+<p><img src="https://s2.loli.net/2025/08/24/oc6lbDGvTWnRyuf.png" alt="image.png"></p>
+<p>构造 payload 为 ?name=&lt;script&gt;alert(1)&lt;/script&gt;，通过！</p>
+<h2 id="level-2"><a href="#level-2" class="headerlink" title="level 2"></a>level 2</h2><p>这题看起来和上一题也差不多</p>
+<p><img src="https://s2.loli.net/2025/08/24/FxDPb4yGmYrzuOl.png" alt="image.png"></p>
+<p>输入 &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; ，结果发现不行，看了看 HTML 源码，显示的部分明显是使用了 htmlspecialchars() 转换了特殊字符。</p>
+<p><img src="https://s2.loli.net/2025/08/24/QBbsPdwt5Si4e2A.png" alt="image.png"></p>
+<p>虽然 h2 标签里展示部分的特殊字符被转换了，但是 input 标签里回显的内容却没有被转换，所以注入点便是 input 里面了。</p>
+<p>这里先用 &quot;&gt; 闭合 input 标签，再注入 &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; 。输入 &quot;&gt; &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; ，通过！</p>
+<h2 id="level-3"><a href="#level-3" class="headerlink" title="level 3"></a>level 3</h2><p><img src="https://s2.loli.net/2025/08/24/7WTuFfkcE2mbDAZ.png" alt="image.png"></p>
+<p>这题连 input 里的 value 也转换了，不过这里的 value 使用了单引号，并且输入单引号发现没有被转换。</p>
+<p><img src="https://s2.loli.net/2025/08/24/iUD5XjNuhMfKl61.png" alt="image.png"></p>
+<p>使用单引号闭合 value ，再通过事件触发来注入，最后用 / 结束标签（/&#x27;&gt; 在属性型 XSS payload 中是合法写法）。输入 &#x27; onmouseover=alert(1) /，通过！</p>
+<h2 id="level-4"><a href="#level-4" class="headerlink" title="level 4"></a>level 4</h2><p><img src="https://s2.loli.net/2025/08/24/81RCEnKuzhlIZi7.png" alt="image.png"></p>
+<p>输入 &quot;&gt; &lt;script&gt;alert(1)&lt;/script&gt; ，发现 &lt; &gt; 都被替换掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/tbzBuiZNnS76QeC.png" alt="image.png"></p>
+<p>那就用事件触发吧，输入 &quot; onmouseover=alert(1) / ，通过！</p>
+<h2 id="level-5"><a href="#level-5" class="headerlink" title="level 5"></a>level 5</h2><p><img src="https://s2.loli.net/2025/08/24/JZAlkfyTO3iWrgV.png" alt="image.png"></p>
+<p>这下 on 被替换成 o_n 了，试了下 script 等标签，也被替换成了 scr_ipt。<br><img src="https://s2.loli.net/2025/08/24/WvsZtck4ExmFqC6.png" alt="image.png"></p>
+<p>尝试用用大小写绕过，输入 “ OnMouseover=alert(1) / ， 发现全部都会被转成小写再替换。</p>
+<p>尝试闭合这个标签，再另外构造一个 a 标签，输入 &quot;&gt; &lt;a href=&quot;javascript:alert(1)&quot;&gt;click me &lt;/a&gt; 。</p>
+<p>最后的结果为 &lt;input name=keyword  value=&quot;&quot;&gt; &lt;a href=&quot;javascript:alert(1)&quot;&gt;click me &lt;/a&gt;&quot;&gt; ，点击 click me 后通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/xLpXRINPsCHOa8G.png" alt="image.png"></p>
+<h2 id="level-6"><a href="#level-6" class="headerlink" title="level 6"></a>level 6</h2><p><img src="https://s2.loli.net/2025/08/24/ULI4jXD7PAYN9Gi.png" alt="image.png"></p>
+<p>用上一题的 payload，结果是 href 也被替换成了 hr_ef。</p>
+<p><img src="https://s2.loli.net/2025/08/24/D9I2bsSMcUxwkie.png" alt="image.png"></p>
+<p>尝试用一下大小写混淆，结果为 &lt;input name=keyword  value=&quot;&quot;&gt; &lt;a Href=&quot;javascript: alert(1)&quot;/&gt;&quot;&gt; 。通过！</p>
+<h2 id="level-7"><a href="#level-7" class="headerlink" title="level 7"></a>level 7</h2><p><img src="https://s2.loli.net/2025/08/24/ZDz6j3N4ewUxu5f.png" alt="image.png"></p>
+<p>尝试用上一题的 payload，即 &quot;&gt; &lt;a Href=&quot;javascript: alert(1)&quot;/&gt; ， 发现大小写混淆也无用，并且 href 和 script 都被直接替换掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/MyUci8vCaunVo3A.png" alt="image.png"></p>
+<p>尝试双写 href 和 script，输入 &quot;&gt; &lt;a hrHrefef=&quot;javascrscriptipt: alert(1)&quot;/&gt; 。通过！</p>
+<h2 id="level-8"><a href="#level-8" class="headerlink" title="level 8"></a>level 8</h2><p>这一题稍微有点不一样了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/e1kJHf5F9jalQ4P.png" alt="image.png"></p>
+<p>输入 123321 看一下源码，可以看到这个友情链接 a 标签的 href 就是输入的内容。<br><img src="https://s2.loli.net/2025/08/24/8EoX1nkRq4iZzJP.png" alt="image.png"></p>
+<p>输入 javascript: alert(1) ，发现 javascript 被替换成了 javasc_ript 。</p>
+<p><img src="https://s2.loli.net/2025/08/24/xob9p82UmVN6i1A.png" alt="image.png"></p>
+<p>尝试闭合 href ，再使用事件触发，输入 &quot; onclick=alert(1) / ，可以看到双引号被转换成 HTML 实体，onclick 也被替换成 o_nclick 。</p>
+<p><img src="https://s2.loli.net/2025/08/24/EFerRLIK81mbUiC.png" alt="image.png"></p>
+<p>这意味着无法使用双引号闭合 href，也无法使用协议绕过（javascript:alert(1)）了吗？难道……难道真的止步于此了吗？</p>
+<p>只好上网搜了搜别人的 write up，发现还能使用 HTML 字符实体来替换一些字符，HTML 字符实体转换：<a href="https://www.qqxiuzi.cn/bianma/zifushiti.php。" target="_blank" rel="noopener">https://www.qqxiuzi.cn/bianma/zifushiti.php。</a><br>这里随便把 javascript 里的 c 字符替换成 &#x26;&#x23;&#x78;&#x36;&#x33;&#x3B; ，输入 javas&amp;#x63;ript:alert(1) 。通过！（感觉这个操作有点骚啊！）</p>
+<p><img src="https://s2.loli.net/2025/08/24/urvGneBg8mFw94Y.png" alt="image.png"></p>
+<h2 id="level-9"><a href="#level-9" class="headerlink" title="level 9"></a>level 9</h2><p><img src="https://s2.loli.net/2025/08/24/VpqrLtg7juBDh1S.png" alt="image.png"></p>
+<p>这一关会先校验输入是否是一个合理的链接地址，如果不是，则直接把 href 里的内容替换成”您的链接不合法？有没有！”</p>
+<p><img src="https://s2.loli.net/2025/08/24/kH1zJISifqpBRZs.png" alt="image.png"></p>
+<p>尝试在上一题的 payload 基础上，加上注释一个链接，输入 javas&#x63;ript:alert(1) //<a href="http://www.baidu.com" target="_blank" rel="noopener">http://www.baidu.com</a> ，通过！看来这个校验，只校验是否包含链接，而不是校验整个输入是否是一个合理的链接！</p>
+<p><img src="https://s2.loli.net/2025/08/24/5ish93YQovaJKTA.png" alt="image.png"></p>
+<h2 id="level-10"><a href="#level-10" class="headerlink" title="level 10"></a>level 10</h2><p>这关没有输入框，查看源码发现有隐藏的表单。</p>
+<p><img src="https://s2.loli.net/2025/08/24/mIs6wKgQrYZqeXD.png" alt="image.png"></p>
+<p>尝试手动构造表单内容，请求 <a href="http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=3" target="_blank" rel="noopener">http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=3</a> 发现 t_sort 内容会回显到输入框。</p>
+<p><img src="https://s2.loli.net/2025/08/24/6y5UBb89lj71rPN.png" alt="image.png"></p>
+<p>构造 payload 到 t_sort 里，输入 <a href="http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=%22%20%20onmouseover=%22alert(1)%22%20type=%22text" target="_blank" rel="noopener">http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=%22%20%20onmouseover=%22alert(1)%22%20type=%22text</a> 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/oeJLwR3BuXhYNUW.png" alt="image.png"></p>
+<h2 id="level-11"><a href="#level-11" class="headerlink" title="level 11"></a>level 11</h2><p>一进入这一关，就看到隐藏的表单输入框里回显了一个链接，这个不正是我上一关的链接吗？所以猜测这里是回显了 http header Referer 的信息，所以这里可能得用到 BurpSuite 了！</p>
+<p><img src="https://s2.loli.net/2025/08/24/LUnrNaOqxMuDvdo.png" alt="image.png"></p>
+<p>刷新一下页面，构造一下 header 里的 Referer 为 “ onclick=alert(1) type=”text 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/bPHLXuNFnUMZavq.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/24/1hsRIlaBmFbpnVg.png" alt="2.png"></p>
+<h2 id="level-12"><a href="#level-12" class="headerlink" title="level 12"></a>level 12</h2><p>这一关和上一关大同小异，只是把 Referer 换成了 User-Agent ，一样的套路，不过多赘述。</p>
+<p><img src="https://s2.loli.net/2025/08/24/KcNtziXhMvR7JQ1.png" alt="image.png"></p>
+<h2 id="level-13"><a href="#level-13" class="headerlink" title="level 13"></a>level 13</h2><p>一样，只不过这次是 Cookie ，不过多赘述。</p>
+<p><img src="https://s2.loli.net/2025/08/24/82MXupxhZwYeiH3.png" alt="image.png"></p>
+<h2 id="level-14"><a href="#level-14" class="headerlink" title="level 14"></a>level 14</h2><p>这题是真不会了，等后续有时间再上网找一些大神的 write up 观摩一下。</p>
+<p><img src="https://s2.loli.net/2025/08/24/iAM1LEQuKc3Dn9Z.png" alt="image.png"></p>
+<h2 id="level-15"><a href="#level-15" class="headerlink" title="level 15"></a>level 15</h2><p><img src="https://s2.loli.net/2025/08/24/XvMyznHGVRaep8k.png" alt="image.png"></p>
+<p>这一关直接看源码，可以看到里面这个 span 的 class 有用到 src 参数，查了查 ng-include ，这是 AngularJS 的指令，有点类似于文件包含。<a href="https://www.runoob.com/angularjs/ng-ng-include.html" target="_blank" rel="noopener">https://www.runoob.com/angularjs/ng-ng-include.html</a></p>
+<p><img src="https://s2.loli.net/2025/08/24/NDFsG5KZYfHPwOr.png" alt="image.png"></p>
+<p>由于这个包含的文件需要与当前域名一致，所以可以考虑考虑用前面关卡的文件，再把 payload 注入到前面的文件链接中。所以我这里构造的 payload 是 &#x27;level1.php?name=&lt;img src=x onerror=alert(1)&gt;&#x27; 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/tahcjSzP9Jb5YGk.png" alt="image.png"></p>
+<h2 id="level-16"><a href="#level-16" class="headerlink" title="level 16"></a>level 16</h2><p><img src="https://s2.loli.net/2025/08/24/ZFrkQVTiIs2B5ow.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/24/zL5ytjE8267HVsa.png" alt="image.png"></p>
+<p>尝试直接注入，?keyword=&lt;script&gt;alert(1)&lt;/script&gt; ，script 和 / 都被替换成了 &amp;nbsp; ，大小写混淆也失败。</p>
+<p><img src="https://s2.loli.net/2025/08/24/rt4QgPW62Ue75K8.png" alt="image.png"></p>
+<p>那就尝试用 img + error 事件触发，?keyword=&lt;img src=x onerror=&quot;alert(1)&quot;&gt; ，发现空格也被替换了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/tbjnfxSL1IF9Qwv.png" alt="image.png"></p>
+<p>尝试用 %0d 代替空格来绕过检查，?keyword=&lt;img%0dsrc=x%0donerror=&quot;alert(1)&quot;&gt; 。通过！</p>
+<h2 id="level-……"><a href="#level-……" class="headerlink" title="level ……"></a>level ……</h2><p>后面几关好像都没法显示，貌似是 flash 的，后续有时间再做吧，现在暂时不了解 flash xss。</p>
+<p><img src="https://s2.loli.net/2025/08/24/dpOB1J8QSqbKT2W.png" alt="image.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>先确认注入点，再开始尝试注入</li>
+<li>常见的注入方式有：&lt;script&gt; 直接执行、利用 HTML 标签自带的事件（如 img + onerror、 iframe + onload、 input + onclick 或 onmouseover 等）、meta 标签刷新跳转等（不过这个练习中没有这种题）</li>
+<li>XSS 绕过常用方法有：大小写绕过、编码绕过、闭合标签绕过、注释绕过、其它符号绕过、双字符绕过、事件绕过等等</li>
+</ol>
 
       
     </div>
@@ -437,7 +544,15 @@
       
         <div class="post-tags">
           
-            <a href="/tags/JVM优化/" rel="tag"># JVM优化</a>
+            <a href="/tags/CTF/" rel="tag"># CTF</a>
+          
+            <a href="/tags/Web安全/" rel="tag"># Web安全</a>
+          
+            <a href="/tags/Writeup/" rel="tag"># Writeup</a>
+          
+            <a href="/tags/ctfhub/" rel="tag"># ctfhub</a>
+          
+            <a href="/tags/XSS/" rel="tag"># XSS</a>
           
         </div>
       
@@ -450,8 +565,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/11/14/JDK7HashMap多线程扩容导致的死循环问题/" rel="next" title="JDK7HashMap多线程扩容导致的死循环问题">
-                <i class="fa fa-chevron-left"></i> JDK7HashMap多线程扩容导致的死循环问题
+              <a href="/2025/08/19/Write-up-CTFHUB-web之SVN泄露、HG泄露/" rel="next" title="Write-up-CTFHUB-web之SVN泄露、HG泄露">
+                <i class="fa fa-chevron-left"></i> Write-up-CTFHUB-web之SVN泄露、HG泄露
               </a>
             
           </div>
@@ -459,10 +574,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2021/07/02/SpringBoot-Dubbo简单demo实践/" rel="prev" title="SpringBoot+Dubbo简单demo实践">
-                SpringBoot+Dubbo简单demo实践 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -610,7 +721,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#症状"><span class="nav-number">2.</span> <span class="nav-text">症状</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#优化"><span class="nav-number">3.</span> <span class="nav-text">优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Full-GC"><span class="nav-number">3.1.</span> <span class="nav-text">Full GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Young-GC"><span class="nav-number">3.2.</span> <span class="nav-text">Young GC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#练习"><span class="nav-number">2.</span> <span class="nav-text">练习</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#level-1"><span class="nav-number">2.1.</span> <span class="nav-text">level 1</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-2"><span class="nav-number">2.2.</span> <span class="nav-text">level 2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-3"><span class="nav-number">2.3.</span> <span class="nav-text">level 3</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-4"><span class="nav-number">2.4.</span> <span class="nav-text">level 4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-5"><span class="nav-number">2.5.</span> <span class="nav-text">level 5</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-6"><span class="nav-number">2.6.</span> <span class="nav-text">level 6</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-7"><span class="nav-number">2.7.</span> <span class="nav-text">level 7</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-8"><span class="nav-number">2.8.</span> <span class="nav-text">level 8</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-9"><span class="nav-number">2.9.</span> <span class="nav-text">level 9</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-10"><span class="nav-number">2.10.</span> <span class="nav-text">level 10</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-11"><span class="nav-number">2.11.</span> <span class="nav-text">level 11</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-12"><span class="nav-number">2.12.</span> <span class="nav-text">level 12</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-13"><span class="nav-number">2.13.</span> <span class="nav-text">level 13</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-14"><span class="nav-number">2.14.</span> <span class="nav-text">level 14</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-15"><span class="nav-number">2.15.</span> <span class="nav-text">level 15</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-16"><span class="nav-number">2.16.</span> <span class="nav-text">level 16</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level-……"><span class="nav-number">2.17.</span> <span class="nav-text">level ……</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
 
           </div>

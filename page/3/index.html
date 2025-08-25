@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/18/Write-up-CTFHUB-web之Git泄露/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/19/Write-up-CTFHUB-web之SVN泄露、HG泄露/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/08/18/Write-up-CTFHUB-web之Git泄露/" itemprop="url">Write-up: CTFHUB web之Git泄露</a></h1>
+                <a class="post-title-link" href="/2025/08/19/Write-up-CTFHUB-web之SVN泄露、HG泄露/" itemprop="url">Write-up-CTFHUB-web之SVN泄露、HG泄露</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-18T21:54:19+08:00">
-                2025-08-18
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-19T23:52:17+08:00">
+                2025-08-19
               </time>
             
 
@@ -397,27 +397,35 @@
       
         
           
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>git应该是最主流的版本控制工具了，但是如果配置不当，可能会不小心把 .git 文件夹直接部署到生产环境。当然，这都2025了，不太可能会有开发出现这种错误了……</p>
-<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="Githack"><a href="#Githack" class="headerlink" title="Githack"></a>Githack</h2><p>项目地址：<a href="https://github.com/lijiejie/GitHack" target="_blank" rel="noopener">https://github.com/lijiejie/GitHack</a><br>这是一个.git泄露利用脚本，可以通过.git文件夹下的文件，重建还原工程源代码。</p>
-<p>下载后，用python2就可以运行该脚本<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python GitHack.py http://www.openssl.org/.git/</span><br></pre></td></tr></table></figure></p>
-<h1 id="Log"><a href="#Log" class="headerlink" title="Log"></a>Log</h1><p>ctfhub 的 git 泄露一共有3道，先来做第一道：Log</p>
-<p><img src="https://s2.loli.net/2025/08/18/Pg46BCWhMVmY3al.png" alt="image.png"></p>
-<p>打开后就一个页面，显示“Where is flag?”<br><img src="https://s2.loli.net/2025/08/18/cktFWeN5zHpI1jQ.png" alt="image.png"></p>
-<p>直接用脚本下载并重建工程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python2 GitHack.py http://challenge-4b71d7d837e22605.sandbox.ctfhub.com:10800/.git</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/dKW8nlYpC6hax9S.png" alt="image.png"></p>
-<p>全局搜索 “ctfhub” 或者 “flag”，在源代码中搜不到，但是在git log相关文件中能看到提交记录有端倪，应该是添加了 flag 后又删掉了。</p>
-<p><img src="https://s2.loli.net/2025/08/18/5QATtId8aDZfn6o.png" alt="image.png"></p>
-<p>用 git reset 回滚到 “add flag” 那一次提交后再全局搜索 “ctfhub” 或者 “flag”，可以在一个 txt 文件里找到 flag 了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset --hard fa0ee775a01e795f67ef4cb9d816ed52b0321473</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/18/eI5RoP8OFhJXl4d.png" alt="image.png"></p>
-<h2 id="Stash"><a href="#Stash" class="headerlink" title="Stash"></a>Stash</h2><p>前面的步骤和上面的一样，不过这次的txt文件里可就没有flag了<br><img src="https://s2.loli.net/2025/08/18/eHl9vw8rIpbZ7hy.png" alt="image.png"></p>
-<p>但是在 .git/logs/refs/stash 里面看到有个 flag 的日志，stash 是什么可以看这里 <a href="https://git-scm.com/docs/git-stash/zh_HANS-CN" target="_blank" rel="noopener">https://git-scm.com/docs/git-stash/zh_HANS-CN</a><br><img src="https://s2.loli.net/2025/08/18/s5igbSB9RnMH3xl.png" alt="image.png"></p>
-<p>用 git stash list 看看暂存的修改<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash list</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/Q2EPmrHX3qIdA1S.png" alt="image.png"></p>
-<p>用 git stash pop 把暂存的修改还原后，可以看到txt文件里的flag了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash pop</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://s2.loli.net/2025/08/18/m2K9CVPoBARfTlZ.png" alt="image.png"></p>
-<h2 id="Index"><a href="#Index" class="headerlink" title="Index"></a>Index</h2><p>前几步步骤仍然和上面一样，但是txt文件直接就有flag了……<br>突然想到这几道题其实不应该直接用 Githack 工具还原工程，而是应该先用 dirsearch 扫描网站泄露的目录，扫出来发现有 .git 文件夹后，再用 Githack 工具还原工程，毕竟在真实的场景下，我们是不知道网站会有什么安全风险的，后续再更新一下用 dirsearch 该怎么做。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>碰到 git 信息泄露的情况，可以使用 Githack 工具还原工程，flag 可能存在于旧版本、别的分支、暂存区中，得细心找找！</p>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。</p>
+<p>Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的可执行文件名为 hg，是化学元素“汞”（Hydrargyrum）的缩写，也是对最初开发者 Matt Mackall 的致敬（hg 是他用户名的缩写），这个软件我也没有使用过。</p>
+<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="dirsearch"><a href="#dirsearch" class="headerlink" title="dirsearch"></a>dirsearch</h2><p>项目地址：<a href="https://github.com/maurosoria/dirsearch" target="_blank" rel="noopener">https://github.com/maurosoria/dirsearch</a></p>
+<p>dirsearch 是一款基于 python3 的扫描工具，常用于暴力扫描页面结构，包括网页中的目录和文件</p>
+<h2 id="dvcs-ripper"><a href="#dvcs-ripper" class="headerlink" title="dvcs-ripper"></a>dvcs-ripper</h2><p>项目地址：<a href="https://github.com/kost/dvcs-ripper" target="_blank" rel="noopener">https://github.com/kost/dvcs-ripper</a><br>dvcs-ripper 是一款基于 perl 的版本控制软件信息泄露利用工具，支持 SVN, GIT, Mercurial/hg, bzr 等</p>
+<h1 id="SVN"><a href="#SVN" class="headerlink" title="SVN"></a>SVN</h1><p>打开页面是这样的，提示我们 flag 在源代码里<br><img src="https://s2.loli.net/2025/08/20/FqeovAQhsWcg8Pl.png" alt="0.png"></p>
+<p>使用 dirsearch 工具扫描这个页面，得到扫描结果后，搜索 200 看看请求成功的文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch -u http://challenge-776f8dc47b983ee8.sandbox.ctfhub.com:10800/</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/20/M27dWBkuiG1RNTa.png" alt="2.png"></p>
+<p>从上面的图中可以看到是 .svn 文件夹泄露了，因此使用 dvcs-ripper 工具还原文件夹</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perl /home/kali/tools/dvcs-ripper/rip-svn.pl -u http://challenge-776f8dc47b983ee8.sandbox.ctfhub.com:10800/.svn</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/20/d1JPqvsYeXRNGhK.png" alt="3.png"></p>
+<p>用 vscode 打开工程，搜索一下 flag 或者 ctfhub，可以找到 flag</p>
+<p><img src="https://s2.loli.net/2025/08/20/E8Gm7Ze4bBYRyHg.png" alt="4.png"></p>
+<h1 id="HG"><a href="#HG" class="headerlink" title="HG"></a>HG</h1><p>打开页面是这样的</p>
+<p><img src="https://s2.loli.net/2025/08/20/aVCxMf3qvEmk2PA.png" alt="0.png"></p>
+<p>老规矩，使用 dirsearch 扫描，查看请求成功的文件</p>
+<p><img src="https://s2.loli.net/2025/08/20/oxeEXnQvtsY5Ik4.png" alt="1.png"></p>
+<p>使用 dvcs-ripper 工具下载 .hg 文件夹</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perl /home/kali/tools/dvcs-ripper/rip-hg.pl -u http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/.hg</span><br></pre></td></tr></table></figure>
+<p>全局搜索 flag 和 ctfhub</p>
+<p><img src="https://s2.loli.net/2025/08/20/z3Bik4Tycv7whn6.png" alt="3.png"></p>
+<blockquote>
+<p>.hg/store/fncache 存的文件索引数据，通过 fncache 可以快速定位到某个文件的位置，hg 会在路径前加 data/，并在结尾加 .i 表示这是一个索引，所以这里的 “data/flag_2180410243.txt.i”对应的路径就是 “flag_2180410243.txt”</p>
+</blockquote>
+<p>直接请求该文件，拿到flag</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/flag_2180410243.txt</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/20/lSRr1C6oadwDNA3.png" alt="4.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>信息泄露题可以先使用 dirsearch 工具确认哪些信息可能泄露了，再对症下药，使用相应的工具利用泄露的文件找到 flag 。</p>
 
           
         
@@ -457,7 +465,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/29/">29</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -505,7 +513,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-count">29</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -527,7 +535,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">22</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

@@ -69,7 +69,7 @@
 
 
 
-  <meta name="keywords" content="CTF,Web安全,Writeup,sqli-labs,sql注入,">
+  <meta name="keywords" content="HandsomeDong,七里翔">
 
 
 
@@ -80,36 +80,13 @@
 
 
 
-<meta name="description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
-<meta name="keywords" content="CTF,Web安全,Writeup,sqli-labs,sql注入">
-<meta property="og:type" content="article">
-<meta property="og:title" content="sqli-labs 第一关">
-<meta property="og:url" content="http://yoursite.com/2025/08/09/sqli-labs-第一关/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="HandsomeDong - 七里翔">
+<meta property="og:url" content="http://yoursite.com/tags/文件上传/index.html">
 <meta property="og:site_name" content="HandsomeDong - 七里翔">
-<meta property="og:description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/G1D9AYaqi7KMbEC.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/hVKdEtHfIvbL9C5.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/Nj87fe3Z5uaOt2l.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/426VUfPjYKmu5DW.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/YR9xturkiwEf5FA.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/oPbjvZQrVqL924u.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/2CaEwxKeHSVtd3s.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/lMm5iyFq1bCQzJH.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/aqgoCQbSxNH2RGj.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/76edbohSy5rZKU2.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/6lsrvCjtez3Rxnc.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/zFs6qEQfJaTjCYx.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/m6VIKUxEyejuX8t.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/1T8fLmZjkMVv2W3.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/MsNDXunrwGg6tlo.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png">
-<meta property="og:updated_time" content="2025-08-23T17:13:51.241Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="sqli-labs 第一关">
-<meta name="twitter:description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
-<meta name="twitter:image" content="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png">
+<meta name="twitter:title" content="HandsomeDong - 七里翔">
 
 
 
@@ -139,13 +116,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2025/08/09/sqli-labs-第一关/">
+  <link rel="canonical" href="http://yoursite.com/tags/文件上传/">
 
 
 
 
 
-  <title>sqli-labs 第一关 | HandsomeDong - 七里翔</title>
+  <title>Tag: 文件上传 | HandsomeDong - 七里翔</title>
   
 
 
@@ -174,7 +151,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-left ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -290,285 +267,52 @@
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-expand">
-    
+  
+  
+  
+  <div class="post-block tag">
 
-  
+    <div id="posts" class="posts-collapse">
+      <div class="collection-title">
+        <h1>文件上传<small>Tag</small>
+        </h1>
+      </div>
 
-  
-  
-  
+      
+        
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/09/sqli-labs-第一关/">
+    <header class="post-header">
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="HandsomeDong">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HandsomeDong - 七里翔">
-    </span>
-
-    
-      <header class="post-header">
-
+      <h2 class="post-title">
         
+            <a class="post-title-link" href="/2025/08/27/Write-up-CTFHUB-web之文件上传/" itemprop="url">
+              
+                <span itemprop="name">Write up CTFHUB web之文件上传</span>
+              
+            </a>
         
-          <h1 class="post-title" itemprop="name headline">sqli-labs 第一关</h1>
-        
+      </h2>
 
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-09T16:11:57+08:00">
-                2025-08-09
-              </time>
-            
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2025-08-27T23:41:22+08:00" content="2025-08-27">
+          08-27
+        </time>
+      </div>
 
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/" itemprop="url" rel="index">
-                    <span itemprop="name">CTF</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/Web/" itemprop="url" rel="index">
-                    <span itemprop="name">Web</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/Web/Writeup/" itemprop="url" rel="index">
-                    <span itemprop="name">Writeup</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/Web/Writeup/sqli-labs/" itemprop="url" rel="index">
-                    <span itemprop="name">sqli-labs</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-            <span class="post-meta-divider">|</span>
-            <span class="page-pv"><i class="fa fa-file-o"></i>
-            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
-            </span>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
-<p>最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。</p>
-</blockquote>
-<h1 id="手工注入"><a href="#手工注入" class="headerlink" title="手工注入"></a>手工注入</h1><h2 id="判断是否存在-SQL-注入"><a href="#判断是否存在-SQL-注入" class="headerlink" title="判断是否存在 SQL 注入"></a>判断是否存在 SQL 注入</h2><ol>
-<li>一进来就提醒输入一个数字的id值</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png" alt="image.png"></p>
-<ol start="2">
-<li>输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据我们输入的值来查询数据了。（这里推荐使用 chrome 的 HackBar 插件，在浏览器直接输入的话，特殊符号老是被编码，不太好看）</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/G1D9AYaqi7KMbEC.png" alt="image.png"></p>
-<ol start="3">
-<li>接下来判断是否存在注入，是字符型注入还是数字型注入<br>直接输入 1 是没问题的，但是输入 1’ 就报错了，所以这应该是字符型注入。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/hVKdEtHfIvbL9C5.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/Nj87fe3Z5uaOt2l.png" alt="image.png"></p>
-<ol start="4">
-<li>进一步验证猜想<br>为了进一步验证这是字符型，可以使用 AND 1=1、 AND 1=2 查看结果。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/426VUfPjYKmu5DW.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/YR9xturkiwEf5FA.png" alt="image.png"><br>从上面2张图可以确定这不是数字型注入了，因为 AND 后面的条件没生效。</p>
-<p><img src="https://s2.loli.net/2025/08/09/oPbjvZQrVqL924u.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/2CaEwxKeHSVtd3s.png" alt="image.png"><br>从上面2张图可以确定这是字符型注入，使用单引号闭合了前面的查询条件，因此 AND 后面的查询条件生效了，所以2次查询结果不一样。</p>
-<h2 id="联合注入爆数据"><a href="#联合注入爆数据" class="headerlink" title="联合注入爆数据"></a>联合注入爆数据</h2><ol>
-<li>确定 SELECT 列数<br>接下来就是使用联合注入爆各种数据了，不过在此之前需要先确定一下 SELECT 的内容有多少列，因为 UNION 的列数需要一致。<br>使用 ORDER BY 来确认列数，ORDER BY 4 时报错了，所以 SELECT 的列数是3。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/lMm5iyFq1bCQzJH.png" alt="image.png"></p>
-<ol start="2">
-<li>爆显示位<br>输入一个不存在的id，把后面的内容 UNION 上去，确认显示位。<br>可以看到回显的内容是第二、第三列。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/aqgoCQbSxNH2RGj.png" alt="image.png"></p>
-<ol start="3">
-<li>爆库名<br>接下来就可以爆整个数据库实例的库名了，先使用 database() 查看当前查询的库，以及查询 information_schema.schemata 的 schema_name 列获取所有库名。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/76edbohSy5rZKU2.png" alt="image.png"></p>
-<ol start="4">
-<li>爆表名<br>查询 information_schema.tables 获取 security 库下的所有表名。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/6lsrvCjtez3Rxnc.png" alt="image.png"></p>
-<ol start="5">
-<li>爆字段<br>当前显示了用户名、密码，这些数据肯定存在 users 表中，所以查查这张表有什么字段吧！<br>可以看到表中的字段有 id、username、password</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/zFs6qEQfJaTjCYx.png" alt="image.png"></p>
-<ol start="6">
-<li>爆数据<br>直接查询 users 表的 username 和 password</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/m6VIKUxEyejuX8t.png" alt="image.png"></p>
-<h1 id="sqlmap"><a href="#sqlmap" class="headerlink" title="sqlmap"></a>sqlmap</h1><h2 id="使用-sqlmap-注入"><a href="#使用-sqlmap-注入" class="headerlink" title="使用 sqlmap 注入"></a>使用 sqlmap 注入</h2><p>sqlmap github: <a href="https://github.com/sqlmapproject/sqlmap" target="_blank" rel="noopener">https://github.com/sqlmapproject/sqlmap</a></p>
-<ol>
-<li>先查询所有库</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 --dbs</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/1T8fLmZjkMVv2W3.png" alt="image.png"></p>
-<ol start="2">
-<li>查询 security 下的表</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/MsNDXunrwGg6tlo.png" alt="image.png"></p>
-<ol start="3">
-<li>查询 users 表数据</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security -T users --columns --dump</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png" alt="image.png"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
-<li>先确认是字符型注入还是数字型注入，再使用注释把后面的 SQL 注释掉，然后确认注入格式，再使用联合注入查询库、表名，最后查询数据</li>
-<li>这种简单的 case，sqlmap 直接能解决。不过现在处于练习阶段，还是得手工注入，理解原理</li>
-</ol>
-
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CTF/" rel="tag"># CTF</a>
-          
-            <a href="/tags/Web安全/" rel="tag"># Web安全</a>
-          
-            <a href="/tags/Writeup/" rel="tag"># Writeup</a>
-          
-            <a href="/tags/sqli-labs/" rel="tag"># sqli-labs</a>
-          
-            <a href="/tags/sql注入/" rel="tag"># sql注入</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2024/04/26/Triton入门初体验/" rel="next" title="Triton入门初体验">
-                <i class="fa fa-chevron-left"></i> Triton入门初体验
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2025/08/18/Write-up-CTFHUB-web之Git泄露/" rel="prev" title="Write-up: CTFHUB web之Git泄露">
-                Write-up: CTFHUB web之Git泄露 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
+    </header>
   </article>
 
 
-
-    <div class="post-spread">
       
     </div>
+
   </div>
+  
+  
+  
+
+  
 
 
           </div>
@@ -576,10 +320,6 @@
 
 
           
-
-  
-
-
 
         </div>
         
@@ -600,17 +340,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -686,22 +417,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手工注入"><span class="nav-number">2.</span> <span class="nav-text">手工注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#判断是否存在-SQL-注入"><span class="nav-number">2.1.</span> <span class="nav-text">判断是否存在 SQL 注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#联合注入爆数据"><span class="nav-number">2.2.</span> <span class="nav-text">联合注入爆数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlmap"><span class="nav-number">3.</span> <span class="nav-text">sqlmap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-sqlmap-注入"><span class="nav-number">3.1.</span> <span class="nav-text">使用 sqlmap 注入</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
@@ -862,10 +577,6 @@
 
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
 
   
 

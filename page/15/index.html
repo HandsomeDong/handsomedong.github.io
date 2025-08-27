@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/17/Spring-Autowire注入Map和List/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/09/使用cryptsetup加密硬盘/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/10/17/Spring-Autowire注入Map和List/" itemprop="url">Spring @Autowire注入Map和List</a></h1>
+                <a class="post-title-link" href="/2019/12/09/使用cryptsetup加密硬盘/" itemprop="url">使用cryptsetup加密硬盘</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-17T22:55:23+08:00">
-                2019-10-17
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-09T21:54:35+08:00">
+                2019-12-09
               </time>
             
 
@@ -336,30 +336,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index">
-                    <span itemprop="name">Java</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/框架/" itemprop="url" rel="index">
-                    <span itemprop="name">框架</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/框架/Spring/" itemprop="url" rel="index">
-                    <span itemprop="name">Spring</span>
+                  <a href="/categories/树莓派/" itemprop="url" rel="index">
+                    <span itemprop="name">树莓派</span>
                   </a>
                 </span>
 
@@ -397,17 +375,32 @@
       
         
           
-            <p>今天要实现一个需求，我们要同时使用阿里云和白山云的对象存储，在上传或者删除一些文件时，两个对象存储都要做同样的操作。由于是不同的平台，配置、SDK什么的都不一样，因此我写了一个接口让它们去实现，然后我再在service调用bean的方法去操作文件。本来还想用@Autowire和@Qualifier分别注入这两个bean再塞到一个list去调用它们，然后突然发现@Autowired能直接注入Map或List，把实现该接口的所有的bean塞到一个集合中，实在是太棒太灵活了！</p>
-<p><img src="https://s2.loli.net/2023/07/19/Tln9VrfdFsKLq1o.jpg" alt="太棒了"></p>
-<p>那么就不多BB了，直接上代码。</p>
-<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Animal &#123;</span><br><span class="line">    void sayHello();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="实现类"><a href="#实现类" class="headerlink" title="实现类"></a>实现类</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Cat implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class Dog implements Animal &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void sayHello() &#123;</span><br><span class="line">        System.out.println(&quot;Hello, this is &quot; + this.getClass().getSimpleName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h3><p>可以注入Map或者List，指定泛型是那个接口类型即可。下面是测试的代码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">@RunWith(SpringRunner.class)</span><br><span class="line">@SpringBootTest</span><br><span class="line">public class AnimalTest &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private List&lt;Animal&gt; animalList;</span><br><span class="line">    @Autowired</span><br><span class="line">    private Map&lt;String, Animal&gt; animalMap;</span><br><span class="line"></span><br><span class="line">    @Test</span><br><span class="line">    public void contextLoads() &#123;</span><br><span class="line">        for (Animal animal : animalList) &#123;</span><br><span class="line">            animal.sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Set&lt;String&gt; keys = animalMap.keySet();</span><br><span class="line">        for (String key : keys) &#123;</span><br><span class="line">            animalMap.get(key).sayHello();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>断点看了一下变量，可以看到在Map里面，key就是bean的名字。<br><img src="https://s2.loli.net/2023/07/19/uhYFMjNmke7BCvb.jpg" alt="测试断点"></p>
-<p>下面是运行结果。</p>
-<p><img src="https://s2.loli.net/2023/07/19/YzF3wbAU4k76BRu.jpg" alt="运行结果"></p>
+            <p>在京东关注移动硬盘好久了，等了很久终于等到希捷移动硬盘几个月以来的最低价……299！咬咬牙终于下单，今天早上到手。</p>
+<p><img src="https://s2.loli.net/2023/07/19/Eplcnd6wJ5kBa9P.jpg" alt="1T希捷移动硬盘"></p>
+<p>这个移动硬盘主要用来给我的树莓派外接，然后用SMB共享，这样在内网条件下，我的手机、电脑、平板等就可以随时访问硬盘里的内容了，不过在此之前，我还得对硬盘进行加密，免得谁偷偷把我硬盘拿走了后随意浏览里面一些不可描述的东西。<br>cryptsetup是linux下的一个分区加密工具，它通过调用内核中的”dm-crypt”来实现磁盘加密的功能，这个加密工具应该还挺常用的，我的树莓派就是用的这个加密工具。不过在此之前，我们得先初始化这个硬盘</p>
+<p><img src="https://s2.loli.net/2023/07/19/3WxiDyncuBOZk1q.jpg" alt="不可描述"></p>
+<h3 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h3><h4 id="找到设备"><a href="#找到设备" class="headerlink" title="找到设备"></a>找到设备</h4><p>第一步先对硬盘进行分区。把移动硬盘插到树莓派上，用 <strong>fdisk -l</strong> 看看是哪个硬盘。</p>
+<p><img src="https://s2.loli.net/2023/07/19/eHoL7msGJdWiXI1.jpg" alt="fdisk -l"></p>
+<p>很明显这个 /dev/sdb1 就是我插进去的移动硬盘。</p>
+<h4 id="创建分区"><a href="#创建分区" class="headerlink" title="创建分区"></a>创建分区</h4><p>现在输入命令 <strong>fdisk /dev/sdb1</strong> 来操作这个硬盘。然后可以输入 m 来查看操作提示。</p>
+<p><img src="https://s2.loli.net/2023/07/19/rsFEMj7XRoIdzmU.jpg" alt="操作提示"></p>
+<p>可以看到 n 是添加新分区，那就输入 <strong>n</strong> 吧。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ovxlKT682Jm4D3Z.jpg" alt="添加新分区"></p>
+<p>这个时候询问我们是要创建主分区还是扩展分区，主分区最多只能创建4个，如果创建了扩展分区那么扩展分区需要占用一个主分区，直接enter则默认是主分区，后面还有询问分区序号、分区大小什么的，我一路直接enter了，即默认。</p>
+<p><img src="https://s2.loli.net/2023/07/19/YCFzdca9Q8Ju41U.jpg" alt="创建主分区"></p>
+<p>创建好后可以输入 <strong>p</strong> 来查看逻辑分区。</p>
+<p><img src="https://s2.loli.net/2023/07/19/TFcEHC8DkxQryK7.jpg" alt="查看逻辑分区"></p>
+<p>可以看到我此时是只有一个分区的，大小是931.5G，现在可还没分区成功，还需要输入 <strong>w</strong> 保存。</p>
+<h3 id="加密格式化"><a href="#加密格式化" class="headerlink" title="加密格式化"></a>加密格式化</h3><p>OK，现在硬盘基本的初始化完成了，现在要开始对它进行加密了。我这里用的是分区加密工具是cryptsetup，没有的话需要先安装。安装方法很简单，这里就不详细介绍了。<br>现在输入 <strong>cryptsetup luksFormat /dev/sdb1</strong> ，然后输入YES确认（注意要大写），再输入你要给硬盘设置的密码。<br><img src="https://s2.loli.net/2023/07/19/l7fdZCen8NJMRp2.jpg" alt="加密格式化"></p>
+<h3 id="打开并挂载硬盘"><a href="#打开并挂载硬盘" class="headerlink" title="打开并挂载硬盘"></a>打开并挂载硬盘</h3><h4 id="打开加密的硬盘"><a href="#打开加密的硬盘" class="headerlink" title="打开加密的硬盘"></a>打开加密的硬盘</h4><p>输入 <strong>cryptsetup luksOpen /dev/sdb1 test</strong> ，并且输入密码后，硬盘 /dev/sdb1 会被映射到 /dev/mapper/test 下。</p>
+<p><img src="https://s2.loli.net/2023/07/19/ilZHdaYOQ84rT1D.jpg" alt="打开硬盘"></p>
+<h4 id="格式化映射的设备"><a href="#格式化映射的设备" class="headerlink" title="格式化映射的设备"></a>格式化映射的设备</h4><p>现在还需要再格式化一下映射的设备，执行 <strong>mkfs.ext4 /dev/mapper/test</strong>，这步操作只需在第一次打开设备时需要，以后再打开、挂载硬盘可以就无需这步操作了。</p>
+<p><img src="https://s2.loli.net/2023/07/19/kDg42AHKQ7CqGOe.jpg" alt="格式化映射设备"></p>
+<h4 id="挂载硬盘"><a href="#挂载硬盘" class="headerlink" title="挂载硬盘"></a>挂载硬盘</h4><p>这个时候想要挂载硬盘，直接把映射的目录挂载就行， <strong>mount /dev/mapper/test /home/HandsomeDong</strong> 。</p>
+<p><img src="https://s2.loli.net/2023/07/19/vRxLehsAQToXDwN.jpg" alt="挂载硬盘"></p>
+<h3 id="卸载硬盘"><a href="#卸载硬盘" class="headerlink" title="卸载硬盘"></a>卸载硬盘</h3><p>想要卸载、拔出硬盘，需要先卸载挂载点，再关闭映射的设备，切忌热插拔，容易损坏硬盘。<br>卸载挂载点 <strong>umount /home/HandsomeDong</strong><br>关闭映射设备 <strong>cryptsetup luksClose test</strong><br><img src="https://s2.loli.net/2023/07/19/LO8etlr17kXp6VP.jpg" alt="卸载硬盘"></p>
+<h3 id="可能遇到的问题"><a href="#可能遇到的问题" class="headerlink" title="可能遇到的问题"></a>可能遇到的问题</h3><h4 id="数据无法读取"><a href="#数据无法读取" class="headerlink" title="数据无法读取"></a>数据无法读取</h4><p>硬盘意外断电再重新挂载时可能会造成数据无法读取，这时可以使用fsck修复指定分区。<br><strong>fsck /dev/mapper/HandsomeDong</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/M4UCybjR5ahVZDQ.jpg" alt="修复分区"></p>
 
           
         
@@ -447,7 +440,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/14/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/page/16/">16</a><span class="space">&hellip;</span><a class="page-number" href="/page/29/">29</a><a class="extend next" rel="next" href="/page/16/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/14/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/page/16/">16</a><span class="space">&hellip;</span><a class="page-number" href="/page/30/">30</a><a class="extend next" rel="next" href="/page/16/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -495,7 +488,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -517,7 +510,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

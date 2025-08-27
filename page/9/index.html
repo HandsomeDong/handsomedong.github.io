@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/07/02/SpringBoot-Dubbo简单demo实践/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/11/13/除了-Websocket-，服务端还有什么办法能向浏览器主动推送信息？/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/07/02/SpringBoot-Dubbo简单demo实践/" itemprop="url">SpringBoot+Dubbo简单demo实践</a></h1>
+                <a class="post-title-link" href="/2021/11/13/除了-Websocket-，服务端还有什么办法能向浏览器主动推送信息？/" itemprop="url">除了 Websocket ，服务端还有什么办法能向浏览器主动推送信息？</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-07-02T13:56:41+08:00">
-                2021-07-02
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-13T13:43:47+08:00">
+                2021-11-13
               </time>
             
 
@@ -336,30 +336,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index">
-                    <span itemprop="name">Java</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/框架/" itemprop="url" rel="index">
-                    <span itemprop="name">框架</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/框架/Dubbo/" itemprop="url" rel="index">
-                    <span itemprop="name">Dubbo</span>
+                  <a href="/categories/前端/" itemprop="url" rel="index">
+                    <span itemprop="name">前端</span>
                   </a>
                 </span>
 
@@ -397,70 +375,48 @@
       
         
           
-            <h1 id="SpringBoot-Dubbo-简单-demo-实践"><a href="#SpringBoot-Dubbo-简单-demo-实践" class="headerlink" title="SpringBoot + Dubbo 简单 demo 实践"></a>SpringBoot + Dubbo 简单 demo 实践</h1><p>休息了一个月终于又要上班了，下家公司的项目用的是Dubbo+Zookeeper，由于之前只用过Spring Cloud，所以提前了解一下Dubbo的使用，搭了个简单的 demo 感受 Dubbo 和 Spring Cloud 的区别。<br>大概流程如下：</p>
-<ol>
-<li>Zookeeper搭建</li>
-<li>Dubbo可视化管理界面搭建</li>
-<li>接口层定义</li>
-<li>服务层实现</li>
-<li>消费层调用</li>
-</ol>
-<h2 id="Dubbo基本工作原理"><a href="#Dubbo基本工作原理" class="headerlink" title="Dubbo基本工作原理"></a>Dubbo基本工作原理</h2><p>Dubbo 是一款 RPC 服务框架，它最大的优势在于提供了面向接口代理的服务编程模型，对开发者屏蔽了底层的远程通信细节。同时 Dubbo 也是一款服务治理框架，它为分布式部署的微服务提供了服务发现、流量调度等服务治理解决方案。</p>
-<p>下图是 Dubbo 的基本工作原理图(在官网找的)，服务提供者与服务消费者之间通过注册中心协调地址，通过约定的协议实现数据交换。<br><img src="https://s2.loli.net/2023/07/19/RmB1wsW5jqTYAZv.png#pic_center" alt="Dubbo 基本工作原理图"><br>接下来就搭建一个 demo ，感受一下 Dubbo 的使用和 Spring Cloud 有什么区别。</p>
-<h2 id="Zookeeper搭建"><a href="#Zookeeper搭建" class="headerlink" title="Zookeeper搭建"></a>Zookeeper搭建</h2><h3 id="Zookeeper下载"><a href="#Zookeeper下载" class="headerlink" title="Zookeeper下载"></a>Zookeeper下载</h3><p>Dubbo 使用 Zookeeper 作为注册中心，提供服务注册和发现，跟Spring Cloud的 eureka 或 nacos 类似。</p>
-<p>所以第一步当然是去<a href="https://zookeeper.apache.org/" target="_blank" rel="noopener">官网</a>下载 Zookeeper 啦，我下载的版本是3.6.3。</p>
-<h3 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h3><p>下载解压后，进入 conf 文件夹可以看到有个 zoo_sample.cfg 文件，这个是配置文件示例，现在复制并更名为 zoo.cfg ，根据自己的需要对配置进行更改，我改了一下数据路径。<br>Zookeeper 的端口号默认是2181，可以根据自己的需要对 clientPort 的值进行更改。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dataDir=E:/zookeeper/data</span><br><span class="line">clientPort=2181</span><br></pre></td></tr></table></figure>
-<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>进入bin文件夹可以看到里面有很多脚本，zkServer.cmd 和 zkServer.sh 就是启动脚本，我的电脑系统是 windows ，所以直接双击 zkServer.cmd 即可启动。</p>
-<p><img src="https://s2.loli.net/2023/07/19/SnKa5EN2pIZO9RL.png#pic_center" alt="启动Zookeeper"></p>
-<h2 id="Dubbo-可视化管理界面搭建"><a href="#Dubbo-可视化管理界面搭建" class="headerlink" title="Dubbo 可视化管理界面搭建"></a>Dubbo 可视化管理界面搭建</h2><p>Zookeeper 启动完成之后，我们需要一个可视化界面方便对服务进行观察和管理。</p>
-<h3 id="下载项目"><a href="#下载项目" class="headerlink" title="下载项目"></a>下载项目</h3><p>Dubbo-admin的Github地址是 <a href="https://github.com/apache/dubbo-admin" target="_blank" rel="noopener">https://github.com/apache/dubbo-admin</a> ，直接 git clone 下来。项目里有 readme.md 介绍启动流程，参考 readme.md 启动项目。</p>
-<h3 id="修改配置-1"><a href="#修改配置-1" class="headerlink" title="修改配置"></a>修改配置</h3><p>打开 dubbo-admin\dubbo-admin-server\src\main\resources\application.properties 可以修改配置，指定 Zookeeper 地址，我的 Zookeeper 是默认配置，所以不用修改。</p>
-<h3 id="编译、打包项目"><a href="#编译、打包项目" class="headerlink" title="编译、打包项目"></a>编译、打包项目</h3><p>进入到项目里编译并打包项目。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn clean package -Dmaven.test.skip=true</span><br></pre></td></tr></table></figure>
-<h3 id="启动项目"><a href="#启动项目" class="headerlink" title="启动项目"></a>启动项目</h3><p>可以直接在项目根目录运行 mvn –projects dubbo-admin-server spring-boot:run 启动项目，也可以进入 dubbo-admin-distribution\target 运行里面的jar包。</p>
-<p><img src="https://s2.loli.net/2023/07/19/SVJFBcPLXlzGxmb.png#pic_center" alt="启动 dubbo-admin"></p>
-<p><strong> 启动失败 </strong><br>我刚开始启动失败了，这个 dubbo-admin 的启动端口是 8080，但是我发现 8080 端口已经被占用了，最后发现是 Zookeeper 占用的，原来是 Zookeeper 内嵌了一个管理控制台，通过 jetty 启动，这个 jetty 的端口就是 8080，于是我去改了以下 Zookeeper 的 zoo.cfg ，新增了一行配置把 Zookeeper 的管理控制台端口改为 8081。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">admin.serverPort=8081</span><br></pre></td></tr></table></figure>
-<h3 id="进入管理界面"><a href="#进入管理界面" class="headerlink" title="进入管理界面"></a>进入管理界面</h3><p>启动成功后就可以访问 <a href="http://127.0.0.1:8080" target="_blank" rel="noopener">http://127.0.0.1:8080</a> 了，默认的账号密码都是root。<br><img src="https://s2.loli.net/2023/07/19/fv5lIzuOY4d6RWZ.png#pic_center" alt="登录"></p>
-<p><img src="https://s2.loli.net/2023/07/19/kWJmSxy5gLArGPE.png#pic_center" alt="Dubbo Admin"></p>
-<h2 id="工程创建"><a href="#工程创建" class="headerlink" title="工程创建"></a>工程创建</h2><p>接下来就要创建工程了，先创建个 maven 多模块工程，里面需要包含三个模块，一个是 api 模块，一个是服务提供者模块，一个是服务消费者模块。</p>
-<h3 id="api模块"><a href="#api模块" class="headerlink" title="api模块"></a>api模块</h3><p>假设我这个服务是一个用户查询的服务，那我就需要先创建一个 dto 和一个接口。<br><img src="https://s2.loli.net/2023/07/19/N2jn3OCBtpPaT4r.png" alt="api 模块"></p>
-<h4 id="创建-UserInfo-类"><a href="#创建-UserInfo-类" class="headerlink" title="创建 UserInfo 类"></a>创建 UserInfo 类</h4><p>创建一个用户信息类，需要注意的是，dto 要实现 Serializable 接口进行序列化。当然，也可以使用其它的序列化方式，hessian2、json等。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">public class UserInfo implements Serializable &#123;</span><br><span class="line">    private static final long serialVersionUID = 2908612893636115165L;</span><br><span class="line"></span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    private Long userId;</span><br><span class="line"></span><br><span class="line">    public static long getSerialVersionUID() &#123;</span><br><span class="line">        return serialVersionUID;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getUserName() &#123;</span><br><span class="line">        return userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserName(String userName) &#123;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Long getUserId() &#123;</span><br><span class="line">        return userId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUserId(Long userId) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="定义用户服务接口"><a href="#定义用户服务接口" class="headerlink" title="定义用户服务接口"></a>定义用户服务接口</h4><p>简单定义一个接口。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface UserService &#123;</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="服务提供者模块"><a href="#服务提供者模块" class="headerlink" title="服务提供者模块"></a>服务提供者模块</h3><p>现在创建一个服务提供者模块。</p>
-<h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><p>这个模块需要 Dubbo 和 Zookeeper 相关依赖，再加上这个模块是要实现 UserService 接口，所以也需要刚才创建的 api 模块依赖。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>配置文件主要需要以下配置：<br><img src="https://s2.loli.net/2023/07/19/d3WH21YxENk7fZ6.png" alt="配置文件"></p>
-<p>根据上图的配置，修改 application.yml，我的配置如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 9000</span><br><span class="line"></span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-provider</span><br><span class="line">  registry:</span><br><span class="line">    address: 127.0.0.1:2181</span><br><span class="line">    protocol: zookeeper</span><br><span class="line">  protocol:</span><br><span class="line">    name: dubbo</span><br><span class="line">    port: 19000</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registry</span><br></pre></td></tr></table></figure></p>
-<h4 id="用户服务类具体实现"><a href="#用户服务类具体实现" class="headerlink" title="用户服务类具体实现"></a>用户服务类具体实现</h4><p>实现用户服务接口，注意这里的 @Service 注解，不是 Spring 的注解，而是 Dubbo 的注解！包的全路径是 org.apache.dubbo.config.annotation.Service。<br>并且需要注意的是，它必须要实现 UserService 接口。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@Service</span><br><span class="line">@Component</span><br><span class="line">public class UserServiceImpl implements UserService &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;UserInfo&gt; getUserInfoList() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = new ArrayList&lt;&gt;();</span><br><span class="line">        for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">            UserInfo userInfo = new UserInfo();</span><br><span class="line">            userInfo.setUserId(Integer.valueOf(i).longValue());</span><br><span class="line">            userInfo.setUserName(&quot;七里翔&quot; + i);</span><br><span class="line">            userInfoList.add(userInfo);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="SpringBoot-启动类"><a href="#SpringBoot-启动类" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>最后在启动类要加上 @EnableDubbo 注解。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserProviderApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserProviderApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="查看-Dubbo-Admin"><a href="#查看-Dubbo-Admin" class="headerlink" title="查看 Dubbo Admin"></a>查看 Dubbo Admin</h4><p>现在再去 Dubbo Admin 上面就可以看到这个服务注册成功了！点击详情也可以看到服务的具体信息。<br><img src="https://s2.loli.net/2023/07/19/aF1lCeZkbI8HYtA.png" alt="Dubbo Admin"></p>
-<p><img src="https://s2.loli.net/2023/07/19/x9IWKMvbJnLVBl4.png" alt="服务详情"></p>
-<h3 id="服务消费者模块"><a href="#服务消费者模块" class="headerlink" title="服务消费者模块"></a>服务消费者模块</h3><p>最后就是创建服务消费者模块了，在该模块下进行服务调用。</p>
-<h4 id="依赖-1"><a href="#依赖-1" class="headerlink" title="依赖"></a>依赖</h4><p>依赖基本和服务提供者相同，这个就不多BB了。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">    &lt;dubbo.version&gt;2.7.5&lt;/dubbo.version&gt;</span><br><span class="line">    &lt;curator.version&gt;2.12.0&lt;/curator.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Zookeeper dependencies --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;</span><br><span class="line">        &lt;type&gt;pom&lt;/type&gt;</span><br><span class="line">        &lt;exclusions&gt;</span><br><span class="line">            &lt;exclusion&gt;</span><br><span class="line">                &lt;groupId&gt;org.slf4j&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;</span><br><span class="line">            &lt;/exclusion&gt;</span><br><span class="line">        &lt;/exclusions&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes --&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;curator-recipes&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;$&#123;curator.version&#125;&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.handsomedong&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;dubbo-api&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-<h4 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h4><p>application.yml</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 10000</span><br><span class="line">debug: true</span><br><span class="line"></span><br><span class="line">dubbo:</span><br><span class="line">  application:</span><br><span class="line">    name: user-service-consumer</span><br><span class="line">  registry:</span><br><span class="line">    address: zookeeper://127.0.0.1:2181</span><br><span class="line">  monitor:</span><br><span class="line">    protocol: registr</span><br></pre></td></tr></table></figure>
-<h4 id="服务调用"><a href="#服务调用" class="headerlink" title="服务调用"></a>服务调用</h4><p>我这里直接创建个 Controller 来测试。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">@RestController</span><br><span class="line">@RequestMapping(&quot;test&quot;)</span><br><span class="line">public class TestController &#123;</span><br><span class="line">    @Reference	//dubbo</span><br><span class="line">    UserService userService;</span><br><span class="line"></span><br><span class="line">    @GetMapping(&quot;test&quot;)</span><br><span class="line">    public List&lt;UserInfo&gt; test() &#123;</span><br><span class="line">        List&lt;UserInfo&gt; userInfoList = userService.getUserInfoList();</span><br><span class="line">        return userInfoList;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="SpringBoot-启动类-1"><a href="#SpringBoot-启动类-1" class="headerlink" title="SpringBoot 启动类"></a>SpringBoot 启动类</h4><p>这个启动类同样要加上 @EnableDubbo 注解。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@EnableDubbo</span><br><span class="line">@SpringBootApplication</span><br><span class="line">public class UserConsumerApplication &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(UserConsumerApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>启动服务消费者后，断点调试、用 postman 测试一下。</p>
-<p><img src="https://s2.loli.net/2023/07/19/UGLvxHwCRNcMsqI.png" alt="断点调试"></p>
-<p><img src="https://s2.loli.net/2023/07/19/rXKsIJBAYU1Hlpk.png" alt="postman"></p>
-<p>可以看到已经大功告成了！！！</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="Dubbo-和-Spring-Cloud-区别"><a href="#Dubbo-和-Spring-Cloud-区别" class="headerlink" title="Dubbo 和 Spring Cloud 区别"></a>Dubbo 和 Spring Cloud 区别</h3><ol>
-<li>Dubbo 耦合较高，有一定约束。这是我使用中感受到的最大的区别，Dubbo 需要我们定义个抽象接口，然后提供方实现这个接口，消费方再通过这个接口进行调用。提供方和消费方都依赖于这个接口的模块，所以整个项目是有一定的耦合的。而Spring Cloud 我们使用 Feign 就比较自由，比较轻量化，通过 REST 调用，更灵活。这不能单纯地说是优点或者是缺点吧，毕竟接口定义过轻也很容易多版本的情况下导致接口文档与实际所展现功能不一致导致服务集成时的问题，或许对版本控制比较严格有时候反而会更加稳定。</li>
-<li>Dubbo底层是使用Netty这样的NIO框架，是基于TCP协议传输的；而 Spring Cloud 是基于 Http 协议+ REST 接口调用远程过程的通信。在传输协议和序列化方式上，Dubbo 的性能要比 Spring Cloud 更高。因为 Dubbo 是长连接并且用二进制传输，占用带宽更少。而 Spring Cloud 使用的是短连接并且使用 JSON 序列化，消耗更大。</li>
-<li>Dubbo 只是一个 RPC 框架，而 Spring Cloud 是一整套微服务的解决方案，因此它们的领域是不一样的。</li>
-<li>社区方面，Spring Cloud 要比 Dubbo 活跃很多很多很多很多……Dubbo 好久没更新了，而 Spring Cloud 目前还一直在更新，很活跃！</li>
-</ol>
-<p><img src="https://s2.loli.net/2023/07/19/Qt4rfk8dsqL1Ugb.png" alt="Dubbo 流泪"></p>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>打工的时候，偶尔在闲暇时刻偷偷打开一下股票网站，看看今天有没有赚钱，说不定哪天一夜暴富，这是我现在唯一的盼头……</p>
+<p><img src="https://s2.loli.net/2023/07/19/euz1TniqLF2o7SI.jpg" alt="流泪打工人"></p>
+<p>今天我一如往常打开熟悉的“XX财富网”，输入熟悉的股票代码，点开我前几天刚买入的“XXX”……</p>
+<p><img src="https://s2.loli.net/2023/07/19/7CPtpYo3VjMIRhy.gif" alt="绿"></p>
+<p>看着冒着绿光并且一闪一闪的屏幕，我陷入了沉思……</p>
+<p><img src="https://s2.loli.net/2023/07/19/K6dpJc7P23Z8iSD.jpg" alt="沉思"></p>
+<p><strong>我恍惚了一下，心想这实时刷新的数据，是后端通过websocket推过来的吗？</strong></p>
+<p>于是我F12看了一下，<strong>没有 websocket 连接啊！</strong></p>
+<p><img src="https://s2.loli.net/2023/07/19/7NDhloYLMPnKciZ.png" alt="没有websocket"></p>
+<p><strong>难道除了 Websocket 还有别的办法能够让后端向前端主动推送消息？</strong></p>
+<p>我马上想到了 http2.0 的 server push ，但是想了想又觉得不太可能，因为 http2.0 的push并不是这个意思。</p>
+<p><strong>http2.0 的 server push 指的是：服务器还没有收到浏览器的请求，服务器就把各种资源推送给浏览器。比如，浏览器只请求了 index.html，但是服务器发现 index.html 内容里面需要用到 style.css、example.png，于是服务器在浏览器请求 index.html时顺便把 style.css、example.png 也一起发送给浏览器。这样的话，只需要一轮 HTTP 通信，浏览器就得到了全部资源，提高了性能。</strong></p>
+<p>所以很明显，http2.0 的 server push 只是复用其中一条http连接顺便把后续需要发送的一些静态资源提前发给了浏览器，并不<strong>适用于这种推送动态数据的场景</strong>（比如股票涨跌数据实时刷新、直播弹幕推送等）。</p>
+<p>那服务器究竟是怎么实时推送了股票相关的数据呢？</p>
+<h1 id="端倪"><a href="#端倪" class="headerlink" title="端倪"></a>端倪</h1><p>于是我点开了 Fetch/XHR 看看到底是何方神圣，在不断推送数据。于是我发现了这几个请求的内容好像不断地在刷新……</p>
+<p>从下图可以看到一秒钟推送好几条数据过来（现在是十一点半，我打开了美股）</p>
+<p><img src="https://s2.loli.net/2023/07/19/9ROFre7IysTmwzv.png" alt="端倪"></p>
+<p>查看这几个http请求，很容易就发现请求头和响应头的 Content-Type 和 Accept 跟其它普通的http请求不太一样。</p>
+<p><img src="https://s2.loli.net/2023/07/19/U1qVtv7mO6McDiH.png" alt="头"></p>
+<p>很明显，这个服务端推送，跟这个 text/event-stream 关系很大。</p>
+<p><img src="https://s2.loli.net/2023/07/19/DE4y1Q5nNtKHsOI.gif" alt="真相只有一个"></p>
+<p>于是我去查了一下相关资料，果不其然……<strong>服务器向浏览器推送信息，除了 WebSocket，还有一种方法：Server-Sent Events。</strong></p>
+<h1 id="Server-Sent-Events-是什么？"><a href="#Server-Sent-Events-是什么？" class="headerlink" title="Server-Sent Events 是什么？"></a>Server-Sent Events 是什么？</h1><p>Server-Sent Events，服务器发送事件，简称SSE，是一种 HTML 5 事件通知，它允许网页获得来自服务器的更新。</p>
+<p>严格来说，HTTP 协议是没有办法做到服务器主动推送信息的，但是有一种变通的方法可以做到，那就是服务器向客户端声明接下来要发送的是流信息（streaming）。</p>
+<p>也就是说，发送的不是一次性的数据包，而是一个数据流，会连续不断地发送过来。这时，客户端不会关闭连接，会一直等着服务器发过来的新的数据流，视频播放就是这样的例子。本质上，这种通信就是以流信息的方式，完成一次用时很长的下载。</p>
+<p>SSE 就是利用这种机制，使用流信息向浏览器推送信息。它基于 HTTP 协议，目前除了 IE/Edge，其他浏览器都支持。</p>
+<h1 id="Server-Sent-Events-与-Websocket-对比"><a href="#Server-Sent-Events-与-Websocket-对比" class="headerlink" title="Server-Sent Events 与 Websocket 对比"></a>Server-Sent Events 与 Websocket 对比</h1><p>既然能让服务器主动向浏览器推送信息，那我们肯定会想到让websocket来跟它做做对比。</p>
+<p>总的来说，Websocket 应该是更强大、更灵活、应用更广泛的，因为它是全双工通信，可以双向通信；但是SSE是单向通道，只能服务器向浏览器发送，因为流信息本质上就是下载。如果浏览器向服务器发送信息，就变成了另一次 HTTP 请求。<br><img src="https://s2.loli.net/2023/07/19/9QgO1zIvSjAcw7F.png" alt="SSE"><br>但是，SSE也有自己的优点。</p>
+<ul>
+<li>SSE 使用 HTTP 协议，现有的服务器软件都支持。WebSocket 是一个独立协议。</li>
+<li>SSE 比较轻量级，使用较简单；WebSocket 协议相对来说比较复杂。</li>
+<li>SSE 默认支持断线重连，而WebSocket 需要自己实现。</li>
+<li>SSE 一般只用来传送文本，二进制数据需要编码后传送，WebSocket 默认支持传送二进制数据。</li>
+<li>SSE 支持自定义发送的消息类型。</li>
+</ul>
+<p>所以 SSE 和 Websocket 适合不同的使用场景。</p>
+<p>迟点有空的时候写个demo试试。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li>除了 Websocket ，服务端还能通过 SSE 向浏览器主动推送消息，其本质上就是一个基于 HTTP 的流。</li>
+<li>今天的工不白打，股市虽绿，但我因此收获了一个冷门的知识点<del>安慰自己</del> 。</li>
+</ul>
+<p><img src="https://s2.loli.net/2023/07/19/NAxtRGfvVPlozEe.jpg" alt="我真的没哭"></p>
 
           
         
@@ -500,7 +456,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/29/">29</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/30/">30</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -548,7 +504,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -570,7 +526,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

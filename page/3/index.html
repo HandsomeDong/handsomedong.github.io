@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/19/Write-up-CTFHUB-web之SVN泄露、HG泄露/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/24/XSS攻击练习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/08/19/Write-up-CTFHUB-web之SVN泄露、HG泄露/" itemprop="url">Write-up-CTFHUB-web之SVN泄露、HG泄露</a></h1>
+                <a class="post-title-link" href="/2025/08/24/XSS攻击练习/" itemprop="url">XSS攻击练习</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-19T23:52:17+08:00">
-                2025-08-19
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-24T01:11:57+08:00">
+                2025-08-24
               </time>
             
 
@@ -397,35 +397,90 @@
       
         
           
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>SVN 是一款类似于 git 的版本控制工具，不过比 git 要简单易用，但是使用人数应该是比 git 少得多的，以前我在第一家公司时倒是用过，但是用得很少，主要是游戏研发部门的项目用到。</p>
-<p>Mercurial（HG） 是一个免费、开源的分布式版本控制系统（Distributed Version Control System - DVCS）。它的名字意为“水银”，象征着轻快和灵活。其命令行工具的可执行文件名为 hg，是化学元素“汞”（Hydrargyrum）的缩写，也是对最初开发者 Matt Mackall 的致敬（hg 是他用户名的缩写），这个软件我也没有使用过。</p>
-<h1 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h1><h2 id="dirsearch"><a href="#dirsearch" class="headerlink" title="dirsearch"></a>dirsearch</h2><p>项目地址：<a href="https://github.com/maurosoria/dirsearch" target="_blank" rel="noopener">https://github.com/maurosoria/dirsearch</a></p>
-<p>dirsearch 是一款基于 python3 的扫描工具，常用于暴力扫描页面结构，包括网页中的目录和文件</p>
-<h2 id="dvcs-ripper"><a href="#dvcs-ripper" class="headerlink" title="dvcs-ripper"></a>dvcs-ripper</h2><p>项目地址：<a href="https://github.com/kost/dvcs-ripper" target="_blank" rel="noopener">https://github.com/kost/dvcs-ripper</a><br>dvcs-ripper 是一款基于 perl 的版本控制软件信息泄露利用工具，支持 SVN, GIT, Mercurial/hg, bzr 等</p>
-<h1 id="SVN"><a href="#SVN" class="headerlink" title="SVN"></a>SVN</h1><p>打开页面是这样的，提示我们 flag 在源代码里<br><img src="https://s2.loli.net/2025/08/20/FqeovAQhsWcg8Pl.png" alt="0.png"></p>
-<p>使用 dirsearch 工具扫描这个页面，得到扫描结果后，搜索 200 看看请求成功的文件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch -u http://challenge-776f8dc47b983ee8.sandbox.ctfhub.com:10800/</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/20/M27dWBkuiG1RNTa.png" alt="2.png"></p>
-<p>从上面的图中可以看到是 .svn 文件夹泄露了，因此使用 dvcs-ripper 工具还原文件夹</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perl /home/kali/tools/dvcs-ripper/rip-svn.pl -u http://challenge-776f8dc47b983ee8.sandbox.ctfhub.com:10800/.svn</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/20/d1JPqvsYeXRNGhK.png" alt="3.png"></p>
-<p>用 vscode 打开工程，搜索一下 flag 或者 ctfhub，可以找到 flag</p>
-<p><img src="https://s2.loli.net/2025/08/20/E8Gm7Ze4bBYRyHg.png" alt="4.png"></p>
-<h1 id="HG"><a href="#HG" class="headerlink" title="HG"></a>HG</h1><p>打开页面是这样的</p>
-<p><img src="https://s2.loli.net/2025/08/20/aVCxMf3qvEmk2PA.png" alt="0.png"></p>
-<p>老规矩，使用 dirsearch 扫描，查看请求成功的文件</p>
-<p><img src="https://s2.loli.net/2025/08/20/oxeEXnQvtsY5Ik4.png" alt="1.png"></p>
-<p>使用 dvcs-ripper 工具下载 .hg 文件夹</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perl /home/kali/tools/dvcs-ripper/rip-hg.pl -u http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/.hg</span><br></pre></td></tr></table></figure>
-<p>全局搜索 flag 和 ctfhub</p>
-<p><img src="https://s2.loli.net/2025/08/20/z3Bik4Tycv7whn6.png" alt="3.png"></p>
-<blockquote>
-<p>.hg/store/fncache 存的文件索引数据，通过 fncache 可以快速定位到某个文件的位置，hg 会在路径前加 data/，并在结尾加 .i 表示这是一个索引，所以这里的 “data/flag_2180410243.txt.i”对应的路径就是 “flag_2180410243.txt”</p>
-</blockquote>
-<p>直接请求该文件，拿到flag</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://challenge-1cb22b11b0567b80.sandbox.ctfhub.com:10800/flag_2180410243.txt</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/20/lSRr1C6oadwDNA3.png" alt="4.png"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>信息泄露题可以先使用 dirsearch 工具确认哪些信息可能泄露了，再对症下药，使用相应的工具利用泄露的文件找到 flag 。</p>
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>今天学习 xss 攻击，在一个 xss 练习平台上玩了一下，感觉还是挺有收获的。<br>地址：<a href="http://test.ctf8.com/" target="_blank" rel="noopener">http://test.ctf8.com/</a></p>
+<p><img src="https://s2.loli.net/2025/08/24/9nJImVvXUBE8i45.png" alt="image.png"></p>
+<h1 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h1><h2 id="level-1"><a href="#level-1" class="headerlink" title="level 1"></a>level 1</h2><p>猜想这里直接回显 GET 参数里的 name</p>
+<p><img src="https://s2.loli.net/2025/08/24/oc6lbDGvTWnRyuf.png" alt="image.png"></p>
+<p>构造 payload 为 ?name=&lt;script&gt;alert(1)&lt;/script&gt;，通过！</p>
+<h2 id="level-2"><a href="#level-2" class="headerlink" title="level 2"></a>level 2</h2><p>这题看起来和上一题也差不多</p>
+<p><img src="https://s2.loli.net/2025/08/24/FxDPb4yGmYrzuOl.png" alt="image.png"></p>
+<p>输入 &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; ，结果发现不行，看了看 HTML 源码，显示的部分明显是使用了 htmlspecialchars() 转换了特殊字符。</p>
+<p><img src="https://s2.loli.net/2025/08/24/QBbsPdwt5Si4e2A.png" alt="image.png"></p>
+<p>虽然 h2 标签里展示部分的特殊字符被转换了，但是 input 标签里回显的内容却没有被转换，所以注入点便是 input 里面了。</p>
+<p>这里先用 &quot;&gt; 闭合 input 标签，再注入 &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; 。输入 &quot;&gt; &lt;script&gt;alert(&quot;七里翔&quot;)&lt;/script&gt; ，通过！</p>
+<h2 id="level-3"><a href="#level-3" class="headerlink" title="level 3"></a>level 3</h2><p><img src="https://s2.loli.net/2025/08/24/7WTuFfkcE2mbDAZ.png" alt="image.png"></p>
+<p>这题连 input 里的 value 也转换了，不过这里的 value 使用了单引号，并且输入单引号发现没有被转换。</p>
+<p><img src="https://s2.loli.net/2025/08/24/iUD5XjNuhMfKl61.png" alt="image.png"></p>
+<p>使用单引号闭合 value ，再通过事件触发来注入，最后用 / 结束标签（/&#x27;&gt; 在属性型 XSS payload 中是合法写法）。输入 &#x27; onmouseover=alert(1) /，通过！</p>
+<h2 id="level-4"><a href="#level-4" class="headerlink" title="level 4"></a>level 4</h2><p><img src="https://s2.loli.net/2025/08/24/81RCEnKuzhlIZi7.png" alt="image.png"></p>
+<p>输入 &quot;&gt; &lt;script&gt;alert(1)&lt;/script&gt; ，发现 &lt; &gt; 都被替换掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/tbzBuiZNnS76QeC.png" alt="image.png"></p>
+<p>那就用事件触发吧，输入 &quot; onmouseover=alert(1) / ，通过！</p>
+<h2 id="level-5"><a href="#level-5" class="headerlink" title="level 5"></a>level 5</h2><p><img src="https://s2.loli.net/2025/08/24/JZAlkfyTO3iWrgV.png" alt="image.png"></p>
+<p>这下 on 被替换成 o_n 了，试了下 script 等标签，也被替换成了 scr_ipt。<br><img src="https://s2.loli.net/2025/08/24/WvsZtck4ExmFqC6.png" alt="image.png"></p>
+<p>尝试用用大小写绕过，输入 “ OnMouseover=alert(1) / ， 发现全部都会被转成小写再替换。</p>
+<p>尝试闭合这个标签，再另外构造一个 a 标签，输入 &quot;&gt; &lt;a href=&quot;javascript:alert(1)&quot;&gt;click me &lt;/a&gt; 。</p>
+<p>最后的结果为 &lt;input name=keyword  value=&quot;&quot;&gt; &lt;a href=&quot;javascript:alert(1)&quot;&gt;click me &lt;/a&gt;&quot;&gt; ，点击 click me 后通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/xLpXRINPsCHOa8G.png" alt="image.png"></p>
+<h2 id="level-6"><a href="#level-6" class="headerlink" title="level 6"></a>level 6</h2><p><img src="https://s2.loli.net/2025/08/24/ULI4jXD7PAYN9Gi.png" alt="image.png"></p>
+<p>用上一题的 payload，结果是 href 也被替换成了 hr_ef。</p>
+<p><img src="https://s2.loli.net/2025/08/24/D9I2bsSMcUxwkie.png" alt="image.png"></p>
+<p>尝试用一下大小写混淆，结果为 &lt;input name=keyword  value=&quot;&quot;&gt; &lt;a Href=&quot;javascript: alert(1)&quot;/&gt;&quot;&gt; 。通过！</p>
+<h2 id="level-7"><a href="#level-7" class="headerlink" title="level 7"></a>level 7</h2><p><img src="https://s2.loli.net/2025/08/24/ZDz6j3N4ewUxu5f.png" alt="image.png"></p>
+<p>尝试用上一题的 payload，即 &quot;&gt; &lt;a Href=&quot;javascript: alert(1)&quot;/&gt; ， 发现大小写混淆也无用，并且 href 和 script 都被直接替换掉了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/MyUci8vCaunVo3A.png" alt="image.png"></p>
+<p>尝试双写 href 和 script，输入 &quot;&gt; &lt;a hrHrefef=&quot;javascrscriptipt: alert(1)&quot;/&gt; 。通过！</p>
+<h2 id="level-8"><a href="#level-8" class="headerlink" title="level 8"></a>level 8</h2><p>这一题稍微有点不一样了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/e1kJHf5F9jalQ4P.png" alt="image.png"></p>
+<p>输入 123321 看一下源码，可以看到这个友情链接 a 标签的 href 就是输入的内容。<br><img src="https://s2.loli.net/2025/08/24/8EoX1nkRq4iZzJP.png" alt="image.png"></p>
+<p>输入 javascript: alert(1) ，发现 javascript 被替换成了 javasc_ript 。</p>
+<p><img src="https://s2.loli.net/2025/08/24/xob9p82UmVN6i1A.png" alt="image.png"></p>
+<p>尝试闭合 href ，再使用事件触发，输入 &quot; onclick=alert(1) / ，可以看到双引号被转换成 HTML 实体，onclick 也被替换成 o_nclick 。</p>
+<p><img src="https://s2.loli.net/2025/08/24/EFerRLIK81mbUiC.png" alt="image.png"></p>
+<p>这意味着无法使用双引号闭合 href，也无法使用协议绕过（javascript:alert(1)）了吗？难道……难道真的止步于此了吗？</p>
+<p>只好上网搜了搜别人的 write up，发现还能使用 HTML 字符实体来替换一些字符，HTML 字符实体转换：<a href="https://www.qqxiuzi.cn/bianma/zifushiti.php。" target="_blank" rel="noopener">https://www.qqxiuzi.cn/bianma/zifushiti.php。</a><br>这里随便把 javascript 里的 c 字符替换成 &#x26;&#x23;&#x78;&#x36;&#x33;&#x3B; ，输入 javas&amp;#x63;ript:alert(1) 。通过！（感觉这个操作有点骚啊！）</p>
+<p><img src="https://s2.loli.net/2025/08/24/urvGneBg8mFw94Y.png" alt="image.png"></p>
+<h2 id="level-9"><a href="#level-9" class="headerlink" title="level 9"></a>level 9</h2><p><img src="https://s2.loli.net/2025/08/24/VpqrLtg7juBDh1S.png" alt="image.png"></p>
+<p>这一关会先校验输入是否是一个合理的链接地址，如果不是，则直接把 href 里的内容替换成”您的链接不合法？有没有！”</p>
+<p><img src="https://s2.loli.net/2025/08/24/kH1zJISifqpBRZs.png" alt="image.png"></p>
+<p>尝试在上一题的 payload 基础上，加上注释一个链接，输入 javas&#x63;ript:alert(1) //<a href="http://www.baidu.com" target="_blank" rel="noopener">http://www.baidu.com</a> ，通过！看来这个校验，只校验是否包含链接，而不是校验整个输入是否是一个合理的链接！</p>
+<p><img src="https://s2.loli.net/2025/08/24/5ish93YQovaJKTA.png" alt="image.png"></p>
+<h2 id="level-10"><a href="#level-10" class="headerlink" title="level 10"></a>level 10</h2><p>这关没有输入框，查看源码发现有隐藏的表单。</p>
+<p><img src="https://s2.loli.net/2025/08/24/mIs6wKgQrYZqeXD.png" alt="image.png"></p>
+<p>尝试手动构造表单内容，请求 <a href="http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=3" target="_blank" rel="noopener">http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=3</a> 发现 t_sort 内容会回显到输入框。</p>
+<p><img src="https://s2.loli.net/2025/08/24/6y5UBb89lj71rPN.png" alt="image.png"></p>
+<p>构造 payload 到 t_sort 里，输入 <a href="http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=%22%20%20onmouseover=%22alert(1)%22%20type=%22text" target="_blank" rel="noopener">http://test.ctf8.com/level10.php?keyword=well%20done!?t_link=1&amp;t_history=2&amp;t_sort=%22%20%20onmouseover=%22alert(1)%22%20type=%22text</a> 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/oeJLwR3BuXhYNUW.png" alt="image.png"></p>
+<h2 id="level-11"><a href="#level-11" class="headerlink" title="level 11"></a>level 11</h2><p>一进入这一关，就看到隐藏的表单输入框里回显了一个链接，这个不正是我上一关的链接吗？所以猜测这里是回显了 http header Referer 的信息，所以这里可能得用到 BurpSuite 了！</p>
+<p><img src="https://s2.loli.net/2025/08/24/LUnrNaOqxMuDvdo.png" alt="image.png"></p>
+<p>刷新一下页面，构造一下 header 里的 Referer 为 “ onclick=alert(1) type=”text 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/bPHLXuNFnUMZavq.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/24/1hsRIlaBmFbpnVg.png" alt="2.png"></p>
+<h2 id="level-12"><a href="#level-12" class="headerlink" title="level 12"></a>level 12</h2><p>这一关和上一关大同小异，只是把 Referer 换成了 User-Agent ，一样的套路，不过多赘述。</p>
+<p><img src="https://s2.loli.net/2025/08/24/KcNtziXhMvR7JQ1.png" alt="image.png"></p>
+<h2 id="level-13"><a href="#level-13" class="headerlink" title="level 13"></a>level 13</h2><p>一样，只不过这次是 Cookie ，不过多赘述。</p>
+<p><img src="https://s2.loli.net/2025/08/24/82MXupxhZwYeiH3.png" alt="image.png"></p>
+<h2 id="level-14"><a href="#level-14" class="headerlink" title="level 14"></a>level 14</h2><p>这题是真不会了，等后续有时间再上网找一些大神的 write up 观摩一下。</p>
+<p><img src="https://s2.loli.net/2025/08/24/iAM1LEQuKc3Dn9Z.png" alt="image.png"></p>
+<h2 id="level-15"><a href="#level-15" class="headerlink" title="level 15"></a>level 15</h2><p><img src="https://s2.loli.net/2025/08/24/XvMyznHGVRaep8k.png" alt="image.png"></p>
+<p>这一关直接看源码，可以看到里面这个 span 的 class 有用到 src 参数，查了查 ng-include ，这是 AngularJS 的指令，有点类似于文件包含。<a href="https://www.runoob.com/angularjs/ng-ng-include.html" target="_blank" rel="noopener">https://www.runoob.com/angularjs/ng-ng-include.html</a></p>
+<p><img src="https://s2.loli.net/2025/08/24/NDFsG5KZYfHPwOr.png" alt="image.png"></p>
+<p>由于这个包含的文件需要与当前域名一致，所以可以考虑考虑用前面关卡的文件，再把 payload 注入到前面的文件链接中。所以我这里构造的 payload 是 &#x27;level1.php?name=&lt;img src=x onerror=alert(1)&gt;&#x27; 。通过！</p>
+<p><img src="https://s2.loli.net/2025/08/24/tahcjSzP9Jb5YGk.png" alt="image.png"></p>
+<h2 id="level-16"><a href="#level-16" class="headerlink" title="level 16"></a>level 16</h2><p><img src="https://s2.loli.net/2025/08/24/ZFrkQVTiIs2B5ow.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/24/zL5ytjE8267HVsa.png" alt="image.png"></p>
+<p>尝试直接注入，?keyword=&lt;script&gt;alert(1)&lt;/script&gt; ，script 和 / 都被替换成了 &amp;nbsp; ，大小写混淆也失败。</p>
+<p><img src="https://s2.loli.net/2025/08/24/rt4QgPW62Ue75K8.png" alt="image.png"></p>
+<p>那就尝试用 img + error 事件触发，?keyword=&lt;img src=x onerror=&quot;alert(1)&quot;&gt; ，发现空格也被替换了。</p>
+<p><img src="https://s2.loli.net/2025/08/24/tbjnfxSL1IF9Qwv.png" alt="image.png"></p>
+<p>尝试用 %0d 代替空格来绕过检查，?keyword=&lt;img%0dsrc=x%0donerror=&quot;alert(1)&quot;&gt; 。通过！</p>
+<h2 id="level-……"><a href="#level-……" class="headerlink" title="level ……"></a>level ……</h2><p>后面几关好像都没法显示，貌似是 flash 的，后续有时间再做吧，现在暂时不了解 flash xss。</p>
+<p><img src="https://s2.loli.net/2025/08/24/dpOB1J8QSqbKT2W.png" alt="image.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>先确认注入点，再开始尝试注入</li>
+<li>常见的注入方式有：&lt;script&gt; 直接执行、利用 HTML 标签自带的事件（如 img + onerror、 iframe + onload、 input + onclick 或 onmouseover 等）、meta 标签刷新跳转等（不过这个练习中没有这种题）</li>
+<li>XSS 绕过常用方法有：大小写绕过、编码绕过、闭合标签绕过、注释绕过、其它符号绕过、双字符绕过、事件绕过等等</li>
+</ol>
 
           
         
@@ -465,7 +520,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/29/">29</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/30/">30</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -513,7 +568,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -535,7 +590,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>

@@ -69,7 +69,7 @@
 
 
 
-  <meta name="keywords" content="CTF,Web安全,Writeup,sqli-labs,sql注入,">
+  <meta name="keywords" content="CTF,Web安全,Writeup,ctfhub,文件上传,">
 
 
 
@@ -80,36 +80,47 @@
 
 
 
-<meta name="description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
-<meta name="keywords" content="CTF,Web安全,Writeup,sqli-labs,sql注入">
+<meta name="description" content="前言文件上传漏洞是指用户上传了一个可执行脚本文件，并通过此文件获得了执行服端命令的能力。想要完成这一攻击，需要满足几个条件：  上传的文件能够被 WEB 容器执行 用户能从 WEB 上访问这个文件 文件在上传后，主要的内容不能发生改变  这两天在 CTFHUB 做了几道文件上传的题，包括 js 绕过、.htaccess 上传绕过、文件头绕过等等，感觉还是蛮有意思的。  工具准备蚁剑我们利用文件上传">
+<meta name="keywords" content="CTF,Web安全,Writeup,ctfhub,文件上传">
 <meta property="og:type" content="article">
-<meta property="og:title" content="sqli-labs 第一关">
-<meta property="og:url" content="http://yoursite.com/2025/08/09/sqli-labs-第一关/index.html">
+<meta property="og:title" content="Write up CTFHUB web之文件上传">
+<meta property="og:url" content="http://yoursite.com/2025/08/27/Write-up-CTFHUB-web之文件上传/index.html">
 <meta property="og:site_name" content="HandsomeDong - 七里翔">
-<meta property="og:description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
+<meta property="og:description" content="前言文件上传漏洞是指用户上传了一个可执行脚本文件，并通过此文件获得了执行服端命令的能力。想要完成这一攻击，需要满足几个条件：  上传的文件能够被 WEB 容器执行 用户能从 WEB 上访问这个文件 文件在上传后，主要的内容不能发生改变  这两天在 CTFHUB 做了几道文件上传的题，包括 js 绕过、.htaccess 上传绕过、文件头绕过等等，感觉还是蛮有意思的。  工具准备蚁剑我们利用文件上传">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/G1D9AYaqi7KMbEC.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/hVKdEtHfIvbL9C5.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/Nj87fe3Z5uaOt2l.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/426VUfPjYKmu5DW.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/YR9xturkiwEf5FA.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/oPbjvZQrVqL924u.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/2CaEwxKeHSVtd3s.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/lMm5iyFq1bCQzJH.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/aqgoCQbSxNH2RGj.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/76edbohSy5rZKU2.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/6lsrvCjtez3Rxnc.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/zFs6qEQfJaTjCYx.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/m6VIKUxEyejuX8t.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/1T8fLmZjkMVv2W3.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/MsNDXunrwGg6tlo.png">
-<meta property="og:image" content="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png">
-<meta property="og:updated_time" content="2025-08-23T17:13:51.241Z">
+<meta property="og:image" content="https://s2.loli.net/2025/08/27/ZuermW41HjLKC2A.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/27/bYJLWy1sUdexH7X.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/xT4ejOtXFpqR2SC.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/CD4uSVXvdcH93wJ.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/pyZvWFkedbomVqi.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/zkcOTmqZ5P1EFuj.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/xk9pGcQAqLEOTiV.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/xZwmBAMUsSqyojY.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/uNlROwzfIT369KW.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/JO7vpmStW8u9yKN.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/m7cEgqZVTAKS2hn.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/JaKFp7ebd9h4jDM.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/wM5cSeI4RTOYNpZ.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/PEJBa7ufUwlby5S.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/p6SO8wXgkRPQMJq.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/IlMm3DoPpXexSEj.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/3tId4MlrSfKF1QN.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/it4sWB15YITMzAa.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/6jV1QwibqyNBGuX.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/y8TI41nd76BuJgO.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/YzWoyH938dNufOx.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/FIzQv8K9xNTa75q.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/pnwz4OxrkP3Vgob.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/pnwz4OxrkP3Vgob.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/rOBWwRcmaE6QpoN.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/D8A9HhBvE5bUwjJ.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/muI4sNWdhLBEZFc.png">
+<meta property="og:image" content="https://s2.loli.net/2025/08/28/DwGxEn2TH5NVyWr.png">
+<meta property="og:updated_time" content="2025-08-27T18:19:04.583Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="sqli-labs 第一关">
-<meta name="twitter:description" content="前言 最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。  手工注入判断是否存在 SQL 注入 一进来就提醒输入一个数字的id值    输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据">
-<meta name="twitter:image" content="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png">
+<meta name="twitter:title" content="Write up CTFHUB web之文件上传">
+<meta name="twitter:description" content="前言文件上传漏洞是指用户上传了一个可执行脚本文件，并通过此文件获得了执行服端命令的能力。想要完成这一攻击，需要满足几个条件：  上传的文件能够被 WEB 容器执行 用户能从 WEB 上访问这个文件 文件在上传后，主要的内容不能发生改变  这两天在 CTFHUB 做了几道文件上传的题，包括 js 绕过、.htaccess 上传绕过、文件头绕过等等，感觉还是蛮有意思的。  工具准备蚁剑我们利用文件上传">
+<meta name="twitter:image" content="https://s2.loli.net/2025/08/27/ZuermW41HjLKC2A.png">
 
 
 
@@ -139,13 +150,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2025/08/09/sqli-labs-第一关/">
+  <link rel="canonical" href="http://yoursite.com/2025/08/27/Write-up-CTFHUB-web之文件上传/">
 
 
 
 
 
-  <title>sqli-labs 第一关 | HandsomeDong - 七里翔</title>
+  <title>Write up CTFHUB web之文件上传 | HandsomeDong - 七里翔</title>
   
 
 
@@ -304,7 +315,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/09/sqli-labs-第一关/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2025/08/27/Write-up-CTFHUB-web之文件上传/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="HandsomeDong">
@@ -321,7 +332,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">sqli-labs 第一关</h1>
+          <h1 class="post-title" itemprop="name headline">Write up CTFHUB web之文件上传</h1>
         
 
         <div class="post-meta">
@@ -333,8 +344,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-09T16:11:57+08:00">
-                2025-08-09
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-08-27T23:41:22+08:00">
+                2025-08-27
               </time>
             
 
@@ -385,17 +396,6 @@
 
                 
                 
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CTF/Web/Writeup/sqli-labs/" itemprop="url" rel="index">
-                    <span itemprop="name">sqli-labs</span>
-                  </a>
-                </span>
-
-                
-                
               
             </span>
           
@@ -431,73 +431,125 @@
       
 
       
-        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
-<p>最近也是玩上了CTF啊，不过CTF涉及到的知识点可真多，先从最简单的web安全-SQL注入学起吧！听说 SQLi Labs 是一个开源且全面的 SQL 注入靶场，那就拿这个来练练 SQL 手工注入吧！同时也学学 sqlmap 的使用。</p>
-</blockquote>
-<h1 id="手工注入"><a href="#手工注入" class="headerlink" title="手工注入"></a>手工注入</h1><h2 id="判断是否存在-SQL-注入"><a href="#判断是否存在-SQL-注入" class="headerlink" title="判断是否存在 SQL 注入"></a>判断是否存在 SQL 注入</h2><ol>
-<li>一进来就提醒输入一个数字的id值</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/zmUvZL6F91Gatuh.png" alt="image.png"></p>
-<ol start="2">
-<li>输入发现会回显内容，输入不同的id值，会回显不同的内容，所以我们后端应该就是根据我们输入的值来查询数据了。（这里推荐使用 chrome 的 HackBar 插件，在浏览器直接输入的话，特殊符号老是被编码，不太好看）</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/G1D9AYaqi7KMbEC.png" alt="image.png"></p>
-<ol start="3">
-<li>接下来判断是否存在注入，是字符型注入还是数字型注入<br>直接输入 1 是没问题的，但是输入 1’ 就报错了，所以这应该是字符型注入。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/hVKdEtHfIvbL9C5.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/Nj87fe3Z5uaOt2l.png" alt="image.png"></p>
-<ol start="4">
-<li>进一步验证猜想<br>为了进一步验证这是字符型，可以使用 AND 1=1、 AND 1=2 查看结果。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/426VUfPjYKmu5DW.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/YR9xturkiwEf5FA.png" alt="image.png"><br>从上面2张图可以确定这不是数字型注入了，因为 AND 后面的条件没生效。</p>
-<p><img src="https://s2.loli.net/2025/08/09/oPbjvZQrVqL924u.png" alt="image.png"></p>
-<p><img src="https://s2.loli.net/2025/08/09/2CaEwxKeHSVtd3s.png" alt="image.png"><br>从上面2张图可以确定这是字符型注入，使用单引号闭合了前面的查询条件，因此 AND 后面的查询条件生效了，所以2次查询结果不一样。</p>
-<h2 id="联合注入爆数据"><a href="#联合注入爆数据" class="headerlink" title="联合注入爆数据"></a>联合注入爆数据</h2><ol>
-<li>确定 SELECT 列数<br>接下来就是使用联合注入爆各种数据了，不过在此之前需要先确定一下 SELECT 的内容有多少列，因为 UNION 的列数需要一致。<br>使用 ORDER BY 来确认列数，ORDER BY 4 时报错了，所以 SELECT 的列数是3。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/lMm5iyFq1bCQzJH.png" alt="image.png"></p>
-<ol start="2">
-<li>爆显示位<br>输入一个不存在的id，把后面的内容 UNION 上去，确认显示位。<br>可以看到回显的内容是第二、第三列。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/aqgoCQbSxNH2RGj.png" alt="image.png"></p>
-<ol start="3">
-<li>爆库名<br>接下来就可以爆整个数据库实例的库名了，先使用 database() 查看当前查询的库，以及查询 information_schema.schemata 的 schema_name 列获取所有库名。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/76edbohSy5rZKU2.png" alt="image.png"></p>
-<ol start="4">
-<li>爆表名<br>查询 information_schema.tables 获取 security 库下的所有表名。</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/6lsrvCjtez3Rxnc.png" alt="image.png"></p>
-<ol start="5">
-<li>爆字段<br>当前显示了用户名、密码，这些数据肯定存在 users 表中，所以查查这张表有什么字段吧！<br>可以看到表中的字段有 id、username、password</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/zFs6qEQfJaTjCYx.png" alt="image.png"></p>
-<ol start="6">
-<li>爆数据<br>直接查询 users 表的 username 和 password</li>
-</ol>
-<p><img src="https://s2.loli.net/2025/08/09/m6VIKUxEyejuX8t.png" alt="image.png"></p>
-<h1 id="sqlmap"><a href="#sqlmap" class="headerlink" title="sqlmap"></a>sqlmap</h1><h2 id="使用-sqlmap-注入"><a href="#使用-sqlmap-注入" class="headerlink" title="使用 sqlmap 注入"></a>使用 sqlmap 注入</h2><p>sqlmap github: <a href="https://github.com/sqlmapproject/sqlmap" target="_blank" rel="noopener">https://github.com/sqlmapproject/sqlmap</a></p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>文件上传漏洞是指用户上传了一个可执行脚本文件，并通过此文件获得了执行服端命令的能力。想要完成这一攻击，需要满足几个条件：</p>
 <ol>
-<li>先查询所有库</li>
+<li>上传的文件能够被 WEB 容器执行</li>
+<li>用户能从 WEB 上访问这个文件</li>
+<li>文件在上传后，主要的内容不能发生改变</li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 --dbs</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/1T8fLmZjkMVv2W3.png" alt="image.png"></p>
-<ol start="2">
-<li>查询 security 下的表</li>
+<p>这两天在 CTFHUB 做了几道文件上传的题，包括 js 绕过、.htaccess 上传绕过、文件头绕过等等，感觉还是蛮有意思的。</p>
+<p><img src="https://s2.loli.net/2025/08/27/ZuermW41HjLKC2A.png" alt="image.png"></p>
+<h1 id="工具准备"><a href="#工具准备" class="headerlink" title="工具准备"></a>工具准备</h1><h2 id="蚁剑"><a href="#蚁剑" class="headerlink" title="蚁剑"></a>蚁剑</h2><p>我们利用文件上传漏洞的目的是获得执行服务器端命令的能力，在 CTF 中，这类题的 flag 通常放在服务器的某个目录下，我们获得服务端命令后，即可遍历服务器的目录找到 flag 。</p>
+<p>我们当然可以在服务器执行 ls、cd、 find、cat 等命令查找、打开文件，但是有一些工具能让我们更方便地查看文件，而蚁剑就是这么一款开源的跨平台网站管理工具，方便我们进行一些常规操作。</p>
+<p>项目地址：<a href="https://github.com/AntSwordProject/antSword" target="_blank" rel="noopener">https://github.com/AntSwordProject/antSword</a></p>
+<p><img src="https://s2.loli.net/2025/08/27/bYJLWy1sUdexH7X.png" alt="image.png"></p>
+<h2 id="Burp-Suite"><a href="#Burp-Suite" class="headerlink" title="Burp Suite"></a>Burp Suite</h2><p>网站通常会对上传的文件做一些校验，比如校验文件名扩展名、MIME、文件头等，有一些校验是可以通过修改伪造请求数据绕过的，这就要用到 Burp Suite 了。</p>
+<p>Burp Suite是一个用于攻击web应用程序的集成化的渗透测试工具，它集合了多种渗透测试组件，能够使我们更好的完成对web应用的渗透测试和攻击。我们经常会用 Burp Suite 来做爆破、抓包、改包等操作。</p>
+<p>工具链接：<a href="https://portswigger.net/burp" target="_blank" rel="noopener">https://portswigger.net/burp</a></p>
+<h1 id="做题"><a href="#做题" class="headerlink" title="做题"></a>做题</h1><h2 id="无验证"><a href="#无验证" class="headerlink" title="无验证"></a>无验证</h2><p>先来一道简单点的题，这道题没有对文件进行任何校验，正好借此来熟悉一下怎么通过上传的脚本文件获取到服务器的命令执行能力。</p>
+<p><img src="https://s2.loli.net/2025/08/28/xT4ejOtXFpqR2SC.png" alt="image.png"></p>
+<p>先来写个很简单的<strong>一句话木马</strong>的php文件，原来就是 eval() 函数会把语句内的字符串当作 PHP 代码来执行来执行，我们通过 post 请求的 cmd 参数来输入命令，很简单吧！</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php @eval($_POST[&apos;cmd&apos;]); ?&gt;</span><br></pre></td></tr></table></figure>
+<p>直接上传木马文件，可以看到网站很贴心地给我们返回了文件的相对路径。</p>
+<p><img src="https://s2.loli.net/2025/08/28/CD4uSVXvdcH93wJ.png" alt="image.png"></p>
+<p>先试试能不能执行命令吧！构造一个 POST 请求，测试一下 ls、pwd 命令</p>
+<p><img src="https://s2.loli.net/2025/08/28/pyZvWFkedbomVqi.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/28/zkcOTmqZ5P1EFuj.png" alt="image.png"></p>
+<p>确认木马文件上传并访问成功后，打开蚁剑，Add shell，Shell url 就是当前的链接 + 木马文件相对路径，而 Shell pwd 则是 post 参数 cmd，然后 Test Connection 看到测试连接成功后，直接 Add 就行。</p>
+<p><img src="https://s2.loli.net/2025/08/28/xk9pGcQAqLEOTiV.png" alt="image.png"></p>
+<p>接下来就可以连上服务器随意浏览服务器的文件了！实际上蚁剑就是帮我们省去了自己构造注入了命令的 POST 请求的功夫，替换成了图形界面。</p>
+<p><img src="https://s2.loli.net/2025/08/28/xZwmBAMUsSqyojY.png" alt="image.png"></p>
+<p>找到 flag，通过！</p>
+<p><img src="https://s2.loli.net/2025/08/28/uNlROwzfIT369KW.png" alt="image.png"></p>
+<p><img src="https://s2.loli.net/2025/08/28/JO7vpmStW8u9yKN.png" alt="image.png"></p>
+<h2 id="js-验证"><a href="#js-验证" class="headerlink" title="js 验证"></a>js 验证</h2><p>这次直接上传文件被拦截了。</p>
+<p><img src="https://s2.loli.net/2025/08/28/m7cEgqZVTAKS2hn.png" alt="1.png"></p>
+<p>查看网页代码可以看到，拦截的逻辑是在前端做的。</p>
+<p><img src="https://s2.loli.net/2025/08/28/JaKFp7ebd9h4jDM.png" alt="2.png"></p>
+<p>想要绕过前端 js 的验证，通常有几种方法：</p>
+<ol>
+<li>禁用 js。这个很容易理解，直接在浏览器设置禁用 js，这个校验的程序就跑不了了</li>
+<li>删除检测代码。前端一般给 form 表单添加 onsubmit 监听（或者其它事件），直接在浏览器删除掉这个代码就是了</li>
+<li>拦截请求，改包。上传一个符合 js 验证条件的文件，然后抓包，再修改请求数据，再放行请求</li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/MsNDXunrwGg6tlo.png" alt="image.png"></p>
-<ol start="3">
-<li>查询 users 表数据</li>
+<p>前两种办法比较简单，不过多赘述，我这里使用第三种方法。</p>
+<p>首先把刚才的 muma.php 文件重命名为 muma.jpg 文件，上传文件，拦截请求把 filename 修改回 muma.php 即可。上传成功后该怎么做，你懂的……</p>
+<p><img src="https://s2.loli.net/2025/08/28/wM5cSeI4RTOYNpZ.png" alt="3.png"></p>
+<h2 id="htaccess"><a href="#htaccess" class="headerlink" title=".htaccess"></a>.htaccess</h2><blockquote>
+<p>.htaccess 文件是Apache服务器中的一个配置文件，它负责相关目录下的网页配置。通过htaccess文件，可以帮我们实现：网页301重定向、自定义404错误页面、改变文件扩展名、允许/阻止特定的用户或者目录的访问、禁止目录列表、配置默认文档等功能。</p>
+</blockquote>
+<blockquote>
+<p>.htaccess 文件（或者“分布式配置文件”）提供了针对每个目录改变配置的方法，即在一个特定的目录中放置一个包含指令的文件，其中的指令作用于此目录及其所有子目录。</p>
+</blockquote>
+<blockquote>
+<p>但是需要注意的是，其上级目录也可能会有 .htaccess 文件，而指令是按查找顺序依次生效的，所以一个特定目录下的.htaccess文件中的指令可能会覆盖其上级目录中的.htaccess文件中的指令，即子目录中的指令会覆盖父目录或者主配置文件中的指令。</p>
+</blockquote>
+<p>这次查看代码可以看到一段注释的 php 代码，这其实是后端的代码，放在这里给我们用作提示。可以看到后缀名为脚本的文件都被禁止上传了，由于这是后端的校验，因此我们无法通过改包等方式来绕过了。</p>
+<p><img src="https://s2.loli.net/2025/08/28/PEJBa7ufUwlby5S.png" alt="2.png"></p>
+<p>但是可以看到黑名单中并没有 .htaccess 文件，那我们可以尝试通过 .htaccess 配置把后缀名不在黑名单中的文件，按照 php 文件去解析，这样就能达到目的。</p>
+<p>首先新建一个 .htaccess 文件，内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AddType application/x-httpd-php .jpg  # 将后缀名为.jpg、且内容符合PHP语法规范的文件当成PHP文件解析</span><br></pre></td></tr></table></figure>
+<p>直接上传 .htaccess 文件，可以看到上传成功了。</p>
+<p><img src="https://s2.loli.net/2025/08/28/p6SO8wXgkRPQMJq.png" alt="4.png"></p>
+<p>此时把一句话木马文件 muma.php 重命名为 muma.jpg，上传后用蚁剑连接可以看到连接成功了！</p>
+<p><img src="https://s2.loli.net/2025/08/28/IlMm3DoPpXexSEj.png" alt="7.png"></p>
+<h2 id="MIME-绕过"><a href="#MIME-绕过" class="headerlink" title="MIME 绕过"></a>MIME 绕过</h2><blockquote>
+<p>MIME (Multipurpose Internet Mail Extensions) 是描述消息内容类型的标准，用来表示文档、文件或字节流的性质和格式。</p>
+</blockquote>
+<p>MIME 消息能包含文本、图像、音频、视频以及其他应用程序专用的数据。<br>有些程序不是校验文件后缀名，而是校验请求头里的 Content-Type，这里面会声明消息内容类型，这题就是如此。</p>
+<p><img src="https://s2.loli.net/2025/08/28/3tId4MlrSfKF1QN.png" alt="1.png"></p>
+<p>上传 muma.php，用 Burp Suite 把 Content-Type 里的 application/x-php 修改为 image/jpeg 即可绕过校验。</p>
+<p><img src="https://s2.loli.net/2025/08/28/it4sWB15YITMzAa.png" alt="2.png"></p>
+<p><img src="https://s2.loli.net/2025/08/28/6jV1QwibqyNBGuX.png" alt="3.png"></p>
+<h2 id="00-截断"><a href="#00-截断" class="headerlink" title="00 截断"></a>00 截断</h2><p>这道题给出了后端的校验代码，这次不仅只接受后缀名为 jpg、png、gif 的文件，还会拿我们请求的 <strong>GET 参数 + 随机数 + 时间 + 上传文件的后缀名</strong> 作为保存在服务器中的文件名。</p>
+<p>由于这次设置了白名单，我们无法上传 .htaccess 文件，并且存储后的文件名有一定的随机性，我们即使能绕过白名单校验，也需要想办法获取到上传后的文件名才能访问……</p>
+<p><img src="https://s2.loli.net/2025/08/28/y8TI41nd76BuJgO.png" alt="2.png"></p>
+<p>这个时候就要尝试一下 00 截断了。</p>
+<p>早期 php（≤ 5.3.3）在把字符串传给底层 C API（文件系统、fopen/include/stat 等）时，没有阻断 NUL 字节。C API 把 \0 当作字符串结尾，导致 <strong>\0 后面的内容被悄悄截掉</strong> ，于是出现了“00 截断”。</p>
+<p>比如后端代码为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include($_GET[&apos;file&apos;] . &apos;.php&apos;);</span><br></pre></td></tr></table></figure>
+<p>我们传入的参数为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?file=../../uploads/shell.jpg%00</span><br></pre></td></tr></table></figure>
+<p>触发流程：%00 → 解码成 \x00 → 传入底层时路径变成 ../../uploads/shell.jpg（.php 被截掉）</p>
+<p>利用这一漏洞，这道题我们可以：</p>
+<ol>
+<li>给 $_GET[‘road’] 传入 muma.php%00。这样即可截断后面字符串，达到上传后的文件名可控的目的。</li>
+<li>上传前的文件名改为 muma.php%00.jpg。这样在校验后缀名时，程序会认为这是一个 .jpg 文件；而在保存及移动文件时，则会认为这是一个 .php 文件。</li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u http://192.168.0.120:10000/Less-7/?id=1 -D security -T users --columns --dump</span><br></pre></td></tr></table></figure>
-<p><img src="https://s2.loli.net/2025/08/09/5KaN9YlTciSrXWL.png" alt="image.png"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
-<li>先确认是字符型注入还是数字型注入，再使用注释把后面的 SQL 注释掉，然后确认注入格式，再使用联合注入查询库、表名，最后查询数据</li>
-<li>这种简单的 case，sqlmap 直接能解决。不过现在处于练习阶段，还是得手工注入，理解原理</li>
+<p>上传 muma.php，在抓包时，修改 road 参数、filename、Content-Type。这次上传后没有回显文件相对地址，但是看到默认的 road 参数为 /var/www/html/upload，我们也可以猜到，当前上传的页面其实位于服务器的 /var/www/html 目录，而上传后的目录则为 /var/www/html/upload。</p>
+<p><img src="https://s2.loli.net/2025/08/28/YzWoyH938dNufOx.png" alt="3.png"></p>
+<p>请求一下文件，可以看到请求没报错，后面的步骤就不过多赘述了。</p>
+<p><img src="https://s2.loli.net/2025/08/28/FIzQv8K9xNTa75q.png" alt="4.png"></p>
+<h2 id="双写后缀"><a href="#双写后缀" class="headerlink" title="双写后缀"></a>双写后缀</h2><p>这次查看提示的后端代码可以看到，后端是直接把黑名单中的后缀名替换成空字符串，而且是只替换一次……所以直接用双写后缀即可，上传 muma.phpphp，它会自动把文件名修改为 muma.php。</p>
+<p><img src="https://s2.loli.net/2025/08/28/pnwz4OxrkP3Vgob.png" alt="2.png"></p>
+<h2 id="文件头检查"><a href="#文件头检查" class="headerlink" title="文件头检查"></a>文件头检查</h2><p>这道题没有给出后端代码，只能先测试测试。</p>
+<p>上传 muma.php，提示只能上传一些图片类型的文件。</p>
+<p><img src="https://s2.loli.net/2025/08/28/pnwz4OxrkP3Vgob.png" alt="2.png"></p>
+<p>修改后缀名为 .jpg ，提示“文件错误”，这个时候应该就能猜出来后端校验了文件内容，发现文件内容并不是图片。</p>
+<p><img src="https://s2.loli.net/2025/08/28/rOBWwRcmaE6QpoN.png" alt="1.png"></p>
+<p>校验的方法一般都是只会读取文件的前几个字节，确保文件内容和扩展名匹配。<br>所以可以尝试添加或修改文件头来通过校验，我这里添加 gif 动态图的文件头，最终 php 文件的内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GIF89a</span><br><span class="line">&lt;?php @eval($_POST[&apos;cmd&apos;]); ?&gt;</span><br></pre></td></tr></table></figure>
+<p><img src="https://s2.loli.net/2025/08/28/D8A9HhBvE5bUwjJ.png" alt="3.png"></p>
+<p>上传时再修改一下 Content-Type，使其与文件头对应的 MIME 类型保持一致。</p>
+<p><img src="https://s2.loli.net/2025/08/28/muI4sNWdhLBEZFc.png" alt="4.png"></p>
+<p>上传成功！</p>
+<p><img src="https://s2.loli.net/2025/08/28/DwGxEn2TH5NVyWr.png" alt="7.png"></p>
+<p>这道题还能用图片马来绕过，原理其实和伪造文件头类似，可以了解下。</p>
+<blockquote>
+<p>图片马：在正常的图片文件里插入一句话木马代码</p>
+</blockquote>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>文件上传的绕过方式一般有以下几种：</p>
+<ol>
+<li>前端绕过。如果是前端 JS 校验或 HTML 标签限制，通过禁用 JS、删除 HTML 事件、抓包改包等方式可以轻松绕过。</li>
+<li>扩展名绕过。常见的绕过方式有双扩展名、大小写绕过、00 截断（仅旧版本 PHP）、特殊后缀（依赖解析器）等方式。</li>
+<li>MIME 类型绕过。服务器只检查 Content-Type，直接抓包改包即可。</li>
+<li>文件头检查绕过。有些题会用 finfo / getimagesize 检查文件头是否是图片，可以通过<strong>伪造文件头</strong>、<strong>图片马</strong>绕过。</li>
+<li>.htaccess 绕过。通过 .htaccess 修改解析规则，让原本不能执行的文件变成可执行脚本。</li>
 </ol>
+<p>口诀</p>
+<blockquote>
+<p>前端假，扩展乱，MIME 改，头部串；<br>黑名单，大小写，00 截断走后端；<br>路径穿，条件竞，解压包里藏木马。</p>
+</blockquote>
 
       
     </div>
@@ -521,9 +573,9 @@
           
             <a href="/tags/Writeup/" rel="tag"># Writeup</a>
           
-            <a href="/tags/sqli-labs/" rel="tag"># sqli-labs</a>
+            <a href="/tags/ctfhub/" rel="tag"># ctfhub</a>
           
-            <a href="/tags/sql注入/" rel="tag"># sql注入</a>
+            <a href="/tags/文件上传/" rel="tag"># 文件上传</a>
           
         </div>
       
@@ -536,8 +588,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2024/04/26/Triton入门初体验/" rel="next" title="Triton入门初体验">
-                <i class="fa fa-chevron-left"></i> Triton入门初体验
+              <a href="/2025/08/25/Write-up-CTFHUB-XSS/" rel="next" title="Write up CTFHUB XSS">
+                <i class="fa fa-chevron-left"></i> Write up CTFHUB XSS
               </a>
             
           </div>
@@ -545,10 +597,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2025/08/18/Write-up-CTFHUB-web之Git泄露/" rel="prev" title="Write-up: CTFHUB web之Git泄露">
-                Write-up: CTFHUB web之Git泄露 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -696,7 +744,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#手工注入"><span class="nav-number">2.</span> <span class="nav-text">手工注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#判断是否存在-SQL-注入"><span class="nav-number">2.1.</span> <span class="nav-text">判断是否存在 SQL 注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#联合注入爆数据"><span class="nav-number">2.2.</span> <span class="nav-text">联合注入爆数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlmap"><span class="nav-number">3.</span> <span class="nav-text">sqlmap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-sqlmap-注入"><span class="nav-number">3.1.</span> <span class="nav-text">使用 sqlmap 注入</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#工具准备"><span class="nav-number">2.</span> <span class="nav-text">工具准备</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#蚁剑"><span class="nav-number">2.1.</span> <span class="nav-text">蚁剑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Burp-Suite"><span class="nav-number">2.2.</span> <span class="nav-text">Burp Suite</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#做题"><span class="nav-number">3.</span> <span class="nav-text">做题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#无验证"><span class="nav-number">3.1.</span> <span class="nav-text">无验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#js-验证"><span class="nav-number">3.2.</span> <span class="nav-text">js 验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#htaccess"><span class="nav-number">3.3.</span> <span class="nav-text">.htaccess</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MIME-绕过"><span class="nav-number">3.4.</span> <span class="nav-text">MIME 绕过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#00-截断"><span class="nav-number">3.5.</span> <span class="nav-text">00 截断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#双写后缀"><span class="nav-number">3.6.</span> <span class="nav-text">双写后缀</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件头检查"><span class="nav-number">3.7.</span> <span class="nav-text">文件头检查</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
 
           </div>
